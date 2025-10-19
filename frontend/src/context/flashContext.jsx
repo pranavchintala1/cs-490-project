@@ -1,10 +1,10 @@
 import React, { createContext, useContext } from "react";
-import useFlash from "../tools/flash";
+import Flash from "../tools/flash";
 
 const FlashContext = createContext();
 
 export const FlashProvider = ({ children }) => {
-  const flash = useFlash(); // single global hook
+  const flash = Flash(); // single global hook
   return <FlashContext.Provider value={flash}>{children}</FlashContext.Provider>;
 };
 
