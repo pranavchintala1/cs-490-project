@@ -2,9 +2,9 @@ import React, { useState } from "react";
 
 
 
-export const useFlash = (duration = 3000) => {
+const Flash = (duration = 3000) => {
 
-    const [flash, setFlash] = useState({message:"",type:"error"});
+    const [flash, setFlash] = useState({message:"",type:"error"}); // TODO. Add styling for different messages. for example, flash-error could be red or something.
 
 
     const showFlash = (message, type) => {
@@ -18,3 +18,6 @@ export const useFlash = (duration = 3000) => {
  
 
 };
+
+
+export default Flash;
