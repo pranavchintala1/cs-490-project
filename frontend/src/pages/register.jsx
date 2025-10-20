@@ -16,7 +16,7 @@ function Register() {
 
     const navigate = useNavigate();
 
-    const [flash, showFlash] = useFlash();
+    const { flash, showFlash } = useFlash();
 
 
     const onSubmit = (data) => {

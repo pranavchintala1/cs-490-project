@@ -13,7 +13,7 @@ function Login() {
     } = useForm();
 
     const navigate = useNavigate();
-    const [flash, showFlash] = useFlash();
+    const { flash, showFlash }  = useFlash();
 
 
     const onSubmit = (data) => {
