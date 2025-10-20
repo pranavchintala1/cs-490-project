@@ -1,13 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { FlashProvider } from "../src/context/flashContext";
+import { BrowserRouter } from 'react-router-dom';
 import './index.css';
-import App from './App';
+import { App } from './App';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <FlashProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </FlashProvider>
   </React.StrictMode>
 );
 
