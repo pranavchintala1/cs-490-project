@@ -25,8 +25,7 @@ function Register() {
             if (duplicateData){
                 showFlash('Email is taken, choose again.',"error");
                 return;
-            }
-            
+            }            
 
             const newData = {
                 email: data.email,
@@ -46,7 +45,7 @@ function Register() {
             
         };
 
-    
+
     
     return (
         <>
@@ -64,6 +63,8 @@ function Register() {
 
                 <input
                     type="password"
+                    minLength="8"
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"
                     {...register("password", { required: true })}
                     placeholder="Password"
                 />
