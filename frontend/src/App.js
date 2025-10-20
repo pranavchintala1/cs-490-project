@@ -1,13 +1,14 @@
 import React from "react";
 import { Routes, Route } from 'react-router-dom';
-import Nav from "../src/tools/nav"
+import Nav from "./tools/nav"
 import logo from './logo.svg';
 import './App.css';
-import Home from "../src/pages/home";
-import Login from "../src/pages/login"
-import Register from "../src/pages/register"
-import Profile from "../src/pages/profile"
-
+import Home from "./pages/home";
+import Login from "./pages/login"
+import Register from "./pages/register"
+import Profile from "./pages/profile"
+import { FlashMessage } from "./tools/flash"
+import { FlashProvider } from "./context/flashContext"
 
 
 export function App() {
@@ -16,14 +17,18 @@ export function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <>
-          <Nav />
-            <Routes>
-              <Route path = "/" element = {<Home />} />
-              <Route path = "/register" element = {<Register />} />
-              <Route path = "/login" element = {<Login />} />
-              <Route path = "/profile" element = {<Profile />} />
-              <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
-            </Routes>
+    
+          <FlashProvider>
+            <FlashMessage />
+              <Nav />
+              <Routes>
+                <Route path = "/" element = {<Home />} />
+                <Route path = "/register" element = {<Register />} />
+                <Route path = "/login" element = {<Login />} />
+                <Route path = "/profile" element = {<Profile />} />
+                <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
+             </Routes>
+            </FlashProvider>
           </>
 
       </header>
