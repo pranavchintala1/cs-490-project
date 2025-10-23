@@ -20,7 +20,7 @@ function Login() {
         const userData = JSON.parse(localStorage.getItem(data.email)); // TODO Change localstorage to whatever database is being used later
 
             if (userData && userData.password === data.password) { //If the entered password matches the stored password.
-                localStorage.setItem("session",userData.session) // TODo change localstorage session to something else later.
+                localStorage.setItem("session",userData.session) // TODO change localstorage session to something else later.
                 navigate(`/profile/${userData.session}`); // make profile later lmao. 
             } 
             else {
