@@ -51,8 +51,6 @@ function Register() {
         <>
             <h2>Register</h2>
 
-            {flash.message && ( <div className={`flash-${flash.type}`}>{flash.message}</div> )}
-
             <form className="Register" onSubmit={handleSubmit(onSubmit)}>
 
                 <input

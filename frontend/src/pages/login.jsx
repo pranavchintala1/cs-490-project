@@ -36,7 +36,6 @@ function Login() {
         <>
             <h2>Login</h2>
 
-            {flash.message && ( <div className={`flash-${flash.type}`}>{flash.message}</div> )}
 
             <form className="Login" onSubmit={handleSubmit(onSubmit)}>
 
