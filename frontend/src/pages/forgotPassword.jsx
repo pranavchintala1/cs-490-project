@@ -35,7 +35,7 @@ const ForgotPassword = () => {
 
 return (
     <>
-
+    <p>Enter email address associated with your account.</p>
     <form className="Reset" onSubmit={handleSubmit(onSubmit)}>
 
         <input type="email"
