@@ -7,8 +7,8 @@ import Home from "./pages/home";
 import Login from "./pages/login"
 import Register from "./pages/register"
 import Profile from "./pages/profile"
-import { FlashMessage } from "./tools/flash"
-import { FlashProvider } from "./context/flashContext"
+import ForgotPassword from "./pages/forgotPassword"
+import { FlashProvider, FlashMessage } from "./context/flashContext"
 
 
 export function App() {
@@ -26,6 +26,7 @@ export function App() {
                 <Route path = "/register" element = {<Register />} />
                 <Route path = "/login" element = {<Login />} />
                 <Route path = "/profile" element = {<Profile />} />
+                <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
              </Routes>
             </FlashProvider>

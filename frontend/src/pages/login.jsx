@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
 
 function Login() {
@@ -54,6 +54,7 @@ function Login() {
 
                 <input type="submit" style={{}} /> 
             </form>
+            <Link to="/forgotPassword">Forgot password</Link>
         </>
     );
 }
