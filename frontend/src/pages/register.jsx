@@ -32,16 +32,16 @@ function Register() {
                 password: data.password,
                 firstName: data.firstName,
                 lastName: data.lastName,
-                token: "temp",
+                session: "temp",
 
             };
 
             localStorage.setItem(data.email,JSON.stringify(newData)); //replace this with sending data to database.
             localStorage.setItem("session",newData.session);
 
-            showFlash("Successfully Registered!","Success")
+            showFlash("Successfully Registered!","Success");
             
-            navigate("/profile")
+            navigate(`/profile/${newData.session}`);
             
         };
 

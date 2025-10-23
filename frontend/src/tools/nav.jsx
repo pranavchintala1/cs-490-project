@@ -28,7 +28,7 @@ const Nav = () => {
         <>
 
         <li>
-          <NavLink to="/profile">Profile</NavLink>
+          <NavLink to={`/profile/${token}`}>Profile</NavLink>
         </li>
         <li>
           <button onClick ={logout}>Logout</button>
