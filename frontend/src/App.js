@@ -25,7 +25,7 @@ export function App() {
                 <Route path = "/" element = {<Home />} />
                 <Route path = "/register" element = {<Register />} />
                 <Route path = "/login" element = {<Login />} />
-                <Route path = "/profile" element = {<Profile />} />
+                <Route path = "/profile/:sessionID" element = {<Profile />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
              </Routes>
