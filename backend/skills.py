@@ -1,3 +1,4 @@
+# backend/skills.py
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -23,23 +24,24 @@ class Skill(BaseModel):
 skills_db: List[Skill] = []
 next_id = 1
 
-@app.get("/skills")
+# --- Routes --- #
+
+@app.get("/")  # GET /skills
 def get_skills():
-    # Return skills sorted by position
     return sorted(skills_db, key=lambda s: s.position or 0)
 
-@app.post("/skills")
+@app.post("/")  # POST /skills
 def add_skill(skill: Skill):
     global next_id
     if any(s.name.lower() == skill.name.lower() for s in skills_db):
         raise HTTPException(status_code=400, detail="Duplicate skill")
     skill.id = next_id
-    skill.position = len(skills_db)  # Position = end of list
+    skill.position = len(skills_db)
     next_id += 1
     skills_db.append(skill)
     return skill
 
-@app.put("/skills/{skill_id}")
+@app.put("/{skill_id}")
 def update_skill(skill_id: int, skill: Skill):
     for s in skills_db:
         if s.id == skill_id:
@@ -48,22 +50,19 @@ def update_skill(skill_id: int, skill: Skill):
             return s
     raise HTTPException(status_code=404, detail="Skill not found")
 
-@app.delete("/skills/{skill_id}")
+@app.delete("/{skill_id}")
 def delete_skill(skill_id: int):
     for s in skills_db:
         if s.id == skill_id:
             skills_db.remove(s)
-            # Update positions after deletion
             for i, skill in enumerate(skills_db):
                 skill.position = i
             return {"message": "Skill removed"}
     raise HTTPException(status_code=404, detail="Skill not found")
 
-# New endpoint to reorder skills
-@app.put("/skills/reorder")
+@app.put("/reorder")
 def reorder_skills(new_order: List[Skill]):
     global skills_db
-    # Update positions according to incoming list
     for i, skill in enumerate(new_order):
         for s in skills_db:
             if s.id == skill.id:
