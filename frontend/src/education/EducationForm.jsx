@@ -11,7 +11,6 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
   const [achievements, setAchievements] = useState("");
   const [id, setId] = useState(null);
 
-  // Reset form function
   const resetForm = () => {
     setInstitution("");
     setDegree("High School");
@@ -90,7 +89,7 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
         </label>
       </div>
       <div>
-        <input placeholder="GPA" type="number" step="0.01" value={gpa} onChange={(e) => setGpa(e.target.value)} />
+        <input placeholder="GPA" type="number" step="0.1" value={gpa} onChange={(e) => setGpa(e.target.value)} />
         <label>
           <input type="checkbox" checked={gpaPrivate} onChange={(e) => setGpaPrivate(e.target.checked)} /> GPA Private
         </label>

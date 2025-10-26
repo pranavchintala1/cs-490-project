@@ -1,8 +1,11 @@
 # backend/education.py
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from typing import List, Optional
+from bson import ObjectId
+from pydantic import BaseModel
+
+from db.models import EDUCATION_COLLECTION, PyObjectId
 
 app = FastAPI()
 
@@ -14,8 +17,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Pydantic models ---
 class Education(BaseModel):
-    id: int | None = None
+    user_id: str
     institution: str
     degree: str
     field_of_study: str
@@ -24,50 +28,78 @@ class Education(BaseModel):
     gpa: Optional[float] = None
     gpa_private: bool = False
     achievements: Optional[str] = None
+    position: Optional[int] = 0
 
-edu_db: List[Education] = []
-next_id = 1
+class EducationUpdate(BaseModel):
+    institution: Optional[str] = None
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    graduation_date: Optional[str] = None
+    currently_enrolled: Optional[bool] = None
+    gpa: Optional[float] = None
+    gpa_private: Optional[bool] = None
+    achievements: Optional[str] = None
+    position: Optional[int] = None
 
-# --- Routes --- #
+# --- Serializer ---
+def education_serializer(entry):
+    return {
+        "id": str(entry["_id"]),
+        "user_id": entry["user_id"],
+        "institution": entry["institution"],
+        "degree": entry["degree"],
+        "field_of_study": entry["field_of_study"],
+        "graduation_date": entry.get("graduation_date"),
+        "currently_enrolled": entry.get("currently_enrolled", False),
+        "gpa": entry.get("gpa"),
+        "gpa_private": entry.get("gpa_private", False),
+        "achievements": entry.get("achievements"),
+        "position": entry.get("position", 0),
+    }
 
-@app.get("/")  # GET /education
-def get_education():
-    # Reverse chronological order (currently_enrolled first, then by graduation_date)
-    return sorted(
-        edu_db,
-        key=lambda e: (
-            not e.currently_enrolled,
-            e.graduation_date or "9999-12-31"
-        )
-    )
+# --- Routes ---
 
-@app.post("/")  # POST /education
+@app.get("/")
+def get_education(user_id: str = Query("temp_user")):
+    entries = list(EDUCATION_COLLECTION.find({"user_id": user_id}).sort("position", 1))
+    return [education_serializer(e) for e in entries]
+
+@app.post("/")
 def add_education(entry: Education):
-    global next_id
-    entry.id = next_id
-    next_id += 1
-    edu_db.append(entry)
-    return entry
+    # Auto position = last
+    last = list(EDUCATION_COLLECTION.find({"user_id": entry.user_id}).sort("position", -1).limit(1))
+    entry.position = last[0]["position"] + 1 if last else 0
 
-@app.put("/{entry_id}")  # Update an entry
-def update_education(entry_id: int, entry: Education):
-    for e in edu_db:
-        if e.id == entry_id:
-            e.institution = entry.institution
-            e.degree = entry.degree
-            e.field_of_study = entry.field_of_study
-            e.graduation_date = entry.graduation_date
-            e.currently_enrolled = entry.currently_enrolled
-            e.gpa = entry.gpa
-            e.gpa_private = entry.gpa_private
-            e.achievements = entry.achievements
-            return e
-    raise HTTPException(status_code=404, detail="Education entry not found")
+    doc = entry.dict()
+    result = EDUCATION_COLLECTION.insert_one(doc)
+    doc["_id"] = result.inserted_id
+    return education_serializer(doc)
+
+@app.put("/{entry_id}")
+def update_education(entry_id: str, entry: EducationUpdate, user_id: str = Query(...)):
+    update_data = {k: v for k, v in entry.dict().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    result = EDUCATION_COLLECTION.update_one(
+        {"_id": ObjectId(entry_id), "user_id": user_id},
+        {"$set": update_data}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Education entry not found")
+
+    updated = EDUCATION_COLLECTION.find_one({"_id": ObjectId(entry_id)})
+    return education_serializer(updated)
 
 @app.delete("/{entry_id}")
-def delete_education(entry_id: int):
-    for e in edu_db:
-        if e.id == entry_id:
-            edu_db.remove(e)
-            return {"message": "Entry removed"}
-    raise HTTPException(status_code=404, detail="Education entry not found")
+def delete_education(entry_id: str, user_id: str = Query(...)):
+    result = EDUCATION_COLLECTION.delete_one({"_id": ObjectId(entry_id), "user_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Education entry not found")
+
+    # Reorder remaining entries
+    remaining = list(EDUCATION_COLLECTION.find({"user_id": user_id}).sort("position", 1))
+    for i, e in enumerate(remaining):
+        EDUCATION_COLLECTION.update_one({"_id": e["_id"]}, {"$set": {"position": i}})
+
+    return {"message": "Entry removed"}

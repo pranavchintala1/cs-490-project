@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
 
-const API_URL = "http://127.0.0.1:8000/education";
+const API_URL = process.env.REACT_APP_API_URL + "/education/";
 
 export default function EducationList() {
   const [entries, setEntries] = useState([]);
@@ -9,22 +9,20 @@ export default function EducationList() {
 
   // Load entries
   useEffect(() => {
-    fetch(API_URL)
+    fetch(`${API_URL}?user_id=temp_user`)
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setEntries(data);
-        else setEntries([]);
-      })
+      .then((data) => setEntries(Array.isArray(data) ? data : []))
       .catch((err) => console.error(err));
   }, []);
 
   // Add entry
   const addEntry = async (entry) => {
     try {
+      const entryWithUser = { user_id: "temp_user", ...entry };
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entry),
+        body: JSON.stringify(entryWithUser),
       });
       const newEntry = await res.json();
       setEntries([newEntry, ...entries]);
@@ -36,12 +34,14 @@ export default function EducationList() {
   // Submit edit
   const submitEdit = async (updatedEntry) => {
     try {
-      await fetch(`${API_URL}/${updatedEntry.id}`, {
+      const { id, ...body } = updatedEntry;
+      const res = await fetch(`${API_URL}${id}?user_id=temp_user`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedEntry),
+        body: JSON.stringify(body),
       });
-      setEntries(entries.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
+      const updated = await res.json();
+      setEntries(entries.map((e) => (e.id === updated.id ? updated : e)));
       setEditEntry(null);
     } catch (err) {
       console.error(err);
@@ -51,20 +51,22 @@ export default function EducationList() {
   // Delete entry
   const deleteEntry = async (id) => {
     if (!window.confirm("Delete this entry?")) return;
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-    setEntries(entries.filter((e) => e.id !== id));
+    try {
+      await fetch(`${API_URL}${id}?user_id=temp_user`, { method: "DELETE" });
+      setEntries(entries.filter((e) => e.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Sort entries: currently enrolled first, then by graduation date descending
-  const sortedEntries = Array.isArray(entries)
-    ? [...entries].sort((a, b) => {
-        if (a.currently_enrolled && !b.currently_enrolled) return -1;
-        if (!a.currently_enrolled && b.currently_enrolled) return 1;
-        if (!a.graduation_date) return 1;
-        if (!b.graduation_date) return -1;
-        return new Date(b.graduation_date) - new Date(a.graduation_date);
-      })
-    : [];
+  // Sort entries
+  const sortedEntries = [...entries].sort((a, b) => {
+    if (a.currently_enrolled && !b.currently_enrolled) return -1;
+    if (!a.currently_enrolled && b.currently_enrolled) return 1;
+    if (!a.graduation_date) return 1;
+    if (!b.graduation_date) return -1;
+    return new Date(b.graduation_date) - new Date(a.graduation_date);
+  });
 
   return (
     <div>
@@ -78,22 +80,19 @@ export default function EducationList() {
 
       {sortedEntries.length === 0 && <p>No entries yet</p>}
 
-      {/* Timeline container */}
       <div style={{ position: "relative", marginTop: "20px" }}>
-        {/* Vertical line spanning full timeline */}
         <div
           style={{
             position: "absolute",
             left: "60px",
-            top: "0",
-            bottom: "0",
+            top: 0,
+            bottom: 0,
             width: "2px",
             backgroundColor: "#ccc",
             zIndex: 0,
           }}
         />
 
-        {/* Timeline entries */}
         {sortedEntries.map((entry) => {
           const yearLabel = entry.currently_enrolled
             ? "Present"
@@ -112,14 +111,7 @@ export default function EducationList() {
                 zIndex: 1,
               }}
             >
-              {/* Dot */}
-              <div
-                style={{
-                  width: "60px",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
+              <div style={{ width: "60px", display: "flex", justifyContent: "center" }}>
                 <div
                   style={{
                     width: "12px",
@@ -132,7 +124,6 @@ export default function EducationList() {
                 />
               </div>
 
-              {/* Year label */}
               <div
                 style={{
                   width: "50px",
@@ -146,7 +137,6 @@ export default function EducationList() {
                 {yearLabel}
               </div>
 
-              {/* Entry card */}
               <div
                 style={{
                   border: "1px solid #ccc",
