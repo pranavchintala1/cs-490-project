@@ -11,6 +11,7 @@ export default function SkillList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilters, setCategoryFilters] = useState({});
 
+  // Load skills from backend
   useEffect(() => {
     fetch(`${API_URL}?user_id=${USER_ID}`)
       .then(res => res.json())
@@ -18,8 +19,8 @@ export default function SkillList() {
   }, []);
 
   const addSkill = async (skill) => {
-    if (skills.some(s => s.name.toLowerCase() === skill.name.toLowerCase())) {
-      return alert("Skill already exists");
+    if (skills.some(s => s.name.toLowerCase() === skill.name.toLowerCase() && s.category === skill.category)) {
+      return alert("Skill already exists in this category");
     }
     try {
       const res = await fetch(API_URL, {
@@ -49,6 +50,7 @@ export default function SkillList() {
     setSkills(skills.filter(s => s.id !== id));
   };
 
+  // Drag-and-drop
   const onDragEnd = async (result) => {
     if (!result.destination) return;
 
@@ -62,12 +64,11 @@ export default function SkillList() {
     const sourceIndex = newSkills.findIndex(s => s.id === movedSkill.id);
     newSkills.splice(sourceIndex, 1);
 
-    // Insert at new index among destination category
+    // Insert at new index within destination category
     const destIndices = newSkills
       .map((s, idx) => (s.category === destination.droppableId ? idx : -1))
       .filter(idx => idx !== -1);
 
-    // Calculate insertion index in the full array
     let insertAt = destination.index < destIndices.length
       ? destIndices[destination.index]
       : destIndices[destIndices.length - 1] + 1;
@@ -75,7 +76,7 @@ export default function SkillList() {
     movedSkill.category = destination.droppableId;
     newSkills.splice(insertAt, 0, movedSkill);
 
-    // Reassign positions for all skills in the same category
+    // Reassign positions for all skills in affected categories
     const categoriesToUpdate = Array.from(new Set([source.droppableId, destination.droppableId]));
     for (let cat of categoriesToUpdate) {
       let catSkills = newSkills.filter(s => s.category === cat);
@@ -94,7 +95,7 @@ export default function SkillList() {
     }
   };
 
-  // Group skills by category after search
+  // Group skills by category and search
   const groupedSkills = skills.reduce((acc, skill) => {
     if (!skill.name.toLowerCase().includes(searchTerm.toLowerCase())) return acc;
     if (!acc[skill.category]) acc[skill.category] = [];
@@ -163,15 +164,17 @@ export default function SkillList() {
                 style={{ marginBottom: "8px" }}
               />
 
-              <p>
-                {Object.entries(levelSummary)
-                  .map(([level, count]) => `${level}: ${count}`)
-                  .join(", ")}
-              </p>
+              <p>{Object.entries(levelSummary)
+                .map(([level, count]) => `${level}: ${count}`)
+                .join(", ")}</p>
 
               <Droppable droppableId={cat}>
                 {(provided) => (
-                  <ul {...provided.droppableProps} ref={provided.innerRef} style={{ listStyle: "none", padding: 0 }}>
+                  <ul
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    style={{ listStyle: "none", padding: 0 }}
+                  >
                     {filteredCatSkills.map((skill, index) => (
                       <Draggable key={skill.id} draggableId={skill.id.toString()} index={index}>
                         {(provided) => (
