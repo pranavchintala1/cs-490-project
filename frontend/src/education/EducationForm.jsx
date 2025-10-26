@@ -78,11 +78,12 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
       </select>
       <input placeholder="Field of Study" value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} required />
       <div>
-        <label>
+      <label>Graduation Date </label>
+      {!currentlyEnrolled && <input type="date" value={graduationDate} onChange={(e) => setGraduationDate(e.target.value)} />}
+      <label>
           <input type="checkbox" checked={currentlyEnrolled} onChange={(e) => setCurrentlyEnrolled(e.target.checked)} /> Currently Enrolled
         </label>
       </div>
-      {!currentlyEnrolled && <input type="date" value={graduationDate} onChange={(e) => setGraduationDate(e.target.value)} />}
       <div>
         <input placeholder="GPA" type="number" step="0.01" value={gpa} onChange={(e) => setGpa(e.target.value)} />
         <label>
