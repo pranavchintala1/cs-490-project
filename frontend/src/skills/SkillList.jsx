@@ -3,39 +3,30 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import SkillItem from "./SkillItem";
 import SkillForm from "./SkillForm";
 
-const API_URL = "http://127.0.0.1:8000/skills";
+const API_URL = process.env.REACT_APP_API_URL + "/skills";
+const USER_ID = process.env.REACT_APP_USER_ID;
 
 export default function SkillList() {
   const [skills, setSkills] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilters, setCategoryFilters] = useState({});
 
-  // Load skills from backend
   useEffect(() => {
-    fetch(API_URL)
+    fetch(`${API_URL}?user_id=${USER_ID}`)
       .then(res => res.json())
       .then(data => setSkills(data));
   }, []);
 
-  // Add new skill
   const addSkill = async (skill) => {
-    // Duplicate check only within category
-    if (skills.some(s => s.name.toLowerCase() === skill.name.toLowerCase() && s.category === skill.category)) {
-      return alert("Skill already exists in this category");
+    if (skills.some(s => s.name.toLowerCase() === skill.name.toLowerCase())) {
+      return alert("Skill already exists");
     }
-
     try {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(skill)
+        body: JSON.stringify({ ...skill, user_id: USER_ID })
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        return alert(err.detail);
-      }
-
       const addedSkill = await res.json();
       setSkills([...skills, addedSkill]);
     } catch (err) {
@@ -43,43 +34,67 @@ export default function SkillList() {
     }
   };
 
-  // Update skill
   const updateSkill = async (id, updatedFields) => {
-    await fetch(`${API_URL}/${id}`, {
+    await fetch(`${API_URL}/${id}?user_id=${USER_ID}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...updatedFields })
+      body: JSON.stringify(updatedFields)
     });
-
     setSkills(skills.map(s => (s.id === id ? { ...s, ...updatedFields } : s)));
   };
 
-  // Remove skill
   const removeSkill = async (id) => {
     if (!window.confirm("Remove this skill?")) return;
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    await fetch(`${API_URL}/${id}?user_id=${USER_ID}`, { method: "DELETE" });
     setSkills(skills.filter(s => s.id !== id));
   };
 
-  // Drag-and-drop handler
-  const onDragEnd = (result) => {
+  const onDragEnd = async (result) => {
     if (!result.destination) return;
-    const { source, destination, draggableId } = result;
 
-    if (source.droppableId === destination.droppableId) {
-      const categorySkills = skills.filter(s => s.category === source.droppableId);
-      const [removed] = categorySkills.splice(source.index, 1);
-      categorySkills.splice(destination.index, 0, removed);
-      const otherSkills = skills.filter(s => s.category !== source.droppableId);
-      setSkills([...otherSkills, ...categorySkills]);
-    } else {
-      const movedSkill = skills.find(s => s.id.toString() === draggableId);
-      movedSkill.category = destination.droppableId;
-      setSkills([...skills]);
+    const { source, destination, draggableId } = result;
+    const movedSkill = skills.find(s => s.id.toString() === draggableId);
+    if (!movedSkill) return;
+
+    const newSkills = [...skills];
+
+    // Remove from old index
+    const sourceIndex = newSkills.findIndex(s => s.id === movedSkill.id);
+    newSkills.splice(sourceIndex, 1);
+
+    // Insert at new index among destination category
+    const destIndices = newSkills
+      .map((s, idx) => (s.category === destination.droppableId ? idx : -1))
+      .filter(idx => idx !== -1);
+
+    // Calculate insertion index in the full array
+    let insertAt = destination.index < destIndices.length
+      ? destIndices[destination.index]
+      : destIndices[destIndices.length - 1] + 1;
+
+    movedSkill.category = destination.droppableId;
+    newSkills.splice(insertAt, 0, movedSkill);
+
+    // Reassign positions for all skills in the same category
+    const categoriesToUpdate = Array.from(new Set([source.droppableId, destination.droppableId]));
+    for (let cat of categoriesToUpdate) {
+      let catSkills = newSkills.filter(s => s.category === cat);
+      catSkills.forEach((s, idx) => s.position = idx);
+    }
+
+    setSkills(newSkills);
+
+    // Push updates to backend
+    for (let s of newSkills.filter(s => categoriesToUpdate.includes(s.category))) {
+      await fetch(`${API_URL}/${s.id}?user_id=${USER_ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: s.category, position: s.position })
+      });
     }
   };
 
-  // Group skills by category after global search
+  // Group skills by category after search
   const groupedSkills = skills.reduce((acc, skill) => {
     if (!skill.name.toLowerCase().includes(searchTerm.toLowerCase())) return acc;
     if (!acc[skill.category]) acc[skill.category] = [];
@@ -94,7 +109,6 @@ export default function SkillList() {
       <h2>Add Skill</h2>
       <SkillForm addSkill={addSkill} existingSkills={skills} />
 
-      {/* Global search */}
       <div style={{ marginTop: "20px" }}>
         <input
           placeholder="Search skills globally..."
@@ -108,8 +122,6 @@ export default function SkillList() {
       <DragDropContext onDragEnd={onDragEnd}>
         {Object.entries(groupedSkills).map(([cat, catSkills]) => {
           const catSearchTerm = categoryFilters[cat] || "";
-
-          // Filter skills in this category by category-specific search
           const filteredCatSkills = catSkills.filter(s =>
             s.name.toLowerCase().includes(catSearchTerm.toLowerCase())
           );
@@ -120,11 +132,18 @@ export default function SkillList() {
           }, {});
 
           const exportCategory = () => {
-            const blob = new Blob([JSON.stringify({ [cat]: filteredCatSkills }, null, 2)], { type: "application/json" });
+            let text = `${cat} (${filteredCatSkills.length})\n`;
+            text += Object.entries(levelSummary)
+              .map(([level, count]) => `${level}: ${count}`)
+              .join(", ") + "\n\n";
+            filteredCatSkills.forEach(s => {
+              text += `• ${s.name} - ${s.proficiency}\n`;
+            });
+            const blob = new Blob([text], { type: "text/plain" });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
-            link.download = `${cat}_skills.json`;
+            link.download = `${cat}_skills.txt`;
             link.click();
           };
 
@@ -135,7 +154,6 @@ export default function SkillList() {
                 <button onClick={exportCategory} style={{ marginLeft: "10px" }}>Export</button>
               </h3>
 
-              {/* Category-specific filter */}
               <input
                 placeholder={`Filter ${cat} skills...`}
                 value={catSearchTerm}
