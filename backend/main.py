@@ -1,8 +1,10 @@
+# backend/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from skills import app as skills_app
 from education import app as education_app
-from certifications import app as certs_app
+from certifications import app as certifications_app
+from projects import app as projects_app
 
 app = FastAPI()
 
@@ -14,6 +16,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount sub-apps
 app.mount("/skills/", skills_app)
 app.mount("/education/", education_app)
-app.mount("/certifications/", certs_app)
+app.mount("/certifications/", certifications_app)
+app.mount("/projects/", projects_app)
