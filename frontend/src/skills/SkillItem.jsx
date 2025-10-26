@@ -1,10 +1,27 @@
 import React from "react";
 
-// UC-26: Skill item with edit and delete functionality
+// Category color + emoji mapping
+const categoryMeta = {
+  Technical: { color: "#4f8ef7", emoji: "💻" },
+  "Soft Skills": { color: "#34c759", emoji: "🗣️" },
+  Languages: { color: "#ff9500", emoji: "🈯" },
+  "Industry-Specific": { color: "#af52de", emoji: "🏭" }
+};
+
 export default function SkillItem({ skill, updateSkill, removeSkill }) {
+  const meta = categoryMeta[skill.category] || { color: "#ccc", emoji: "" };
+
   return (
-    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-      <strong>{skill.name}</strong>
+    <div style={{
+      display: "flex",
+      gap: "8px",
+      alignItems: "center",
+      padding: "6px 10px",
+      borderRadius: "8px",
+      backgroundColor: meta.color + "33",
+      marginBottom: "4px"
+    }}>
+      <span style={{ flexGrow: 1 }}>{meta.emoji} <strong>{skill.name}</strong></span>
 
       <select
         value={skill.proficiency}
