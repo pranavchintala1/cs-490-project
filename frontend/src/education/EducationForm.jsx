@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 
-// UC-028: Education form
 export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
   const [institution, setInstitution] = useState("");
   const [degree, setDegree] = useState("High School");
@@ -11,6 +10,19 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
   const [gpaPrivate, setGpaPrivate] = useState(false);
   const [achievements, setAchievements] = useState("");
   const [id, setId] = useState(null);
+
+  // Reset form function
+  const resetForm = () => {
+    setInstitution("");
+    setDegree("High School");
+    setFieldOfStudy("");
+    setGraduationDate("");
+    setCurrentlyEnrolled(false);
+    setGpa("");
+    setGpaPrivate(false);
+    setAchievements("");
+    setId(null);
+  };
 
   useEffect(() => {
     if (editEntry) {
@@ -23,6 +35,8 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
       setGpaPrivate(editEntry.gpa_private || false);
       setAchievements(editEntry.achievements || "");
       setId(editEntry.id);
+    } else {
+      resetForm();
     }
   }, [editEntry]);
 
@@ -53,16 +67,7 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
       addEntry(entryData);
     }
 
-    // Reset form
-    setInstitution("");
-    setDegree("High School");
-    setFieldOfStudy("");
-    setGraduationDate("");
-    setCurrentlyEnrolled(false);
-    setGpa("");
-    setGpaPrivate(false);
-    setAchievements("");
-    setId(null);
+    resetForm();
   };
 
   return (
@@ -78,9 +83,9 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
       </select>
       <input placeholder="Field of Study" value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)} required />
       <div>
-      <label>Graduation Date </label>
-      {!currentlyEnrolled && <input type="date" value={graduationDate} onChange={(e) => setGraduationDate(e.target.value)} />}
-      <label>
+        <label>Graduation Date </label>
+        {!currentlyEnrolled && <input type="date" value={graduationDate} onChange={(e) => setGraduationDate(e.target.value)} />}
+        <label>
           <input type="checkbox" checked={currentlyEnrolled} onChange={(e) => setCurrentlyEnrolled(e.target.checked)} /> Currently Enrolled
         </label>
       </div>
@@ -92,7 +97,17 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
       </div>
       <textarea placeholder="Achievements / Honors" value={achievements} onChange={(e) => setAchievements(e.target.value)} />
       <button type="submit">{editEntry ? "Save" : "Add"}</button>
-      {editEntry && <button type="button" onClick={cancelEdit}>Cancel</button>}
+      {editEntry && (
+        <button
+          type="button"
+          onClick={() => {
+            cancelEdit();
+            resetForm();
+          }}
+        >
+          Cancel
+        </button>
+      )}
     </form>
   );
 }

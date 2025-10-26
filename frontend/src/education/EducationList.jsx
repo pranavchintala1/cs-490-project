@@ -78,33 +78,102 @@ export default function EducationList() {
 
       {sortedEntries.length === 0 && <p>No entries yet</p>}
 
-      {sortedEntries.map((entry) => (
+      {/* Timeline container */}
+      <div style={{ position: "relative", marginTop: "20px" }}>
+        {/* Vertical line spanning full timeline */}
         <div
-          key={entry.id}
           style={{
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            padding: "8px",
-            marginBottom: "8px",
-            background: entry.currently_enrolled ? "#e0f7fa" : "#f9f9f9",
+            position: "absolute",
+            left: "60px",
+            top: "0",
+            bottom: "0",
+            width: "2px",
+            backgroundColor: "#ccc",
+            zIndex: 0,
           }}
-        >
-          <strong>{entry.degree}</strong> at <em>{entry.institution}</em>
-          <p>
-            {entry.field_of_study} |{" "}
-            {entry.currently_enrolled
-              ? "Currently Enrolled"
-              : entry.graduation_date
-              ? `Graduated: ${entry.graduation_date}`
-              : ""}
-          </p>
-          {!entry.gpa_private && entry.gpa && <p>GPA: {entry.gpa}</p>}
-          {entry.achievements && <p>Achievements: {entry.achievements}</p>}
+        />
 
-          <button onClick={() => setEditEntry(entry)}>✏ Edit</button>
-          <button onClick={() => deleteEntry(entry.id)}>🗑 Delete</button>
-        </div>
-      ))}
+        {/* Timeline entries */}
+        {sortedEntries.map((entry) => {
+          const yearLabel = entry.currently_enrolled
+            ? "Present"
+            : entry.graduation_date
+            ? new Date(entry.graduation_date).getFullYear()
+            : "";
+
+          return (
+            <div
+              key={entry.id}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                marginBottom: "20px",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              {/* Dot */}
+              <div
+                style={{
+                  width: "60px",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: "12px",
+                    height: "12px",
+                    borderRadius: "50%",
+                    backgroundColor: entry.currently_enrolled ? "#00bcd4" : "#4caf50",
+                    border: "2px solid white",
+                    marginTop: "4px",
+                  }}
+                />
+              </div>
+
+              {/* Year label */}
+              <div
+                style={{
+                  width: "50px",
+                  textAlign: "right",
+                  marginRight: "10px",
+                  fontSize: "0.9em",
+                  color: "#555",
+                  marginTop: "2px",
+                }}
+              >
+                {yearLabel}
+              </div>
+
+              {/* Entry card */}
+              <div
+                style={{
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  padding: "10px",
+                  background: entry.currently_enrolled ? "#e0f7fa" : "#f9f9f9",
+                  flex: 1,
+                }}
+              >
+                <strong>{entry.degree}</strong> at <em>{entry.institution}</em>
+                <p>
+                  {entry.field_of_study} |{" "}
+                  {entry.currently_enrolled
+                    ? "Currently Enrolled"
+                    : entry.graduation_date
+                    ? `Graduated: ${entry.graduation_date}`
+                    : ""}
+                </p>
+                {!entry.gpa_private && entry.gpa && <p>GPA: {entry.gpa}</p>}
+                {entry.achievements && <p>Achievements: {entry.achievements}</p>}
+                <button onClick={() => setEditEntry(entry)}>✏ Edit</button>
+                <button onClick={() => deleteEntry(entry.id)}>🗑 Delete</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
