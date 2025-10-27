@@ -12,10 +12,14 @@ export default function ProjectCard({ project, deleteProject }) {
       {project.achievements && <p>Achievements: {project.achievements}</p>}
       {project.media_files && project.media_files.length > 0 && (
         <div>
-          Media: {project.media_files.map((file, idx)=><span key={idx}>{file.name || file} </span>)}
+          Media: {project.media_files.map((file, idx) => (
+            <a key={idx} href={`http://127.0.0.1:8000/projects/download/${file}`} download style={{marginRight:"5px"}}>
+              {file}
+            </a>
+          ))}
         </div>
       )}
-      <button onClick={()=>deleteProject(project.id)}>🗑 Delete</button>
+      <button onClick={() => deleteProject(project.id)}>🗑 Delete</button>
     </div>
   );
 }

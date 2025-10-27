@@ -29,10 +29,7 @@ export default function ProjectForm({ addProject }) {
     formData.append("industry", industry);
     formData.append("status", status);
 
-    // Append multiple media files
-    for (let i = 0; i < mediaFiles.length; i++) {
-      formData.append("media_files", mediaFiles[i]);
-    }
+    mediaFiles.forEach(file => formData.append("media_files", file));
 
     addProject(formData);
 
@@ -44,23 +41,21 @@ export default function ProjectForm({ addProject }) {
 
   return (
     <form onSubmit={handleSubmit} className="project-form">
-      <div><input placeholder="Project Name" value={name} onChange={e=>setName(e.target.value)} required /></div>
-      <div><textarea placeholder="Description" value={description} onChange={e=>setDescription(e.target.value)} required /></div>
-      <div><input placeholder="Role" value={role} onChange={e=>setRole(e.target.value)} required /></div>
+      <div><input placeholder="Project Name" value={name} onChange={e => setName(e.target.value)} required /></div>
+      <div><textarea placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required /></div>
+      <div><input placeholder="Role" value={role} onChange={e => setRole(e.target.value)} required /></div>
       <div>
-        Start: <input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} required />
-        End: <input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} />
+        Start: <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+        End: <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
       </div>
-      <div><input placeholder="Technologies/Skills Used (comma separated)" value={technologies} onChange={e=>setTechnologies(e.target.value)} /></div>
-      <div><input placeholder="Project URL (optional)" value={projectUrl} onChange={e=>setProjectUrl(e.target.value)} /></div>
-      <div><input placeholder="Team Size" value={teamSize} onChange={e=>setTeamSize(e.target.value)} /></div>
-      <div><input placeholder="Achievements / Outcomes" value={achievements} onChange={e=>setAchievements(e.target.value)} /></div>
+      <div><input placeholder="Technologies/Skills Used (comma separated)" value={technologies} onChange={e => setTechnologies(e.target.value)} /></div>
+      <div><input placeholder="Project URL (optional)" value={projectUrl} onChange={e => setProjectUrl(e.target.value)} /></div>
+      <div><input placeholder="Team Size" value={teamSize} onChange={e => setTeamSize(e.target.value)} /></div>
+      <div><input placeholder="Achievements / Outcomes" value={achievements} onChange={e => setAchievements(e.target.value)} /></div>
+      <div><input placeholder="Industry / Project Type" value={industry} onChange={e => setIndustry(e.target.value)} /></div>
       <div>
-        <input placeholder="Industry / Project Type" value={industry} onChange={e=>setIndustry(e.target.value)} />
-      </div>
-      <div>
-        Status: 
-        <select value={status} onChange={e=>setStatus(e.target.value)}>
+        Status:
+        <select value={status} onChange={e => setStatus(e.target.value)}>
           <option>Planned</option>
           <option>Ongoing</option>
           <option>Completed</option>
@@ -68,7 +63,7 @@ export default function ProjectForm({ addProject }) {
       </div>
       <div>
         Media Upload:
-        <input type="file" multiple onChange={e=>setMediaFiles([...e.target.files])} />
+        <input type="file" multiple onChange={e => setMediaFiles([...e.target.files])} />
       </div>
       <button type="submit">Add Project</button>
     </form>
