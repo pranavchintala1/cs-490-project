@@ -1,84 +1,116 @@
-# backend/certifications.py
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
+from fastapi.responses import FileResponse
+from typing import Optional
+from bson import ObjectId
+import shutil
+from pathlib import Path
+from db.models import CERTIFICATIONS_COLLECTION
 
-app = FastAPI()
+app = APIRouter()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Upload folder relative to main.py working dir
+UPLOAD_DIR = Path("uploads/certifications")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-class Certification(BaseModel):
-    id: int | None = None
-    name: str
-    issuer: str
-    date_earned: str
-    does_not_expire: bool = False
-    expiration_date: Optional[str] = None
-    cert_number: Optional[str] = None
-    verified: bool = False
-    category: Optional[str] = None
-    renewal_reminder: Optional[str] = None
-    document_filename: Optional[str] = None
+# Serializer
+def cert_serializer(entry):
+    return {
+        "id": str(entry["_id"]),
+        "user_id": entry.get("user_id"),
+        "name": entry.get("name"),
+        "issuer": entry.get("issuer"),
+        "date_earned": entry.get("date_earned"),
+        "expiration_date": entry.get("expiration_date"),
+        "does_not_expire": entry.get("does_not_expire", False),
+        "cert_id": entry.get("cert_id"),
+        "category": entry.get("category"),
+        "verified": entry.get("verified", False),
+        "document_url": entry.get("document_url"),
+        "position": entry.get("position", 0),
+    }
 
-certs_db: List[Certification] = []
-next_id = 1
+# GET all certifications
+@app.get("/")
+def get_certifications(user_id: str = Query("temp_user")):
+    certs = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
+    
+    from datetime import datetime, timedelta
+    def cert_sort_key(c):
+        exp = c.get("expiration_date")
+        if exp:
+            exp_date = datetime.strptime(exp, "%Y-%m-%d").date()
+            if exp_date < datetime.today().date():
+                return -2  # expired first
+            elif exp_date <= datetime.today().date() + timedelta(days=90):
+                return -1  # expiring soon
+        return 0
 
-# --- Routes --- #
+    certs.sort(key=cert_sort_key)
+    for i, c in enumerate(certs):
+        CERTIFICATIONS_COLLECTION.update_one({"_id": c["_id"]}, {"$set": {"position": i}})
 
-@app.get("/")  # GET /certifications/
-def get_certs():
-    return certs_db
+    return [cert_serializer(c) for c in certs]
 
-@app.post("/")  # POST /certifications/
-async def add_cert(
+# POST new certification
+@app.post("/")
+def add_certification(
+    user_id: str = Form(...),
     name: str = Form(...),
     issuer: str = Form(...),
     date_earned: str = Form(...),
     does_not_expire: bool = Form(False),
-    expiration_date: str = Form(None),
-    cert_number: str = Form(None),
+    expiration_date: Optional[str] = Form(None),
+    cert_id: Optional[str] = Form(None),
+    category: Optional[str] = Form("Categories"),
     verified: bool = Form(False),
-    category: str = Form(None),
-    renewal_reminder: str = Form(None),
-    document_file: UploadFile = File(None),
+    document: UploadFile = File(None),
 ):
-    global next_id
-    cert = Certification(
-        id=next_id,
-        name=name,
-        issuer=issuer,
-        date_earned=date_earned,
-        does_not_expire=does_not_expire,
-        expiration_date=expiration_date,
-        cert_number=cert_number,
-        verified=verified,
-        category=category,
-        renewal_reminder=renewal_reminder,
-        document_filename=document_file.filename if document_file else None,
-    )
-    certs_db.append(cert)
-    next_id += 1
-    return cert
+    filename = None
+    if document:
+        # Use original filename
+        filename = document.filename
+        file_path = UPLOAD_DIR / filename
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(document.file, buffer)
 
+    # Determine position
+    last = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", -1).limit(1))
+    position = last[0]["position"] + 1 if last else 0
+
+    doc = {
+        "user_id": user_id,
+        "name": name,
+        "issuer": issuer,
+        "date_earned": date_earned,
+        "does_not_expire": does_not_expire,
+        "expiration_date": None if does_not_expire else expiration_date,
+        "cert_id": cert_id,
+        "category": category,
+        "verified": verified,
+        "document_url": filename,
+        "position": position,
+    }
+
+    result = CERTIFICATIONS_COLLECTION.insert_one(doc)
+    doc["_id"] = result.inserted_id
+    return cert_serializer(doc)
+
+# DELETE certification
 @app.delete("/{cert_id}")
-def delete_cert(cert_id: int):
-    for c in certs_db:
-        if c.id == cert_id:
-            certs_db.remove(c)
-            return {"message": "Certification removed"}
-    raise HTTPException(status_code=404, detail="Certification not found")
+def delete_certification(cert_id: str, user_id: str = Query(...)):
+    result = CERTIFICATIONS_COLLECTION.delete_one({"_id": ObjectId(cert_id), "user_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Certification not found")
+    # Fix positions
+    remaining = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
+    for i, c in enumerate(remaining):
+        CERTIFICATIONS_COLLECTION.update_one({"_id": c["_id"]}, {"$set": {"position": i}})
+    return {"message": "Certification removed"}
 
-@app.put("/{cert_id}")
-def update_cert(cert_id: int, updated_cert: Certification):
-    for i, c in enumerate(certs_db):
-        if c.id == cert_id:
-            certs_db[i] = updated_cert
-            return updated_cert
-    raise HTTPException(status_code=404, detail="Certification not found")
+# Download file
+@app.get("/download/{filename}")
+def download_cert(filename: str):
+    file_path = UPLOAD_DIR / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(file_path, media_type="application/octet-stream", filename=filename)

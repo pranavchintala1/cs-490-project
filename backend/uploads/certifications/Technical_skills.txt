@@ -1,0 +1,11 @@
+Category: Technical
+
+Summary:
+  Beginner: 3
+  Advanced: 1
+
+Skills:
+  - Tech Beg (Beginner)
+  - Moved from Industry (Beginner)
+  - Node.js (Advanced)
+  - Data test (Beginner)

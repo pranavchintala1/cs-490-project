@@ -1,6 +1,7 @@
-// frontend/src/App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+
+// Import feature lists
 import SkillsList from "./skills/SkillList";
 import EducationList from "./education/EducationList";
 import CertificationList from "./certifications/CertificationList";
@@ -22,7 +23,9 @@ export default function App() {
           <Route path="/education" element={<EducationList />} />
           <Route path="/certifications" element={<CertificationList />} />
           <Route path="/projects" element={<ProjectsList />} />
-          <Route path="*" element={<SkillsList />} /> {/* Default route */}
+
+          {/* Default route */}
+          <Route path="*" element={<SkillsList />} />
         </Routes>
       </div>
     </Router>
