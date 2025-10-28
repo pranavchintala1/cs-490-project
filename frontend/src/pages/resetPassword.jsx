@@ -45,11 +45,11 @@ const ResetPassword = () => {
         //user.password = data.password => send to backend and update value.
         //delete database entry for password reset link.
         //Set session to user's session.
-        const session = "temp";
+        const token = "temp";
     
         reset();
 
-        Navigate(`/profile/${session}`);
+        Navigate(`/profile/${token}`);
 
 
 
