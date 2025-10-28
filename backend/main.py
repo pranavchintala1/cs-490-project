@@ -31,6 +31,10 @@ async def register(regist_info: RegistInfo):
 async def login(credentials: LoginCred):
     try:
         password_hash = await user_auth_dao.get_password(credentials.username)
+        
+        if not password_hash:
+            return JSONResponse(status_code = 400, content = {"detail": "User not found"})
+
         authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception as e:
         return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"}) # could pose security risk
