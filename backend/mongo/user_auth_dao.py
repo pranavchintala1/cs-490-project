@@ -1,4 +1,4 @@
-from backend.mongo.dao_setup import db_client, USER_AUTH_COLLECTION
+from mongo.dao_setup import db_client, USER_AUTH_COLLECTION
 
 import bcrypt
 from datetime import datetime

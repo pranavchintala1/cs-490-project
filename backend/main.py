@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from uuid import uuid4
 
-from backend.mongo.user_data_dao import user_data_dao
-from backend.mongo.user_auth_dao import user_auth_dao
+from mongo.user_data_dao import user_data_dao
+from mongo.user_auth_dao import user_auth_dao
 from pymongo.errors import DuplicateKeyError, WriteError
 import bcrypt
 
