@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from typing import Optional
-from bson import ObjectId
 import shutil
 from pathlib import Path
 from db.models import CERTIFICATIONS_COLLECTION
@@ -15,7 +14,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # Serializer
 def cert_serializer(entry):
     return {
-        "id": str(entry["_id"]),
+        "id": entry["_id"],  # Directly use the string-based id
         "user_id": entry.get("user_id"),
         "name": entry.get("name"),
         "issuer": entry.get("issuer"),
@@ -92,19 +91,21 @@ def add_certification(
     }
 
     result = CERTIFICATIONS_COLLECTION.insert_one(doc)
-    doc["_id"] = result.inserted_id
+    doc["_id"] = str(result.inserted_id)  # Ensure the ID is stored as a string
     return cert_serializer(doc)
 
 # DELETE certification
 @app.delete("/{cert_id}")
 def delete_certification(cert_id: str, user_id: str = Query(...)):
-    result = CERTIFICATIONS_COLLECTION.delete_one({"_id": ObjectId(cert_id), "user_id": user_id})
+    result = CERTIFICATIONS_COLLECTION.delete_one({"_id": cert_id, "user_id": user_id})  # No need to convert to ObjectId
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Certification not found")
+    
     # Fix positions
     remaining = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
     for i, c in enumerate(remaining):
         CERTIFICATIONS_COLLECTION.update_one({"_id": c["_id"]}, {"$set": {"position": i}})
+
     return {"message": "Certification removed"}
 
 # Download file

@@ -1,8 +1,6 @@
-# backend/pmsBackend/skills.py
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-from bson import ObjectId
 from pydantic import BaseModel
 
 from db.models import SKILLS_COLLECTION
@@ -34,7 +32,7 @@ class SkillUpdate(BaseModel):
 # --- Serializer ---
 def skill_serializer(skill_doc):
     return {
-        "id": str(skill_doc["_id"]),
+        "id": str(skill_doc["_id"]),  # Ensure the ID is a string
         "user_id": skill_doc["user_id"],
         "name": skill_doc["name"],
         "category": skill_doc["category"],
@@ -65,7 +63,7 @@ def add_skill(skill: Skill):
         skill_doc["position"] = last_skill[0]["position"] + 1 if last_skill else 0
 
         result = SKILLS_COLLECTION.insert_one(skill_doc)
-        skill_doc["_id"] = result.inserted_id
+        skill_doc["_id"] = str(result.inserted_id)  # Ensure ID is a string
         return skill_serializer(skill_doc)
     except Exception as e:
         return {"error": str(e)}
@@ -77,14 +75,15 @@ def update_skill(skill_id: str, skill: SkillUpdate, user_id: str = Query(...)):
         if not update_data:
             raise HTTPException(status_code=400, detail="No valid fields to update")
 
+        # Directly use string-based IDs in queries
         result = SKILLS_COLLECTION.update_one(
-            {"_id": ObjectId(skill_id), "user_id": user_id},
+            {"_id": skill_id, "user_id": user_id},  # Use string ID directly
             {"$set": update_data}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Skill not found")
 
-        updated = SKILLS_COLLECTION.find_one({"_id": ObjectId(skill_id)})
+        updated = SKILLS_COLLECTION.find_one({"_id": skill_id})  # Use string ID directly
         return skill_serializer(updated)
     except Exception as e:
         return {"error": str(e)}
@@ -92,7 +91,8 @@ def update_skill(skill_id: str, skill: SkillUpdate, user_id: str = Query(...)):
 @app.delete("/{skill_id}")
 def delete_skill(skill_id: str, user_id: str = Query(...)):
     try:
-        result = SKILLS_COLLECTION.delete_one({"_id": ObjectId(skill_id), "user_id": user_id})
+        # Directly use string-based IDs in queries
+        result = SKILLS_COLLECTION.delete_one({"_id": skill_id, "user_id": user_id})  # Use string ID directly
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Skill not found")
 

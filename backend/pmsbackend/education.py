@@ -1,11 +1,9 @@
-# backend/education.py
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-from bson import ObjectId
 from pydantic import BaseModel
 
-from db.models import EDUCATION_COLLECTION, PyObjectId
+from db.models import EDUCATION_COLLECTION
 
 app = FastAPI()
 
@@ -44,7 +42,7 @@ class EducationUpdate(BaseModel):
 # --- Serializer ---
 def education_serializer(entry):
     return {
-        "id": str(entry["_id"]),
+        "id": entry["_id"],  # Directly return string-based ID
         "user_id": entry["user_id"],
         "institution": entry["institution"],
         "degree": entry["degree"],
@@ -58,7 +56,6 @@ def education_serializer(entry):
     }
 
 # --- Routes ---
-
 @app.get("/")
 def get_education(user_id: str = Query("temp_user")):
     entries = list(EDUCATION_COLLECTION.find({"user_id": user_id}).sort("position", 1))
@@ -72,7 +69,7 @@ def add_education(entry: Education):
 
     doc = entry.dict()
     result = EDUCATION_COLLECTION.insert_one(doc)
-    doc["_id"] = result.inserted_id
+    doc["_id"] = str(result.inserted_id)  # Ensure ID is a string
     return education_serializer(doc)
 
 @app.put("/{entry_id}")
@@ -82,18 +79,18 @@ def update_education(entry_id: str, entry: EducationUpdate, user_id: str = Query
         raise HTTPException(status_code=400, detail="No valid fields to update")
 
     result = EDUCATION_COLLECTION.update_one(
-        {"_id": ObjectId(entry_id), "user_id": user_id},
+        {"_id": entry_id, "user_id": user_id},  # Use string ID directly
         {"$set": update_data}
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Education entry not found")
 
-    updated = EDUCATION_COLLECTION.find_one({"_id": ObjectId(entry_id)})
+    updated = EDUCATION_COLLECTION.find_one({"_id": entry_id})  # Use string ID directly
     return education_serializer(updated)
 
 @app.delete("/{entry_id}")
 def delete_education(entry_id: str, user_id: str = Query(...)):
-    result = EDUCATION_COLLECTION.delete_one({"_id": ObjectId(entry_id), "user_id": user_id})
+    result = EDUCATION_COLLECTION.delete_one({"_id": entry_id, "user_id": user_id})  # Use string ID directly
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Education entry not found")
 

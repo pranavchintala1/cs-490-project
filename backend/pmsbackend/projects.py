@@ -1,8 +1,6 @@
-# backend/pmsbackend/projects.py
 from fastapi import APIRouter, HTTPException, Form, File, UploadFile
 from fastapi.responses import FileResponse
 from typing import List, Optional
-from bson import ObjectId
 import shutil
 from pathlib import Path
 from db.models import PROJECTS_COLLECTION  # your MongoDB collection
@@ -15,7 +13,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # Serializer
 def project_serializer(p):
     return {
-        "id": str(p["_id"]),
+        "id": str(p["_id"]),  # Directly return string-based ID
         "name": p.get("name"),
         "description": p.get("description"),
         "role": p.get("role"),
@@ -31,7 +29,6 @@ def project_serializer(p):
     }
 
 # --- Routes --- #
-
 @app.get("/")
 def get_projects():
     projects = list(PROJECTS_COLLECTION.find().sort("start_date", -1))
@@ -76,12 +73,12 @@ def add_project(
     }
 
     result = PROJECTS_COLLECTION.insert_one(doc)
-    doc["_id"] = result.inserted_id
+    doc["_id"] = str(result.inserted_id)  # Ensure ID is a string
     return project_serializer(doc)
 
 @app.delete("/{project_id}")
 def delete_project(project_id: str):
-    result = PROJECTS_COLLECTION.delete_one({"_id": ObjectId(project_id)})
+    result = PROJECTS_COLLECTION.delete_one({"_id": project_id})  # Use string ID directly
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     return {"message": "Project deleted"}
