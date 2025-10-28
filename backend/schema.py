@@ -14,7 +14,6 @@ class RegistInfo(BaseModel):
     address: str | None = None
 
 class ProfileSchema(BaseModel):
-    uuid: str
     username: Optional[str] = None
     email: Optional[str] = None
     name: Optional[str] = None
