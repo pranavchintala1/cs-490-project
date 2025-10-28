@@ -1,4 +1,4 @@
-from backend.mongo.dao_setup import db_client, USER_DATA_COLLECTION
+from mongo.dao_setup import db_client, USER_DATA_COLLECTION
 
 from datetime import datetime
 
