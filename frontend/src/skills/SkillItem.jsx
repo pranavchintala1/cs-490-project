@@ -8,21 +8,32 @@ const categoryMeta = {
   "Industry-Specific": { color: "#af52de", emoji: "🏭" }
 };
 
-export default function SkillItem({ skill, updateSkill, removeSkill }) {
+export default function SkillItem({
+  skill,
+  updateSkill,
+  removeSkill,
+  listeners,
+  attributes,
+  setNodeRef,
+  transform,
+  transition
+}) {
   const meta = categoryMeta[skill.category] || { color: "#ccc", emoji: "" };
+  const style = {
+  display: "flex",
+  gap: "8px",
+  alignItems: "center",
+  padding: "6px 10px",
+  borderRadius: "8px",
+  backgroundColor: meta.color + "33",
+  marginBottom: "4px",
+  width: "100%",
+  maxWidth: "250px",
+};
 
   return (
-    <div style={{
-      display: "flex",
-      gap: "8px",
-      alignItems: "center",
-      padding: "6px 10px",
-      borderRadius: "8px",
-      backgroundColor: meta.color + "33",
-      marginBottom: "4px"
-    }}>
+    <div ref={setNodeRef} {...listeners} {...attributes} style={style}>
       <span style={{ flexGrow: 1 }}>{meta.emoji} <strong>{skill.name}</strong></span>
-
       <select
         value={skill.proficiency}
         onChange={(e) => updateSkill(skill.id, { ...skill, proficiency: e.target.value })}
@@ -32,7 +43,6 @@ export default function SkillItem({ skill, updateSkill, removeSkill }) {
         <option>Advanced</option>
         <option>Expert</option>
       </select>
-
       <button onClick={() => removeSkill(skill.id)}>🗑</button>
     </div>
   );
