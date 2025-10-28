@@ -10,7 +10,7 @@ import {
   useSensors,
   DragOverlay,
 } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
 
 const API_URL = process.env.REACT_APP_API_URL + "/skills";
 const USER_ID = process.env.REACT_APP_USER_ID;
@@ -86,40 +86,60 @@ export default function SkillList() {
 
   const handleDragStart = (event) => setActiveId(event.active.id);
 
-  const handleDragEnd = async (event) => {
-  const { active, over } = event;
+  const handleDragEnd = async ({ active, over }) => {
   setActiveId(null);
   if (!active || !over) return;
 
-  const activeSkill = skills.find((s) => s.id === active.id);
+  const activeSkill = skills.find(s => s.id === active.id);
+  if (!activeSkill) return;
 
-  let targetCategory = activeSkill.category;
+  let newCategory = activeSkill.category;
+  const overSkill = skills.find(s => s.id === over.id);
+  if (overSkill) newCategory = overSkill.category;
+  else if (categories.includes(over.id)) newCategory = over.id;
 
-  // If over.id is a category id, not a skill id, assign that category
-  const overSkill = skills.find((s) => s.id === over.id);
-  if (overSkill) {
-    targetCategory = overSkill.category;
-  } else if (["Technical", "Soft Skills", "Languages", "Industry-Specific"].includes(over.id)) {
-    targetCategory = over.id;
+  const oldCategory = activeSkill.category;
+  const oldPosition = activeSkill.position;
+
+  // Compute new position
+  const categorySkills = skills
+    .filter(s => s.category === newCategory && s.id !== activeSkill.id)
+    .sort((a, b) => a.position - b.position);
+
+  const newPosition = overSkill ? overSkill.position : categorySkills.length;
+
+  // Update positions in memory
+  const updatedSkills = skills.map(s => {
+    if (s.id === activeSkill.id) return { ...s, category: newCategory, position: newPosition };
+
+    if (s.category === newCategory) {
+      if (oldCategory === newCategory) {
+        if (oldPosition < newPosition && s.position > oldPosition && s.position <= newPosition) {
+          // dragging down
+          return { ...s, position: s.position - 1 };
+        }
+        if (oldPosition > newPosition && s.position >= newPosition && s.position < oldPosition) {
+          // dragging up
+          return { ...s, position: s.position + 1 };
+        }
+      } else {
+        // moving from a different category
+        if (s.position >= newPosition) return { ...s, position: s.position + 1 };
+      }
+    }
+    return s;
+  });
+
+  setSkills(updatedSkills.sort((a, b) => a.position - b.position));
+
+  // Update backend for only affected skills
+  for (const s of updatedSkills) {
+    if (s.id === activeSkill.id || s.position !== skills.find(sk => sk.id === s.id).position) {
+      await updateSkill(s.id, { category: s.category, position: s.position });
+    }
   }
-
-  // Update category if changed
-  if (activeSkill.category !== targetCategory) {
-    activeSkill.category = targetCategory;
-  }
-
-  // Reorder: move to the end of the category
-  const newSkills = skills.filter(s => s.id !== activeSkill.id);
-  const categorySkills = newSkills.filter(s => s.category === targetCategory);
-  const insertIndex = newSkills.findIndex(s => s.category === targetCategory) + categorySkills.length;
-  newSkills.splice(insertIndex, 0, activeSkill);
-
-  // Update positions
-  newSkills.forEach((s, idx) => (s.position = idx));
-
-  setSkills(newSkills);
-  await updateSkill(activeSkill.id, activeSkill);
 };
+
 
   const activeSkillObj = skills.find((s) => s.id === activeId);
 
@@ -157,15 +177,21 @@ export default function SkillList() {
           strategy={verticalListSortingStrategy}
         >
           {categories.map((cat) => (
-            <SkillCategory
-              key={cat}
-              category={cat}
-              skills={groupedSkills[cat] || []}
-              updateSkill={updateSkill}
-              removeSkill={removeSkill}
-              activeId={activeId}
-            />
-          ))}
+  <SortableContext
+  key={cat}
+  items={skills.filter(s => s.category === cat).map(s => s.id)}
+  strategy={verticalListSortingStrategy}
+>
+  <SkillCategory
+    category={cat}
+    skills={groupedSkills[cat] || []} // can still filter for display
+    updateSkill={updateSkill}
+    removeSkill={removeSkill}
+    activeId={activeId}
+  />
+</SortableContext>
+))}
+
         </SortableContext>
 
         <DragOverlay>

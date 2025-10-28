@@ -77,7 +77,6 @@ def update_skill(skill_id: str, skill: SkillUpdate, user_id: str = Query(...)):
         if not update_data:
             raise HTTPException(status_code=400, detail="No valid fields to update")
 
-        # ✅ Convert to ObjectId
         result = SKILLS_COLLECTION.update_one(
             {"_id": ObjectId(skill_id), "user_id": user_id},
             {"$set": update_data}
