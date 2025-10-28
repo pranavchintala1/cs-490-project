@@ -1,9 +1,9 @@
-from mongo.setup import db_client, USER_AUTH_COLLECTION
+from backend.mongo.dao_setup import db_client, USER_AUTH_COLLECTION
 
 import bcrypt
 from datetime import datetime
 
-class UserAuthenticationAPI:
+class UserAuthenticationDAO:
     def __init__(self):
         self.collection = db_client.get_collection(USER_AUTH_COLLECTION)
 
@@ -23,4 +23,4 @@ class UserAuthenticationAPI:
         else:
             return None
 
-user_auth_api = UserAuthenticationAPI()
+user_auth_dao = UserAuthenticationDAO()
