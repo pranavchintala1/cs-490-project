@@ -24,8 +24,8 @@ async def register(regist_info: RegistInfo):
 
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"details": "User already exists"})
-    except:
-        return JSONResponse(status_code = 500, content = {"details": "Something went wrong"})
+    except Exception as e:
+        return JSONResponse(status_code = 500, content = {"details": f"Something went wrong {str(e)}"})
     return JSONResponse(status_code=200, content={"details": "Sucessful Registration", "uuid": uuid})
 
 @app.post("/api/auth/login")
@@ -34,7 +34,7 @@ async def login(credentials: LoginCred):
         password_hash = await user_auth_api.get_password(credentials.username)
         authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception as e:
-        return JSONResponse(status_code = 500, content = {"details": str(e)})
+        return JSONResponse(status_code = 500, content = {"details": f"Something went wrong {str(e)}"}) # could pose security risk
     if authenticated:
         return JSONResponse(status_code = 200, content = {"details": "Successful login"})
     else:
@@ -42,12 +42,26 @@ async def login(credentials: LoginCred):
 
 @app.post("/api/auth/logout")
 async def logout():
-    pass
+    return JSONResponse(status_code = 200, content = {"details": "currently unimplemented"})
 
 @app.get("/api/users/me")
 async def retrieve_profile(uuid: str = None):
-    pass
+    try:
+        user_data = await user_data_api.retrieve_user(uuid)
+    except Exception as e:
+        return JSONResponse(status_code = 500, content = {"details": f"Something went wrong: {str(e)}"})
+    
+    if not user_data:
+        return JSONResponse(status_code = 400, content = {"details": "User does not exist"})
+    return user_data
 
 @app.put("api/users/me")
 async def update_profile(uuid: str, profile: ProfileSchema):
-    pass
+    cleaned_data = profile.model_dump(exclude_none = True)
+    try:
+        update_count = await user_data_api.update_user(uuid, cleaned_data)
+    except Exception as e:
+        return JSONResponse(status_code = 500, content = {"details": f"Something went wrong: {str(e)}"})
+    if update_count == 0:
+        return JSONResponse(status_code = 400, content = {"details": "User does not exist"})
+    return JSONResponse(status_code = 200, content = {"details": "Successfully updated user"})
