@@ -55,7 +55,7 @@ async def retrieve_profile(uuid: str = None):
         return JSONResponse(status_code = 400, content = {"details": "User does not exist"})
     return user_data
 
-@app.put("api/users/me")
+@app.put("/api/users/me")
 async def update_profile(uuid: str, profile: ProfileSchema):
     cleaned_data = profile.model_dump(exclude_none = True)
     try:
