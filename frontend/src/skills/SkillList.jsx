@@ -27,37 +27,47 @@ export default function SkillList() {
   }, []);
 
   const fetchSkills = async () => {
-    try {
-      const res = await fetch(`${API_URL}?user_id=${USER_ID}`);
-      const data = await res.json();
-      setSkills(data);
-    } catch (err) {
-      console.error("Fetch failed:", err);
-    }
-  };
+  try {
+    const res = await fetch(`${API_URL}?user_id=${USER_ID}`);
+    const data = await res.json();
+    // Ensure skills is always an array and each skill has a name
+    setSkills(
+      Array.isArray(data)
+        ? data.map((s) => ({ ...s, name: s.name || "" }))
+        : []
+    );
+  } catch (err) {
+    console.error("Fetch failed:", err);
+    setSkills([]); // fallback to empty array
+  }
+};
+
 
   const addSkill = async (skill) => {
-    if (
-      skills.some(
-        (s) =>
-          s.name.toLowerCase() === skill.name.toLowerCase() &&
-          s.category === skill.category
-      )
-    ) {
-      return alert("Skill already exists in this category");
-    }
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...skill, user_id: USER_ID }),
-      });
-      const addedSkill = await res.json();
-      setSkills((prev) => [...prev, addedSkill]);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (
+    skills.some(
+      (s) =>
+        s.name && // <-- safeguard
+        s.name.toLowerCase() === (skill.name || "").toLowerCase() &&
+        s.category === skill.category
+    )
+  ) {
+    return alert("Skill already exists in this category");
+  }
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...skill, user_id: USER_ID }),
+    });
+    const addedSkill = await res.json();
+    setSkills((prev) => [...prev, { ...addedSkill, name: addedSkill.name || "" }]);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const updateSkill = async (id, updatedFields) => {
     try {
@@ -145,11 +155,15 @@ export default function SkillList() {
 
   // --- Global search ---
   const groupedSkills = skills.reduce((acc, skill) => {
-    if (!skill.name.toLowerCase().includes(searchTerm.toLowerCase())) return acc;
-    if (!acc[skill.category]) acc[skill.category] = [];
-    acc[skill.category].push(skill);
+  // Skip skills without a name or that don't match the search term
+  if (!skill.name || !skill.name.toLowerCase().includes(searchTerm.toLowerCase()))
     return acc;
-  }, {});
+
+  if (!acc[skill.category]) acc[skill.category] = [];
+  acc[skill.category].push(skill);
+  return acc;
+}, {});
+
 
   const categories = ["Technical", "Soft Skills", "Languages", "Industry-Specific"];
 
