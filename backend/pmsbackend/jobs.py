@@ -1,16 +1,16 @@
 # backend/pmsbackend/jobs.py
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from datetime import date, datetime
+from typing import Optional, List, Dict, Any
+from datetime import date, datetime, timezone
 from uuid import uuid4
 
-from db.clients import get_db  # your existing Mongo client factory
+from db.clients import get_db  
 
 router = APIRouter()
 COLL = "jobs"
 
-# ---------- Schemas (in-file, no separate models/ folder) ----------
+#schmeas
 
 class JobBase(BaseModel):
     job_title: str = Field(min_length=1, max_length=200)
@@ -19,7 +19,7 @@ class JobBase(BaseModel):
     start_date: date
     end_date: Optional[date] = None
     description: Optional[str] = Field(default="", max_length=1000)
-    current: bool = False  # helper; not in your screenshot but useful
+    current: bool = False  # helper
 
 class JobCreate(JobBase):
     pass
@@ -39,7 +39,9 @@ class JobOut(JobBase):
     created_at: datetime
     updated_at: datetime
 
-# ---------- Helpers ----------
+
+
+#helper functions
 
 def _out(d: dict) -> JobOut:
     d = d.copy()
@@ -51,7 +53,35 @@ def _validate_dates(j: JobBase):
     if (not j.current) and j.end_date and j.start_date > j.end_date:
         raise HTTPException(status_code=400, detail="start_date must be <= end_date")
 
-# ---------- Routes ----------
+#serializers (will move the profile serializers to pms backend soon)
+
+def _iso(v: Any) -> Any:
+    """Convert date/datetime to ISO strings; leave others as-is."""
+    if isinstance(v, (date, datetime)):
+        return v.isoformat()
+    return v
+
+def serialize_job(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize a Mongo document to our public API shape, removing _id and
+    ensuring dates/datetimes are ISO strings (Swagger-friendly).
+    """
+    if not doc:
+        return doc
+    d = dict(doc)  # shallow copy
+    d.pop("_id", None)
+    # Ensure all expected keys exist (defaults if missing)
+    d.setdefault("location", "")
+    d.setdefault("description", "")
+    d.setdefault("current", False)
+    for k in ("start_date", "end_date", "created_at", "updated_at"):
+        if k in d and d[k] is not None:
+            d[k] = _iso(d[k])
+    return d
+
+def serialize_jobs(docs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return [serialize_job(x) for x in docs]
+#job routers 
 
 @router.get("/", response_model=List[JobOut])
 async def list_jobs(user_id: str, db = Depends(get_db)):
