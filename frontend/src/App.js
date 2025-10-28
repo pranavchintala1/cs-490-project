@@ -25,7 +25,7 @@ export default function App() {
           <Route path="/projects" element={<ProjectsList />} />
 
           {/* Default route */}
-          <Route path="*" element={<SkillsList />} />
+          <Route path="*" />
         </Routes>
       </div>
     </Router>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 export default function ProjectForm({ addProject }) {
   const [name, setName] = useState("");
@@ -13,6 +13,8 @@ export default function ProjectForm({ addProject }) {
   const [industry, setIndustry] = useState("");
   const [status, setStatus] = useState("Planned");
   const [mediaFiles, setMediaFiles] = useState([]);
+
+  const fileInputRef = useRef(null); // ✅ To reset file input
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -30,13 +32,14 @@ export default function ProjectForm({ addProject }) {
     formData.append("status", status);
 
     mediaFiles.forEach(file => formData.append("media_files", file));
-
     addProject(formData);
 
-    // Reset form
+    // ✅ Reset form + clear file input UI
     setName(""); setDescription(""); setRole(""); setStartDate("");
     setEndDate(""); setTechnologies(""); setProjectUrl(""); setTeamSize("");
-    setAchievements(""); setIndustry(""); setStatus("Planned"); setMediaFiles([]);
+    setAchievements(""); setIndustry(""); setStatus("Planned");
+    setMediaFiles([]);
+    if (fileInputRef.current) fileInputRef.current.value = ""; // ✅ Reset actual input
   };
 
   return (
@@ -61,10 +64,17 @@ export default function ProjectForm({ addProject }) {
           <option>Completed</option>
         </select>
       </div>
+
       <div>
-        Media Upload:
-        <input type="file" multiple onChange={e => setMediaFiles([...e.target.files])} />
+        Photo/Media Upload:
+        <input
+          type="file"
+          multiple
+          ref={fileInputRef}
+          onChange={e => setMediaFiles([...e.target.files])}
+        />
       </div>
+
       <button type="submit">Add Project</button>
     </form>
   );
