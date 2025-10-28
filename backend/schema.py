@@ -50,23 +50,23 @@ class Project(BaseModel):
     start_date: Optional[str] = None # date?
     end_date: Optional[str] = None # date?
     skills: Optional[list[str]] = None
-    team_size = Optional[int] = None
-    details = Optional[str] = None
-    achievements = Optional[str] = None
-    industry = Optional[str] = None
-    media = Optional[list[str]] = None # url?
-    status = Optional[str] = None
+    team_size: Optional[int] = None
+    details: Optional[str] = None
+    achievements: Optional[str] = None
+    industry: Optional[str] = None
+    media: Optional[list[str]] = None # url?
+    status: Optional[str] = None
 
 class Certification(BaseModel):
     uuid: str
     #entry_id: str
     name: str
     issuer: Optional[str] = None
-    date_earned = Optional[str] = None # date?
-    date_expiry = Optional[str] = None # date?
-    cert_number = Optional[str] = None
-    document = Optional[str] = None # url?
-    category = Optional[str] = None
+    date_earned: Optional[str] = None # date?
+    date_expiry: Optional[str] = None # date?
+    cert_number: Optional[str] = None
+    document: Optional[str] = None # url?
+    category: Optional[str] = None
 
 class ProfileSchema(BaseModel):
     username: Optional[str] = None
