@@ -41,7 +41,7 @@ async def login(credentials: LoginCred):
     if authenticated:
         return JSONResponse(status_code = 200, content = {"detail": "Successful login"})
     else:
-        return JSONResponse(status_code = 200, content = {"detail": "Incorrect credentials"})
+        return JSONResponse(status_code = 401, content = {"detail": "Incorrect credentials"})
 
 @app.post("/api/auth/logout")
 async def logout():
