@@ -78,16 +78,4 @@ class ProfileSchema(BaseModel):
     biography: Optional[str] = None
     industry: Optional[str] = None
     experience_level: Optional[str] = None
-    profile_picture: Optional[str] = None
-
-class Skill(BaseModel):
-    ...
-
-class Employment(BaseModel):
-    ...
-
-class Education(BaseModel):
-    ...
-
-class Project(BaseModel):
-    ...
+    profile_picture: Optional[str] = None # url?
