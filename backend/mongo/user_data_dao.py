@@ -31,6 +31,7 @@ class UserDataDAO:
         return updated.matched_count
 
     async def delete_user(self, uuid: str) -> int:
-        return await self.collection.delete_one({"_id": uuid})
+        result = await self.collection.delete_one({"_id": uuid})
+        return result.deleted_count
 
 user_data_dao = UserDataDAO()
