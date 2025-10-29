@@ -8,6 +8,7 @@ import { OAuth } from "../tools/OAUTH";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
+import { sendData } from "../tools/db_commands";
 
 function Login() {
     // I left all the stylings in the below html blank for whoever needs to look at that (?)
@@ -23,20 +24,25 @@ function Login() {
     const { instance } = useMsal();
 
 
-    const onSubmit = (data,JWT = false) => {
+    const onSubmit = (data) => {
 
-        const userData = JSON.parse(localStorage.getItem(data.email)); // TODO Change localstorage to whatever database is being used later
+        const res = sendData(data); // TODO Change localstorage to whatever database is being used later
 
-            if (userData && userData.password === data.password) { //If the entered password matches the stored password.
-                localStorage.setItem("session",userData.token) // TODO change localstorage session to something else later.
-                navigate(`/profile/${userData.token}`); // make profile later lmao. 
+            if (res.status != 200) { //If the entered password matches the stored password.
+               showFlash(res.content,"error");
+
+               if (res.status == 401){
+                    reset();  
+               }          
+            
             } 
             else {
-                showFlash('Invalid email or password',"error");
-                reset();
-                
-        
+                localStorage.setItem("session",data.username) // TODO change localstorage session to something else later.
+                navigate(`/profile/${data.username}`); // make profile later lmao. 
+
             }
+
+            return;
         };
 
     const OAuthSubmit = (data) => {
@@ -45,8 +51,21 @@ function Login() {
         // send data.credential to backend.
             //if the signature is good...
             // retrieve user token data from other endpoint. then login.
-            const token = "temp"
-            navigate(`/profile/${token}`)
+            const res = sendData(data,"verify-google-token"); // Link this account with local non-google account later.
+            
+            
+            if (res.status != 200){
+                            
+                showFlash(res.content,"error");
+                return;
+                            
+            }
+                        
+            data = res.json();
+            
+            localStorage.setItem("session",data.session_token);
+            
+            navigate(`/profile/${data.session_token}`);
             return;
 
 
@@ -87,7 +106,7 @@ const handleMicrosoftLogin = async () => {
 
                 <input
                     type="email"
-                    {...register("email", { required: true })}
+                    {...register("username", { required: true })}
                     placeholder="Email"
                 />
 
@@ -99,7 +118,7 @@ const handleMicrosoftLogin = async () => {
 
                 <input type="submit" style={{}} /> 
             </form>
-            
+
             <GoogleLogin
                 onSuccess={credentialResponse => {
                     OAuthSubmit(credentialResponse);

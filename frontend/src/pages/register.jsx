@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
-import { OAuth } from "../tools/OAUTH";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
+import { sendData } from "../tools/db_commands";
 
 
 function Register() {
@@ -26,61 +26,54 @@ function Register() {
     const { instance } = useMsal();
 
 
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
 
 
         
-        const duplicateData= JSON.parse(localStorage.getItem(data.email)); // method to send credentials to backend.
- 
-            if (duplicateData){
-                
-                showFlash('Email is taken, choose again.',"error");
-                return;
+        const res = sendData(data,"/api/auth/register");
 
-            }            
+        if (!res){
+            showFlash("Something went wrong when registering","error");
 
-            const newData = {
-                email: data.email,
-                password: data.password, // replace this when database gets updated.
-                firstName: data.firstName,
-                lastName: data.lastName,
-                session: "temp",
+        }
 
-            };
-        
+        else if (res.status != 200){
+            showFlash(res.content,"error");
+        }
+        else{
 
-            localStorage.setItem(data.email,JSON.stringify(newData)); //replace this with sending data to database.
-            localStorage.setItem("session",newData.session);
+            data = res.json()
+
 
             showFlash("Successfully Registered!","Success");
             
-            navigate(`/profile/${newData.session}`);
+            navigate(`/profile/${data.session_token}`);
+
+        }
+            return;
             
         };
 
         const OAuthSubmit = (data) => {
 
-            const token = OAuth(data); // Link this account with local non-google account later.
+            const res = sendData(data,"verify-google-token"); // Link this account with local non-google account later.
 
-
-            if (!token){
-                //POST data.credentials to backend to register, then log in.
-                
-                showFlash("Successfully Registered!","Success");
-                return;
-                
-            }
-
-            if (token == "error"){
-
-                showFlash('Error authentication user',"error");
-                return;
+            if (!res){
+                 
+            showFlash("Something went wrong when registering","error");
 
             }
 
-            localStorage.setItem("session",token)
+            data = res.json();
+            if (res.status != 200){
+                
+                showFlash(data.details,"error");
+                return;
+                
+            }
+        
 
-            navigate(`/profile/${token}`);
+            navigate(`/profile/${data.session_token}`);
             return;
 
         };
@@ -102,7 +95,7 @@ const handleMicrosoftLogin = async () => {
     });*/
 
     // Navigate or update app state
-    localStorage.setItem("session",idToken)
+    
     navigate(`/profile/${account.homeAccountId}`);
   } catch (error) {
     console.error("Login failed:", error);
@@ -116,6 +109,13 @@ const handleMicrosoftLogin = async () => {
             <h2>Register</h2>
 
             <form className="Register" onSubmit={handleSubmit(onSubmit)}>
+
+                 <input
+                    type="text"
+                    {...register("username", { required: true })}
+                    placeholder="Username"
+                />
+
 
                 <input
                     type="email"

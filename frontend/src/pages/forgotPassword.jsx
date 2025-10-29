@@ -1,6 +1,7 @@
 
 import { useForm } from "react-hook-form";
 import { useFlash } from "../context/flashContext";
+import { sendData } from "../tools/db_commands";
 
 
 
@@ -20,11 +21,11 @@ const ForgotPassword = () => {
 
     const onSubmit = (data) => {
 
-        //In the future, send data to backend, which will then send it to email via node.js shenanagins (?)
-
+        sendData(data.email,"api/auth/forgotpassword")
         
-        reset();
         showFlash('If your email exists, you will receive a password reset link.',"success",5000);
+
+        reset();
 
 
 
