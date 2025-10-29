@@ -26,6 +26,6 @@ class UserAuthenticationDAO:
         
     async def get_uuid(self, email: str) -> str | None:
         result = await self.collection.find_one({"email": email})
-        return result["_id"]
+        return result["_id"] if result else None
 
 user_auth_dao = UserAuthenticationDAO()
