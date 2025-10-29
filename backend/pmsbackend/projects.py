@@ -98,3 +98,16 @@ async def add_project(
 
     PROJECTS_COLLECTION.insert_one(doc)
     return project_serializer(doc)
+
+@app.delete("/{project_id}")
+def delete_project(project_id: str, user_id: str = Query(...)):
+    result = PROJECTS_COLLECTION.delete_one({"_id": project_id, "user_id": user_id})
+    if result.deleted_count == 0:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    remaining = list(PROJECTS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
+    for i, p in enumerate(remaining):
+        PROJECTS_COLLECTION.update_one({"_id": p["_id"]}, {"$set": {"position": i}})
+
+    return {"message": "Project deleted successfully"}
