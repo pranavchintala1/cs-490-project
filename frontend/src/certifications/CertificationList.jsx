@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
 
-const API_URL = process.env.REACT_APP_API_URL + "/certifications/";
+const API_URL = process.env.REACT_APP_API_URL + "/certifications";
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
@@ -33,7 +33,7 @@ export default function CertificationList() {
   // Delete certification
   const deleteCert = async (id) => {
     if (!window.confirm("Delete this certification?")) return;
-    await fetch(`${API_URL}${id}?user_id=temp_user`, { method: "DELETE" });
+    await fetch(`${API_URL}/${id}?user_id=temp_user`, { method: "DELETE" })
     setCerts(certs.filter((c) => c.id !== id));
   };
 

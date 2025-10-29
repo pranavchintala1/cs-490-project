@@ -1,22 +1,20 @@
-from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from typing import Optional
 import shutil
 from pathlib import Path
 from db.models import CERTIFICATIONS_COLLECTION
-import uuid
 from datetime import datetime, timedelta
+import uuid
 
-app = APIRouter()
+app = FastAPI()
 
-# Upload folder relative to main.py working dir
 UPLOAD_DIR = Path("uploads/certifications")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# Serializer
 def cert_serializer(entry):
     return {
-        "id": entry["_id"],  # string ID
+        "id": entry["_id"],
         "user_id": entry.get("user_id"),
         "name": entry.get("name"),
         "issuer": entry.get("issuer"),
@@ -30,7 +28,7 @@ def cert_serializer(entry):
         "position": entry.get("position", 0),
     }
 
-# GET all certifications
+# --- GET all certifications ---
 @app.get("/")
 def get_certifications(user_id: str = Query("temp_user")):
     certs = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
@@ -40,20 +38,17 @@ def get_certifications(user_id: str = Query("temp_user")):
         if exp:
             exp_date = datetime.strptime(exp, "%Y-%m-%d").date()
             if exp_date < datetime.today().date():
-                return -2  # expired first
+                return -2
             elif exp_date <= datetime.today().date() + timedelta(days=90):
-                return -1  # expiring soon
+                return -1
         return 0
 
     certs.sort(key=cert_sort_key)
-    
-    # Update positions
     for i, c in enumerate(certs):
         CERTIFICATIONS_COLLECTION.update_one({"_id": c["_id"]}, {"$set": {"position": i}})
-    
     return [cert_serializer(c) for c in certs]
 
-# POST new certification
+# --- POST new certification ---
 @app.post("/")
 def add_certification(
     user_id: str = Form(...),
@@ -74,13 +69,10 @@ def add_certification(
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(document.file, buffer)
 
-    # Determine position
     last = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", -1).limit(1))
     position = last[0]["position"] + 1 if last else 0
 
-    # Use string ID
     doc_id = str(uuid.uuid4())
-
     doc = {
         "_id": doc_id,
         "user_id": user_id,
@@ -99,21 +91,19 @@ def add_certification(
     CERTIFICATIONS_COLLECTION.insert_one(doc)
     return cert_serializer(doc)
 
-# DELETE certification
+# --- DELETE certification ---
 @app.delete("/{cert_id}")
 def delete_certification(cert_id: str, user_id: str = Query(...)):
     result = CERTIFICATIONS_COLLECTION.delete_one({"_id": cert_id, "user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Certification not found")
-    
-    # Fix positions
+
     remaining = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
     for i, c in enumerate(remaining):
         CERTIFICATIONS_COLLECTION.update_one({"_id": c["_id"]}, {"$set": {"position": i}})
-
     return {"message": "Certification removed"}
 
-# Download file
+# --- Download file ---
 @app.get("/download/{filename}")
 def download_cert(filename: str):
     file_path = UPLOAD_DIR / filename

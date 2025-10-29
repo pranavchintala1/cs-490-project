@@ -15,6 +15,7 @@ app.add_middleware(
 )
 
 class Project(BaseModel):
+    user_id: str
     name: str
     description: str
     role: str
@@ -28,7 +29,6 @@ class Project(BaseModel):
     media_urls: List[str] = []
     status: Optional[str] = "Planned"
     position: Optional[int] = 0
-    user_id: str
 
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
@@ -48,6 +48,7 @@ class ProjectUpdate(BaseModel):
 def project_serializer(p):
     return {
         "id": p["_id"],
+        "user_id": p["user_id"],
         "name": p["name"],
         "description": p["description"],
         "role": p["role"],
@@ -60,27 +61,25 @@ def project_serializer(p):
         "industry_type": p.get("industry_type"),
         "media_urls": p.get("media_urls", []),
         "status": p.get("status", "Planned"),
-        "position": p.get("position", 0),
-        "user_id": p["user_id"]
+        "position": p.get("position", 0)
     }
 
-@app.get("/projects")
+@app.get("/")
 def get_projects(user_id: str = Query("temp_user")):
     projects = list(PROJECTS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
     return [project_serializer(p) for p in projects]
 
-@app.post("/projects")
+@app.post("/")
 def add_project(project: Project):
     last = list(PROJECTS_COLLECTION.find({"user_id": project.user_id}).sort("position", -1).limit(1))
     project.position = last[0]["position"] + 1 if last else 0
 
     doc = project.dict()
     doc["_id"] = str(uuid.uuid4())
-
     PROJECTS_COLLECTION.insert_one(doc)
     return project_serializer(doc)
 
-@app.put("/projects/{project_id}")
+@app.put("/{project_id}/")
 def update_project(project_id: str, project: ProjectUpdate, user_id: str = Query(...)):
     update_data = {k: v for k, v in project.dict().items() if v is not None}
     if not update_data:
@@ -93,7 +92,7 @@ def update_project(project_id: str, project: ProjectUpdate, user_id: str = Query
     updated = PROJECTS_COLLECTION.find_one({"_id": project_id})
     return project_serializer(updated)
 
-@app.delete("/projects/{project_id}")
+@app.delete("/{project_id}/")
 def delete_project(project_id: str, user_id: str = Query(...)):
     result = PROJECTS_COLLECTION.delete_one({"_id": project_id, "user_id": user_id})
     if result.deleted_count == 0:

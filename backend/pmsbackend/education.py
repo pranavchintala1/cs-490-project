@@ -52,23 +52,22 @@ def education_serializer(entry):
         "position": entry.get("position", 0),
     }
 
-@app.get("/education")
+@app.get("/")
 def get_education(user_id: str = Query("temp_user")):
     entries = list(EDUCATION_COLLECTION.find({"user_id": user_id}).sort("position", 1))
     return [education_serializer(e) for e in entries]
 
-@app.post("/education")
+@app.post("/")
 def add_education(entry: Education):
     last = list(EDUCATION_COLLECTION.find({"user_id": entry.user_id}).sort("position", -1).limit(1))
     entry.position = last[0]["position"] + 1 if last else 0
 
     doc = entry.dict()
     doc["_id"] = str(uuid.uuid4())
-
     EDUCATION_COLLECTION.insert_one(doc)
     return education_serializer(doc)
 
-@app.put("/education/{entry_id}")
+@app.put("/{entry_id}/")
 def update_education(entry_id: str, entry: EducationUpdate, user_id: str = Query(...)):
     update_data = {k: v for k, v in entry.dict().items() if v is not None}
     if not update_data:
@@ -81,7 +80,7 @@ def update_education(entry_id: str, entry: EducationUpdate, user_id: str = Query
     updated = EDUCATION_COLLECTION.find_one({"_id": entry_id})
     return education_serializer(updated)
 
-@app.delete("/education/{entry_id}")
+@app.delete("/{entry_id}/")
 def delete_education(entry_id: str, user_id: str = Query(...)):
     result = EDUCATION_COLLECTION.delete_one({"_id": entry_id, "user_id": user_id})
     if result.deleted_count == 0:

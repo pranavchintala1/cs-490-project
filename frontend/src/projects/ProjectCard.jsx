@@ -27,12 +27,18 @@ export default function ProjectCard({ project, deleteProject }) {
           <p><strong>Industry:</strong> {project.industry}</p>
 
           <a
-          href={project.project_url.startsWith("http") ? project.project_url : "https://" + project.project_url}
-          target="_blank"
-          rel="noreferrer"
-          >
-          Project Link
-          </a>
+  href={
+    project.project_url
+      ? (project.project_url.startsWith("http")
+          ? project.project_url
+          : "https://" + project.project_url)
+      : "#"
+  }
+  target="_blank"
+  rel="noreferrer"
+>
+  Project Link
+  </a>
           <br/>
 
           {project.media_files?.length > 0 && (

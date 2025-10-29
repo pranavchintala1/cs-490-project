@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
 
-const API_URL = process.env.REACT_APP_API_URL + "/education/";
+const API_URL = process.env.REACT_APP_API_URL + "/education";
 
 export default function EducationList() {
   const [entries, setEntries] = useState([]);
@@ -9,7 +9,7 @@ export default function EducationList() {
 
   // Load entries
   useEffect(() => {
-    fetch(`${API_URL}?user_id=temp_user`)
+    fetch(`${API_URL}/?user_id=temp_user`)
       .then((res) => res.json())
       .then((data) => setEntries(Array.isArray(data) ? data : []))
       .catch((err) => console.error(err));
@@ -19,7 +19,7 @@ export default function EducationList() {
   const addEntry = async (entry) => {
     try {
       const entryWithUser = { user_id: "temp_user", ...entry };
-      const res = await fetch(API_URL, {
+      const res = await fetch(`${API_URL}/`, { // trailing slash
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(entryWithUser),
@@ -35,7 +35,7 @@ export default function EducationList() {
   const submitEdit = async (updatedEntry) => {
     try {
       const { id, ...body } = updatedEntry;
-      const res = await fetch(`${API_URL}${id}?user_id=temp_user`, {
+      const res = await fetch(`${API_URL}/${id}?user_id=temp_user`, { // added slash before id
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -52,7 +52,7 @@ export default function EducationList() {
   const deleteEntry = async (id) => {
     if (!window.confirm("Delete this entry?")) return;
     try {
-      await fetch(`${API_URL}${id}?user_id=temp_user`, { method: "DELETE" });
+      await fetch(`${API_URL}/${id}?user_id=temp_user`, { method: "DELETE" }); // added slash
       setEntries(entries.filter((e) => e.id !== id));
     } catch (err) {
       console.error(err);

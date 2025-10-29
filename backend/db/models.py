@@ -65,6 +65,7 @@ CERTIFICATIONS_COLLECTION: Collection = get_collection("certifications")
 # --- Projects Model ---
 class ProjectModel(BaseModel):
     id: Optional[str] = Field(alias="_id")
+    user_id: str
     name: str
     description: str
     role: str
