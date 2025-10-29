@@ -33,8 +33,8 @@ const USER_ID = process.env.REACT_APP_USER_ID;
 
 export default function SkillForm({ addSkill, existingSkills }) {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("Technical");
-  const [proficiency, setProficiency] = useState("Beginner");
+  const [category, setCategory] = useState("");
+  const [proficiency, setProficiency] = useState("");
   const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function SkillForm({ addSkill, existingSkills }) {
     const filtered = categorySkills.filter(skill =>
       skill.toLowerCase().startsWith(name.toLowerCase()) &&
       skill.toLowerCase() !== name.toLowerCase() &&
-      !existingSkills.some(s => s.name.toLowerCase() === skill.toLowerCase()) // global uniqueness
+      !existingSkills.some(s => s.name.toLowerCase() === skill.toLowerCase())
     );
     setSuggestions(name.trim() ? filtered : []);
   }, [name, category, existingSkills]);
@@ -50,7 +50,10 @@ export default function SkillForm({ addSkill, existingSkills }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmedName = name.trim();
-    if (!trimmedName) return alert("Enter a skill name");
+
+    if (!trimmedName) return alert("Please enter a skill name");
+    if (!category) return alert("Please select a skill category");
+    if (!proficiency) return alert("Please select a proficiency level");
 
     // Prevent duplicates globally
     if (existingSkills.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())) {
@@ -63,7 +66,10 @@ export default function SkillForm({ addSkill, existingSkills }) {
       category,
       proficiency
     });
+
     setName("");
+    setCategory("");
+    setProficiency("");
   };
 
   return (
@@ -73,6 +79,7 @@ export default function SkillForm({ addSkill, existingSkills }) {
         value={name}
         onChange={(e) => setName(e.target.value)}
         style={{ width: "200px" }}
+        required
       />
       {suggestions.length > 0 && (
         <ul style={{
@@ -88,23 +95,29 @@ export default function SkillForm({ addSkill, existingSkills }) {
           width: "200px"
         }}>
           {suggestions.map((s, i) => (
-            <li key={i} style={{ padding: "4px", cursor: "pointer" }} onClick={() => setName(s)}>
+            <li
+              key={i}
+              style={{ padding: "4px", cursor: "pointer" }}
+              onClick={() => setName(s)}
+            >
               {s}
             </li>
           ))}
         </ul>
       )}
-      <select value={category} onChange={(e) => setCategory(e.target.value)}>
-        <option>Technical</option>
-        <option>Soft Skills</option>
-        <option>Languages</option>
-        <option>Industry-Specific</option>
+      <select value={category} onChange={(e) => setCategory(e.target.value)} required>
+        <option value="" disabled>Skill Category</option>
+        <option value="Technical">Technical</option>
+        <option value="Soft Skills">Soft Skills</option>
+        <option value="Languages">Languages</option>
+        <option value="Industry-Specific">Industry-Specific</option>
       </select>
-      <select value={proficiency} onChange={(e) => setProficiency(e.target.value)}>
-        <option>Beginner</option>
-        <option>Intermediate</option>
-        <option>Advanced</option>
-        <option>Expert</option>
+      <select value={proficiency} onChange={(e) => setProficiency(e.target.value)} required>
+        <option value="" disabled>Proficiency Level</option>
+        <option value="Beginner">Beginner</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced</option>
+        <option value="Expert">Expert</option>
       </select>
       <button type="submit">Add Skill</button>
     </form>
