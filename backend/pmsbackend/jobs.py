@@ -1,131 +1,92 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
-from typing import Optional, Any
-from datetime import date, datetime, timezone
-from uuid import uuid4
+# pmsbackend/jobs.py
+from fastapi import APIRouter, HTTPException, Query, Depends
+from typing import Optional, List
+from pydantic import BaseModel
+import uuid
+from db.clients import get_db
+from db.user import jobs_coll  # your existing helper returns the Mongo collection
 
-from db.clients import get_db       
-from db.user import jobs_coll          
+router = APIRouter()
 
-app = APIRouter()
-
-# ---------- Schemas ----------
-class JobBase(BaseModel):
-    job_title: str = Field(min_length=1, max_length=200)
-    company_name: str = Field(min_length=1, max_length=200)
-    location: Optional[str] = Field(default="", max_length=200)
-    start_date: date
-    end_date: Optional[date] = None
-    description: Optional[str] = Field(default="", max_length=1000)
+# ----- Schemas -----
+class JobIn(BaseModel):
+    user_id: str
+    job_title: str
+    company_name: str
+    location: str = ""
+    start_date: Optional[str] = None   # "YYYY-MM-DD"
+    end_date: Optional[str] = None     # null if current
     current: bool = False
-
-class JobCreate(JobBase):
-    pass
+    description: str = ""
+    position: Optional[int] = 0
 
 class JobUpdate(BaseModel):
     job_title: Optional[str] = None
     company_name: Optional[str] = None
     location: Optional[str] = None
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-    description: Optional[str] = Field(default=None, max_length=1000)
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
     current: Optional[bool] = None
+    description: Optional[str] = None
+    position: Optional[int] = None
 
-class JobOut(JobBase):
-    user_id: str
-    job_id: str
-    created_at: datetime
-    updated_at: datetime
+# ----- Serializer (Education-style) -----
+def job_serializer(doc: dict) -> dict:
+    return {
+        "id": doc["_id"],
+        "user_id": doc["user_id"],
+        "job_title": doc["job_title"],
+        "company_name": doc.get("company_name", ""),
+        "location": doc.get("location", ""),
+        "start_date": doc.get("start_date"),
+        "end_date": doc.get("end_date"),
+        "current": doc.get("current", False),
+        "description": doc.get("description", ""),
+        "position": doc.get("position", 0),
+    }
 
-# ---------- Serializers ----------
-def _iso(v: Any) -> Any:
-    if isinstance(v, (date, datetime)):
-        return v.isoformat()
-    return v
-
-def job_serializer(doc: dict[str, Any]) -> dict[str, Any]:
-    if not doc:
-        return doc
-    d = dict(doc)
-    d.pop("_id", None)
-    d.setdefault("location", "")
-    d.setdefault("description", "")
-    d.setdefault("current", False)
-    for k in ("start_date", "end_date", "created_at", "updated_at"):
-        if k in d and d[k] is not None:
-            d[k] = _iso(d[k])
-    return d
-
-def jobs_serializer(docs: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [job_serializer(x) for x in docs]
-
-# ---------- Helpers ----------
-def _validate_dates(j: JobBase):
-    if (not j.current) and j.end_date and j.start_date > j.end_date:
-        raise HTTPException(status_code=400, detail="start_date must be <= end_date")
-
-# ---------- Routes ----------
-@app.get("/", response_model=list[JobOut])
+# ----- Routes (match Education pattern) -----
+@router.get("/", response_model=List[dict])
 async def list_jobs(user_id: str = Query("temp_user"), db=Depends(get_db)):
     coll = jobs_coll(db)
-    cursor = coll.find({"user_id": user_id}).sort("start_date", -1)
-    docs = await cursor.to_list(length=200)
-    return jobs_serializer(docs)
+    entries = coll.find({"user_id": user_id}).sort("position", 1)
+    return [job_serializer(e) for e in await entries.to_list(length=10000)]
 
-@app.post("/", response_model=JobOut, status_code=201)
-async def create_job(user_id: str = Query("temp_user"), body: JobCreate = ..., db=Depends(get_db)):
-    _validate_dates(body)
-    now = datetime.now(timezone.utc)
-    doc = {
-        "user_id": user_id,
-        "job_id": str(uuid4()),
-        **body.model_dump(),
-        "created_at": now,
-        "updated_at": now,
-    }
-    await jobs_coll(db).insert_one(doc)
-    return job_serializer(doc)
-
-@app.get("/{job_id}", response_model=JobOut)
-async def get_job(job_id: str, user_id: str = Query("temp_user"), db=Depends(get_db)):
-    doc = await jobs_coll(db).find_one({"user_id": user_id, "job_id": job_id})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return job_serializer(doc)
-
-@app.put("/{job_id}", response_model=JobOut)
-async def update_job(job_id: str, user_id: str = Query("temp_user"), body: JobUpdate = ..., db=Depends(get_db)):
+@router.post("/", response_model=dict, status_code=201)
+async def add_job(entry: JobIn, db=Depends(get_db)):
     coll = jobs_coll(db)
-    patch = {k: v for k, v in body.model_dump(exclude_none=True).items()}
 
-    if {"start_date", "end_date", "current"} & set(patch.keys()):
-        cur = await coll.find_one({"user_id": user_id, "job_id": job_id})
-        if not cur:
-            raise HTTPException(status_code=404, detail="Job not found")
-        merged = {**cur, **patch}
-        to_validate = JobCreate(
-            job_title=merged["job_title"],
-            company_name=merged["company_name"],
-            location=merged.get("location", ""),
-            start_date=merged["start_date"],
-            end_date=merged.get("end_date"),
-            description=merged.get("description", ""),
-            current=merged.get("current", False),
-        )
-        _validate_dates(to_validate)
+    last = await coll.find({"user_id": entry.user_id}).sort("position", -1).limit(1).to_list(length=1)
+    entry.position = (last[0]["position"] + 1) if last else 0
 
-    patch["updated_at"] = datetime.now(timezone.utc)
-    res = await coll.find_one_and_update(
-        {"user_id": user_id, "job_id": job_id},
-        {"$set": patch},
-        return_document=True,
-    )
-    if not res:
+    doc = entry.model_dump()
+    doc["_id"] = str(uuid.uuid4())
+    await coll.insert_one(doc)
+    return job_serializer(doc)
+
+@router.put("/{entry_id}/", response_model=dict)
+async def update_job(entry_id: str, entry: JobUpdate, user_id: str = Query(...), db=Depends(get_db)):
+    coll = jobs_coll(db)
+    update_data = {k: v for k, v in entry.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    result = await coll.update_one({"_id": entry_id, "user_id": user_id}, {"$set": update_data})
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Job not found")
-    return job_serializer(res)
 
-@app.delete("/{job_id}", status_code=204)
-async def delete_job(job_id: str, user_id: str = Query("temp_user"), db=Depends(get_db)):
-    res = await jobs_coll(db).delete_one({"user_id": user_id, "job_id": job_id})
-    if res.deleted_count == 0:
+    updated = await coll.find_one({"_id": entry_id})
+    return job_serializer(updated)
+
+@router.delete("/{entry_id}/", status_code=200)
+async def delete_job(entry_id: str, user_id: str = Query(...), db=Depends(get_db)):
+    coll = jobs_coll(db)
+    result = await coll.delete_one({"_id": entry_id, "user_id": user_id})
+    if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    # reindex positions like Education
+    remaining = await coll.find({"user_id": user_id}).sort("position", 1).to_list(length=10000)
+    for i, e in enumerate(remaining):
+        await coll.update_one({"_id": e["_id"]}, {"$set": {"position": i}})
+    return {"message": "Entry removed"}

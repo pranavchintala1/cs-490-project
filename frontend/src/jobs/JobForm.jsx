@@ -1,62 +1,63 @@
-// frontend/src/jobs/JobForm.jsx
-import React, { useState } from "react";
+// src/jobs/JobForm.jsx
+import { useState } from "react";
+import { createJob } from "../api";
 
-export default function JobForm({ API, userId, onCreated }) {
+export default function JobForm({ userId = "temp_user", onAdded }) {
   const [f, setF] = useState({
-    job_title: "",
-    company_name: "",
-    location: "",
-    start_date: "",
-    end_date: "",
-    current: false,
-    description: ""
+    job_title: "", company_name: "", location: "",
+    start_date: "", end_date: "", current: false, description: ""
   });
-  const [msg, setMsg] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setF((s) => ({ ...s, [name]: type === "checkbox" ? checked : value }));
+    setF({ ...f, [name]: type === "checkbox" ? checked : value });
   };
 
-  const submit = async () => {
-    setMsg("Saving…");
-    const payload = { ...f, end_date: f.current ? null : (f.end_date || null) };
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true); setErr("");
     try {
-      const r = await fetch(`${API}/jobs?user_id=${encodeURIComponent(userId)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!r.ok) throw new Error(await r.text());
-      setMsg("Added!");
-      setF({ job_title: "", company_name: "", location: "", start_date: "", end_date: "", current: false, description: "" });
-      onCreated?.();
+      const payload = {
+        user_id: userId,
+        job_title: f.job_title,
+        company_name: f.company_name,
+        location: f.location,
+        start_date: f.start_date || null,
+        end_date: f.current ? null : (f.end_date || null),
+        current: !!f.current,
+        description: f.description || "",
+      };
+      await createJob(payload);             // POST /jobs/
+      setF({ job_title:"", company_name:"", location:"", start_date:"", end_date:"", current:false, description:"" });
+      onAdded?.();
     } catch (e) {
       console.error(e);
-      setMsg("Failed to add.");
+      setErr(e.message || "Failed to add.");
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 12, marginBottom: 16 }}>
-      <h3 style={{ marginTop: 0 }}>Add Job</h3>
-      <Grid>
-        <L label="Job Title"><input name="job_title" value={f.job_title} onChange={onChange} /></L>
-        <L label="Company"><input name="company_name" value={f.company_name} onChange={onChange} /></L>
-        <L label="Location"><input name="location" value={f.location} onChange={onChange} /></L>
-        <L label="Start Date"><input type="date" name="start_date" value={f.start_date} onChange={onChange} /></L>
-        <L label="End Date"><input type="date" name="end_date" value={f.end_date} onChange={onChange} disabled={f.current} /></L>
-        <L label="Current"><input type="checkbox" name="current" checked={f.current} onChange={onChange} /></L>
-        <L label="Description"><textarea name="description" rows={3} value={f.description} onChange={onChange} /></L>
-      </Grid>
-      <button onClick={submit}>Add</button> <span style={{ color: "#555" }}>{msg}</span>
-    </div>
+    <form onSubmit={onSubmit}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <label>Job Title<input name="job_title" value={f.job_title} onChange={onChange} /></label>
+        <label>Company<input name="company_name" value={f.company_name} onChange={onChange} /></label>
+        <label>Location<input name="location" value={f.location} onChange={onChange} /></label>
+        <label>Start Date<input type="date" name="start_date" value={f.start_date} onChange={onChange} /></label>
+        <label>End Date<input type="date" name="end_date" value={f.end_date} onChange={onChange} disabled={f.current} /></label>
+        <label style={{ alignSelf: "end" }}>
+          <input type="checkbox" name="current" checked={f.current} onChange={onChange} /> Current
+        </label>
+      </div>
+      <label style={{ display: "block", marginTop: 12 }}>
+        Description
+        <textarea name="description" value={f.description} onChange={onChange} />
+      </label>
+      {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
+      <button disabled={saving} style={{ marginTop: 8 }}>{saving ? "Adding..." : "Add"}</button>
+    </form>
   );
-}
-
-function Grid({ children }) {
-  return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>{children}</div>;
-}
-function L({ label, children }) {
-  return <label style={{ display: "grid", gap: 6 }}><span style={{ fontWeight: 600 }}>{label}</span>{children}</label>;
 }

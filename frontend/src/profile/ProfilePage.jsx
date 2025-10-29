@@ -1,271 +1,183 @@
 // src/profile/ProfilePage.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import { getUserProfile, updateUserProfile, uploadProfilePicture } from "../api";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  getUserProfile,
+  createUserProfile,
+  updateUserProfileById,
+  uploadProfilePicture,
+} from "../api";
 
-const MAX_BIO = 500;
-const USER_ID = "temp_user";
+const styles = {
+  input: { width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ccc" },
+  label: { display: "block", fontWeight: 600, marginBottom: 6 },
+  row: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 16 },
+};
 
-export default function ProfilePage() {
-  const [profile, setProfile] = useState(null);
-  const [file, setFile] = useState(null);
+export default function ProfilePage({ userId = "temp_user" }) {
+  const [profile, setProfile] = useState(null);          // will include { id, user_id, ... }
+  const [form, setForm] = useState({
+    full_name: "", email: "", phone: "", location: "",
+    headline: "", industry: "", experience_level: "", bio: "", profile_picture: null,
+  });
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [msg, setMsg] = useState("");
-
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const p = await getUserProfile(USER_ID);
-        setProfile(p);
-      } catch (e) {
-        console.error(e);
-        setMsg("Failed to load profile.");
-      }
-    })();
-  }, []);
+  const [error, setError] = useState("");
 
   const apiBase = useMemo(
-    () => process.env.REACT_APP_API_URL || "http://localhost:8000",
+    () => process.env.REACT_APP_API_URL || "http://127.0.0.1:8000",
     []
   );
 
-
-
-
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "bio") {
-      setProfile((p) => ({ ...p, bio: (value || "").slice(0, MAX_BIO) }));
-    } else {
-       setProfile((p) => ({ ...p, [name]: value }));
-    }
-  };
-
-    const validate = () => {
-    if (!profile) return "Profile not loaded.";
-    if ((profile.email || "").trim()) {
-  
-      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.email.trim());
-      if (!ok) return "This isnt valid please enter a valid email";
-    }
-    return "";
-  };
-
-  const onSave = async () => {
-    const err = validate();
-    if (err) {
-      setMsg(err);
-      return;
-    }
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
-      setSaving(true);
-      setMsg("Saving…");
-      const updated = await updateUserProfile(USER_ID, {
-        full_name: profile.full_name || "",
-        email: (profile.email || "").toLowerCase(),
-        phone: profile.phone || "",
-        location: profile.location || "",
-        headline: profile.headline || "",
-        bio: profile.bio || "",
-        industry: profile.industry || "",
-        experience_level: profile.experience_level || null,
-        profile_picture: profile.profile_picture || "",
-      });
-      setProfile(updated);
-      setMsg("Saved!");
+      const p = await getUserProfile(userId); // GET /profile/?user_id=...
+      setProfile(p);
+      setForm((f) => ({
+        ...f,
+        full_name: p.full_name || "",
+        email: p.email || "",
+        phone: p.phone || "",
+        location: p.location || "",
+        headline: p.headline || "",
+        industry: p.industry || "",
+        experience_level: p.experience_level || "",
+        bio: p.bio || "",
+        profile_picture: p.profile_picture || null,
+      }));
     } catch (e) {
-      console.error(e);
-      setMsg("Save failed.");
+      setError(e.message || "Failed to load profile.");
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const onSave = async (e) => {
+    e.preventDefault();
+    setSaving(true); setError("");
+    try {
+      if (profile?.id) {
+        const updated = await updateUserProfileById(userId, profile.id, form);
+        setProfile(updated);
+      } else {
+        const created = await createUserProfile({ user_id: userId, ...form });
+        setProfile(created);
+      }
+      alert("Profile saved!");
+    } catch (e) {
+      setError(e.message || "Failed to save.");
     } finally {
       setSaving(false);
     }
   };
 
-   const onUpload = async () => {
-    if (!file) {
-      setMsg("Choose an image first.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setMsg("Image must be 5MB or smaller.");
-      return;
-    }
+  const onUpload = async (file) => {
+    if (!file) return;
+    setUploading(true); setError("");
     try {
-      setUploading(true);
-      setMsg("Uploading…");
-       const { url } = await uploadProfilePicture(USER_ID, file);
-      
-      const updated = await updateUserProfile(USER_ID, { profile_picture: url });
+      const updated = await uploadProfilePicture(userId, file); // returns full profile
       setProfile(updated);
-      setMsg("Uploaded!");
+      setForm((f) => ({ ...f, profile_picture: updated.profile_picture || null }));
     } catch (e) {
-      console.error(e);
-      setMsg("Upload failed. :(");
+      setError("Upload failed. :(");
     } finally {
       setUploading(false);
-      setFile(null);
     }
   };
 
-  if (!profile) return <p style={{ padding: 16 }}>Loading…</p>;
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="profile-container" style={styles.container}>
-      <h2 style={styles.h2}>My Profile</h2>
+    <div style={{ maxWidth: 800 }}>
+      <h1>My Profile</h1>
 
-      <div style={styles.grid}>
-        <L label="Full Name">
-          <input
-            name="full_name"
-            value={profile.full_name || ""}
-            onChange={onChange}
-            style={styles.input}
-            placeholder="Full Name"
-          />
-        </L>
+      {error && <div style={{ color: "crimson", marginBottom: 12 }}>{error}</div>}
 
-        <L label="Email">
-          <input
-            type="email"
-            name="email"
-            value={profile.email || ""}
-            onChange={onChange}
-            style={styles.input}
-            placeholder="email@domain.com"
-          />
-        </L>
+      <form onSubmit={onSave}>
+        <div style={styles.row}>
+          <div>
+            <label style={styles.label}>Full Name</label>
+            <input style={styles.input} name="full_name" value={form.full_name} onChange={onChange}/>
+          </div>
+          <div>
+            <label style={styles.label}>Email</label>
+            <input style={styles.input} name="email" value={form.email} onChange={onChange}/>
+          </div>
+        </div>
 
-        <L label="Phone">
-          <input
-            name="phone"
-            value={profile.phone || ""}
-            onChange={onChange}
-            style={styles.input}
-            placeholder="(555) 555-5555"
-          />
-        </L>
+        <div style={styles.row}>
+          <div>
+            <label style={styles.label}>Phone</label>
+            <input style={styles.input} name="phone" value={form.phone} onChange={onChange}/>
+          </div>
+          <div>
+            <label style={styles.label}>Location</label>
+            <input style={styles.input} name="location" value={form.location} onChange={onChange}/>
+          </div>
+        </div>
 
-        <L label="Location">
-          <input
-            name="location"
-            value={profile.location || ""}
-            onChange={onChange}
-            style={styles.input}
-            placeholder="City, State"
-          />
-        </L>
+        <div style={styles.row}>
+          <div>
+            <label style={styles.label}>Headline</label>
+            <input style={styles.input} name="headline" value={form.headline} onChange={onChange}/>
+          </div>
+          <div>
+            <label style={styles.label}>Industry</label>
+            <input style={styles.input} name="industry" value={form.industry} onChange={onChange}/>
+          </div>
+        </div>
 
-        <L label="Headline">
-          <input
-            name="headline"
-            value={profile.headline || ""}
-            onChange={onChange}
-            style={styles.input}
-            placeholder="e.g., Full-Stack Developer"
-          />
-        </L>
+        <div style={styles.row}>
+          <div>
+            <label style={styles.label}>Experience Level</label>
+            <select
+              style={styles.input}
+              name="experience_level"
+              value={form.experience_level || ""}
+              onChange={onChange}
+            >
+              <option value="">(select)</option>
+              <option value="Junior">Junior</option>
+              <option value="Mid">Mid</option>
+              <option value="Senior">Senior</option>
+            </select>
+          </div>
+          <div>
+            <label style={styles.label}>Bio</label>
+            <textarea
+              name="bio"
+              value={form.bio}
+              onChange={onChange}
+              style={{ ...styles.input, resize: "vertical", minHeight: 100 }}
+            />
+          </div>
+        </div>
 
-        <L label="Industry">
-          <input
-            name="industry"
-            value={profile.industry || ""}
-            onChange={onChange}
-            style={styles.input}
-            placeholder="e.g., Software, Finance"
-          />
-        </L>
-
-        <L label="Experience Level">
-          <select
-            name="experience_level"
-            value={profile.experience_level || ""}
-            onChange={onChange}
-            style={styles.input}
-          >
-            <option value="">Select…</option>
-            <option>Entry</option>
-            <option>Mid</option>
-            <option>Senior</option>
-            <option>Executive</option>
-          </select>
-        </L>
-
-        <L label={`Bio (${(profile.bio || "").length}/${MAX_BIO})`}>
-          <textarea
-            name="bio"
-            value={profile.bio || ""}
-            onChange={onChange}
-            rows={4}
-            style={{ ...styles.input, resize: "vertical" }}
-            placeholder="Brief professional summary (max 500 chars)"
-          />
-        </L>
-      </div>
-
-      <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-        <button onClick={onSave} disabled={saving || uploading} style={styles.btn}>
-          {saving ? "Saving…" : "Save"}
-        </button>
-        <span style={{ color: "#555" }}>{msg}</span>
-      </div>
+        <button type="submit" disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+      </form>
 
       <hr style={{ margin: "24px 0" }} />
 
-      <h3>Upload Profile Picture</h3>
-      {profile.profile_picture ? (
-        <img
-          alt="profile"
-          src={`${apiBase}${profile.profile_picture}`}
-          style={{ maxWidth: 160, borderRadius: 8, display: "block", marginBottom: 12 }}
-        />
+      <h2>Upload Profile Picture</h2>
+      {form.profile_picture ? (
+        <div style={{ marginBottom: 12 }}>
+          <img
+            src={`${apiBase}${form.profile_picture}`}
+            alt="profile"
+            style={{ maxWidth: 200, borderRadius: 8 }}
+          />
+        </div>
       ) : (
-        <p style={{ color: "#666" }}>No picture uploaded yet.</p>
+        <div style={{ marginBottom: 12 }}>No picture uploaded yet.</div>
       )}
-
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        <button onClick={onUpload} disabled={uploading || !file} style={styles.btn}>
-          {uploading ? "Uploading…" : "Upload"}
-        </button>
-      </div>
+      <input type="file" accept="image/*" onChange={(e) => onUpload(e.target.files?.[0])} disabled={uploading}/>
+      {uploading && <div>Uploading…</div>}
     </div>
   );
 }
-
-function L({ label, children }) {
-  return (
-    <label style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontWeight: 600 }}>{label}</span>
-      {children}
-    </label>
-  );
-}
-
-/* ---------- minimal styles ---------- */
-const styles = {
-  container: { padding: 16, maxWidth: 720, fontFamily: "system-ui, sans-serif" },
-  h2: { marginTop: 0 },
-  grid: {
-    display: "grid",
-    gap: 12,
-    gridTemplateColumns: "1fr 1fr",
-  },
-  input: {
-    padding: "8px 10px",
-    border: "1px solid #ccc",
-    borderRadius: 8,
-    width: "100%",
-  },
-  btn: {
-    padding: "8px 14px",
-    border: "1px solid #bbb",
-    borderRadius: 8,
-    cursor: "pointer",
-    background: "#fff",
-  },
-};

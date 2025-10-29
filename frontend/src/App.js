@@ -1,20 +1,20 @@
-// frontend/src/App.js
-import React from "react";
+// src/App.js
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import JobsList from "./jobs/JobsList";
-import ProfilePage from "./profile/ProfilePage" 
+import JobsPage from "./jobs/JobsPage";
+import ProfilePage from "./profile/ProfilePage";
 
 export default function App() {
+  const userId = "temp_user";
   return (
     <BrowserRouter>
-      <div style={{ padding: 12, display: "flex", gap: 12, borderBottom: "1px solid #eee" }}>
-        <Link to="/jobs">Jobs</Link>
+      <nav style={{ padding: 8 }}>
+        <Link to="/jobs" style={{ marginRight: 12 }}>Jobs</Link>
         <Link to="/profile">Profile</Link>
-      </div>
+      </nav>
       <Routes>
-        <Route path="/jobs" element={<JobsList />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="*" element={<div style={{ padding: 16 }}>Choose a page.</div>} />
+        <Route path="/jobs" element={<JobsPage userId={userId} />} />
+        <Route path="/profile" element={<ProfilePage userId={userId} />} />
+        <Route path="*" element={<JobsPage userId={userId} />} />
       </Routes>
     </BrowserRouter>
   );

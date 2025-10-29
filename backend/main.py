@@ -1,31 +1,36 @@
+# main.py
 from fastapi import FastAPI
+from fastapi.routing import APIRoute
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
 
-from pmsbackend.profile import app as profile_router
-from pmsbackend.jobs import app as jobs_router
-app = FastAPI(title="ATS API")
+from pmsbackend.jobs import router as jobs_router
+from pmsbackend.profile import router as profile_router
+from dotenv import load_dotenv
+load_dotenv() 
 
-# CORS
-origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
-if not origins:
-    origins = ["*"]
+app = FastAPI()
+
+# CORS for CRA dev
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-
-app.include_router(profile_router, prefix="/profile", tags=["profile"])
-app.include_router(jobs_router, prefix="/jobs", tags=["jobs"])
-os.makedirs("uploads/profile_pictures", exist_ok=True)
+# static hosting for uploads
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-@app.get("/ping")
-def ping():
-    return {"success": True, "message": "API is alive!"}
+# mount routers (Education-style paths)
+app.include_router(jobs_router, prefix="/jobs", tags=["jobs"])
+app.include_router(profile_router, prefix="/profile", tags=["profile"])
+
+# route lister (debug)
+@app.get("/_routes")
+def routes():
+    return sorted(
+        [{"path": r.path, "methods": sorted(list(r.methods))} for r in app.routes if isinstance(r, APIRoute)],
+        key=lambda x: x["path"],
+    )

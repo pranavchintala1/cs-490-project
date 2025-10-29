@@ -1,66 +1,62 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Any
-from datetime import datetime, timezone
-from pathlib import Path
-import uuid
+# pmsbackend/profile.py
+from fastapi import APIRouter, HTTPException, Query, Depends, UploadFile, File
+from typing import Optional, List
+from pydantic import BaseModel, EmailStr
+import uuid, os
+from db.clients import get_db
+from db.user import profiles_coll  # your existing helper
 
-from db.clients import get_db            # your Motor client factory
-from db.user import profiles_coll        # NEW: pull collection via db.user
+router = APIRouter()
 
-app = APIRouter()
-UPLOAD_DIR = Path("uploads/profile_pics")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-# ---------- Schemas ----------
-class ProfileBase(BaseModel):
-    full_name: str = Field(default="", max_length=200)
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = Field(default="", max_length=40)
-    location: Optional[str] = Field(default="", max_length=200)
-    headline: Optional[str] = Field(default="", max_length=200)
-    industry: Optional[str] = Field(default="", max_length=120)
-    experience_level: Optional[str] = None  # Entry/Mid/Senior/Executive
-    bio: Optional[str] = Field(default="", max_length=500)
-
-class ProfileUpdate(ProfileBase):
-    pass
-
-class ProfileOut(ProfileBase):
+# ----- Schemas -----
+class ProfileIn(BaseModel):
     user_id: str
+    full_name: str = ""
+    email: Optional[EmailStr] = None
+    phone: str = ""
+    location: str = ""
+    headline: str = ""
+    industry: str = ""
+    experience_level: Optional[str] = None
+    bio: str = ""
     profile_picture: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
 
-# ---------- Serializer ----------
-def _iso(v: Any) -> Any:
-    return v.isoformat() if isinstance(v, datetime) else v
+class ProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    headline: Optional[str] = None
+    industry: Optional[str] = None
+    experience_level: Optional[str] = None
+    bio: Optional[str] = None
+    profile_picture: Optional[str] = None
 
-def profile_serializer(doc: dict[str, Any]) -> dict[str, Any]:
-    if not doc:
-        return doc
-    d = dict(doc)
-    d.pop("_id", None)
-    d.setdefault("full_name", "")
-    d.setdefault("phone", "")
-    d.setdefault("location", "")
-    d.setdefault("headline", "")
-    d.setdefault("industry", "")
-    d.setdefault("experience_level", None)
-    d.setdefault("bio", "")
-    for k in ("created_at", "updated_at"):
-        if k in d and d[k] is not None:
-            d[k] = _iso(d[k])
-    return d
+# ----- Serializer -----
+def profile_serializer(doc: dict) -> dict:
+    return {
+        "id": doc["_id"],
+        "user_id": doc["user_id"],
+        "full_name": doc.get("full_name", ""),
+        "email": doc.get("email"),
+        "phone": doc.get("phone", ""),
+        "location": doc.get("location", ""),
+        "headline": doc.get("headline", ""),
+        "industry": doc.get("industry", ""),
+        "experience_level": doc.get("experience_level"),
+        "bio": doc.get("bio", ""),
+        "profile_picture": doc.get("profile_picture"),
+    }
 
-# ---------- Routes ----------
-@app.get("/me", response_model=ProfileOut)
-async def get_me(user_id: str = Query("temp_user"), db=Depends(get_db)):
+# ----- Routes (Education-style) -----
+@router.get("/", response_model=dict)
+async def get_profile(user_id: str = Query("temp_user"), db=Depends(get_db)):
     coll = profiles_coll(db)
     doc = await coll.find_one({"user_id": user_id})
     if not doc:
-        now = datetime.now(timezone.utc)
+        # create an empty profile on first read (handy for FE)
         doc = {
+            "_id": str(uuid.uuid4()),
             "user_id": user_id,
             "full_name": "",
             "email": None,
@@ -71,54 +67,59 @@ async def get_me(user_id: str = Query("temp_user"), db=Depends(get_db)):
             "experience_level": None,
             "bio": "",
             "profile_picture": None,
-            "created_at": now,
-            "updated_at": now,
         }
         await coll.insert_one(doc)
     return profile_serializer(doc)
 
-@app.put("/me", response_model=ProfileOut)
-async def update_me(
-    body: ProfileUpdate,
-    user_id: str = Query("temp_user"),
-    db=Depends(get_db),
-):
+@router.post("/", response_model=dict, status_code=201)
+async def create_profile(entry: ProfileIn, db=Depends(get_db)):
     coll = profiles_coll(db)
-    patch = {k: v for k, v in body.model_dump().items()}
-    patch["updated_at"] = datetime.now(timezone.utc)
+    existing = await coll.find_one({"user_id": entry.user_id})
+    if existing:
+        raise HTTPException(status_code=409, detail="Profile already exists")
+    doc = entry.model_dump()
+    doc["_id"] = str(uuid.uuid4())
+    await coll.insert_one(doc)
+    return profile_serializer(doc)
 
-    res = await coll.find_one_and_update(
-        {"user_id": user_id},
-        {"$set": patch, "$setOnInsert": {"created_at": datetime.now(timezone.utc), "user_id": user_id}},
-        upsert=True,
-        return_document=True,
-    )
-    if not res:
-        res = await coll.find_one({"user_id": user_id})
-    return profile_serializer(res)
+@router.put("/{profile_id}/", response_model=dict)
+async def update_profile(profile_id: str, user_id: str = Query(...), entry: ProfileUpdate = None, db=Depends(get_db)):
+    coll = profiles_coll(db)
+    update_data = {k: v for k, v in (entry.model_dump() if entry else {}).items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
 
-@app.post("/upload-profile-picture", response_model=ProfileOut)
-async def upload_profile_picture(
-    file: UploadFile = File(...),
-    user_id: str = Query("temp_user"),
-    db=Depends(get_db),
-):
-    # Save file
-    ext = Path(file.filename).suffix.lower() or ".bin"
-    safe_name = f"{user_id}_{uuid.uuid4().hex}{ext}"
-    dest = UPLOAD_DIR / safe_name
-    with dest.open("wb") as f:
+    result = await coll.update_one({"_id": profile_id, "user_id": user_id}, {"$set": update_data})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    updated = await coll.find_one({"_id": profile_id})
+    return profile_serializer(updated)
+
+@router.delete("/{profile_id}/", status_code=200)
+async def delete_profile(profile_id: str, user_id: str = Query(...), db=Depends(get_db)):
+    coll = profiles_coll(db)
+    result = await coll.delete_one({"_id": profile_id, "user_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return {"message": "Profile removed"}
+
+# ----- Optional: picture upload, returns URL -----
+UPLOAD_DIR = os.path.join("uploads", "profile")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@router.post("/upload-profile-picture", response_model=dict)
+async def upload_profile_picture(user_id: str = Query(...), file: UploadFile = File(...), db=Depends(get_db)):
+    if not (file.content_type or "").startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    ext = os.path.splitext(file.filename or "")[1] or ".png"
+    fname = f"{uuid.uuid4().hex}{ext}"
+    path = os.path.join(UPLOAD_DIR, fname)
+    with open(path, "wb") as f:
         f.write(await file.read())
 
-    # Update doc
     coll = profiles_coll(db)
-    patch = {"profile_picture": str(dest.as_posix()), "updated_at": datetime.now(timezone.utc)}
-    res = await coll.find_one_and_update(
-        {"user_id": user_id},
-        {"$set": patch, "$setOnInsert": {"created_at": datetime.now(timezone.utc), "user_id": user_id}},
-        upsert=True,
-        return_document=True,
-    )
-    if not res:
-        res = await coll.find_one({"user_id": user_id})
-    return profile_serializer(res)
+    await coll.update_one({"user_id": user_id}, {"$set": {"profile_picture": f"/uploads/profile/{fname}"}})
+    updated = await coll.find_one({"user_id": user_id})
+    return profile_serializer(updated)
