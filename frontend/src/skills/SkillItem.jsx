@@ -43,7 +43,13 @@ export default function SkillItem({
         <option>Advanced</option>
         <option>Expert</option>
       </select>
-      <button onClick={() => removeSkill(skill.id)}>🗑</button>
+      <button
+        onPointerDown={(e) => e.preventDefault()} // prevents drag start
+        onClick={() => removeSkill(skill.id)}
+        style={{ cursor: "pointer" }}
+      >
+        🗑
+      </button>
     </div>
   );
 }
