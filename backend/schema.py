@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 class LoginCred(BaseModel):
-    username: str | None = None
+    email: str | None = None
     password: str | None = None
 
 class RegistInfo(BaseModel):
