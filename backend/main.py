@@ -1,6 +1,8 @@
 from fastapi import FastAPI,Header,Body
 from fastapi.responses import JSONResponse
 from uuid import uuid4
+from datetime import datetime, timedelta
+import bcrypt
 
 from mongo.user_data_dao import user_data_dao
 from mongo.user_auth_dao import user_auth_dao
@@ -95,8 +97,9 @@ async def add_skill(uuid, entry: Skill):
         return JSONResponse(status_code = 400, content = {"detail": "User required"})
     
 @app.post("api/auth/forgotpassword")
-async def forgotPassword(email):
+async def forgotPassword(data: str):
 
+    email = data.email
     try:
         if user_auth_dao.get_uuid(email):
             token = forgotPassword.send_email(email)
@@ -105,9 +108,34 @@ async def forgotPassword(email):
             return True
     except Exception as e:
         return None
+    
+@app.get("api/auth/resetpassword")
+async def resetPassword(token: str):
+    uuid,expires = forgotPassword.verify_link(token)
+    try:
+        if (uuid):
+            if(datetime.now() < uuid["expires"]): # The link is still valid.
+                return JSONResponse(status_code = 200, content = {"uuid": uuid})
+    except Exception as e:
+        return None
+    
+
+@app.put("api/user/updatepassword")
+async def updatePassword(data):
+    uuid = data.uuid
+    newPass = data.password
+
+    try:
+        old_data = user_auth_dao.retieve_user(uuid)
+        old_data["password"] = bcrypt.hashpw(newPass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        user_data_dao.update_user(uuid,data)
+    except Exception as e:
+        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
+    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration", "uuid": uuid})
 
 
-@app.post("/verify-google-token")
+
+@app.post("api/auth/verify-google-token")
 async def verify_google_token(token: str = Body(...)):
     try:
         uuid = str(uuid4())

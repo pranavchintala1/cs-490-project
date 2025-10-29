@@ -2,11 +2,12 @@
 import { useForm } from "react-hook-form";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
+import { getData,updateData } from "../tools/db_commands"
 
 
 
 
-const ResetPassword = () => {
+const ResetPassword = async () => {
 
 
     const URL = useParams();
@@ -22,19 +23,23 @@ const ResetPassword = () => {
     const { flash, showFlash }  = useFlash();
     const Navigate = useNavigate();
 
+    const res = await getData(URL,"api/auth/resetpassword")
+
     //Put a query to database here to see if the url token exists. The reset link in the database should be tied to the user account somehow.
 
-    if (!URL){ // if the url to reset does not exist, change later.
+    if (!res){ // if the url to reset does not exist, change later.
 
         return(
             <>
-            <h1>The password reset link you are looking for does not exist.</h1>
+            <h1>The password reset link you are looking for has expired or does not exist.</h1>
             </>
 
 
         )
 
-    }
+    };
+
+    res = res.json()
 
 
 
@@ -45,11 +50,24 @@ const ResetPassword = () => {
         //user.password = data.password => send to backend and update value.
         //delete database entry for password reset link.
         //Set session to user's session.
-        const token = "temp";
-    
-        reset();
 
-        Navigate(`/profile/${token}`);
+        res = updateData(data,"api/user/updatepassword")
+
+        if(!res){
+            showFlash("Something went wrong when registering","error");
+            return;
+        }
+
+        data = res.json()
+
+        if (res.status != 200 ){
+    
+            showFlash(data.content,"error");
+            return;
+        }
+
+        Navigate(`/profile/${data.session_token}`);
+        return;
 
 
 
@@ -61,8 +79,8 @@ const ResetPassword = () => {
 return (
     <>
 
-    <form className="Reset" onSubmit={handleSubmit(onSubmit)}>
-
+    <form  className="Reset" onSubmit={handleSubmit(onSubmit)}>
+        <input type="hidden" value={res.uuid} {...register("token")} />
         <input
             type="password"
             minLength="8"

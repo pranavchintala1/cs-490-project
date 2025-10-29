@@ -4,7 +4,6 @@ import { useNavigate, Link } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
 import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
-import { OAuth } from "../tools/OAUTH";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
@@ -37,8 +36,10 @@ function Login() {
             
             } 
             else {
-                localStorage.setItem("session",data.username) // TODO change localstorage session to something else later.
-                navigate(`/profile/${data.username}`); // make profile later lmao. 
+
+                data = data.json()
+                
+                navigate(`/profile/${data.uuid}`); // make profile later lmao. 
 
             }
 
@@ -53,18 +54,21 @@ function Login() {
             // retrieve user token data from other endpoint. then login.
             const res = sendData(data,"verify-google-token"); // Link this account with local non-google account later.
             
-            
+            if (!res){
+                showFlash("Something went wrong","error")
+                return
+            }
+
             if (res.status != 200){
                             
                 showFlash(res.content,"error");
                 return;
                             
             }
+
+             data = res.json();
                         
-            data = res.json();
-            
-            localStorage.setItem("session",data.session_token);
-            
+
             navigate(`/profile/${data.session_token}`);
             return;
 
@@ -89,7 +93,7 @@ const handleMicrosoftLogin = async () => {
     });*/
 
     // Navigate or update app state
-    localStorage.setItem("session",idToken)
+    
     navigate(`/profile/${account.homeAccountId}`);
   } catch (error) {
     console.error("Login failed:", error);

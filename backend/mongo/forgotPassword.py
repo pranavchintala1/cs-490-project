@@ -1,6 +1,7 @@
 
 from dotenv import load_dotenv
 from mongo.dao_setup import db_client, RESET_LINKS
+from mongo.user_auth_dao import user_auth_dao
 import os
 import smtplib
 from email.mime.text import MIMEText
@@ -52,7 +53,6 @@ class forgotPassword:
 
     
 
-
     async def store_link(self,id,email,token):
 
         db_token = hashlib.sha256(token.encode()).hexdigest() # send this to db
@@ -65,9 +65,23 @@ class forgotPassword:
         }
         await self.collection.insert_one(body)
 
-    async def get_link(self,token):
+    async def verify_link(self,token):
+
+        try:
+            db_token = hashlib.sha256(token.encode()).hexdigest()
+            data = await self.collection.find_one({"token":db_token})
+            if data:
+                expires = data["expires"]
+                email = data["email"]
+                uuid = user_auth_dao.get_uuid(email)
+                return uuid,expires
+        
+        except Exception as e:
+            return None,None
 
         
+
+
 
 
 

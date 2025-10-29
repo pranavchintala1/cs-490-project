@@ -37,12 +37,12 @@ function Register() {
 
         }
 
-        else if (res.status != 200){
+        data = res.json()
+
+        if (res.status != 200){
             showFlash(res.content,"error");
         }
         else{
-
-            data = res.json()
 
 
             showFlash("Successfully Registered!","Success");
@@ -56,7 +56,7 @@ function Register() {
 
         const OAuthSubmit = (data) => {
 
-            const res = sendData(data,"verify-google-token"); // Link this account with local non-google account later.
+            const res = sendData(data,"api/auth/verify-google-token"); // Link this account with local non-google account later.
 
             if (!res){
                  
@@ -71,7 +71,6 @@ function Register() {
                 return;
                 
             }
-        
 
             navigate(`/profile/${data.session_token}`);
             return;
@@ -95,7 +94,7 @@ const handleMicrosoftLogin = async () => {
     });*/
 
     // Navigate or update app state
-    
+
     navigate(`/profile/${account.homeAccountId}`);
   } catch (error) {
     console.error("Login failed:", error);
