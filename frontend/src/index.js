@@ -10,13 +10,15 @@ import { msalConfig } from "./tools/msal";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
 
+
 const PCA = new PublicClientApplication(msalConfig);
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID; // from .env
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <FlashProvider>
-      <GoogleOAuthProvider clientId = "353485037937-e0ahue4mghknkqrdpsp009l3hatuhc69.apps.googleusercontent.com">
+      <GoogleOAuthProvider clientId={clientId}>
        <MsalProvider instance={PCA}>
         <BrowserRouter>
           <App />
