@@ -1,16 +1,12 @@
 from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from typing import Optional
-import shutil
-from pathlib import Path
 from db.models import CERTIFICATIONS_COLLECTION
 from datetime import datetime, timedelta
+from io import BytesIO
 import uuid
 
 app = FastAPI()
-
-UPLOAD_DIR = Path("uploads/certifications")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 def cert_serializer(entry):
     return {
@@ -24,15 +20,18 @@ def cert_serializer(entry):
         "cert_id": entry.get("cert_id"),
         "category": entry.get("category"),
         "verified": entry.get("verified", False),
-        "document_url": entry.get("document_url"),
         "position": entry.get("position", 0),
+        "has_document": "document" in entry,
+        "document_name": entry.get("document_name"),
+        "document_content_type": entry.get("document_content_type")
     }
+
 
 # --- GET all certifications ---
 @app.get("/")
 def get_certifications(user_id: str = Query("temp_user")):
     certs = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
-    
+
     def cert_sort_key(c):
         exp = c.get("expiration_date")
         if exp:
@@ -50,7 +49,7 @@ def get_certifications(user_id: str = Query("temp_user")):
 
 # --- POST new certification ---
 @app.post("/")
-def add_certification(
+async def add_certification(
     user_id: str = Form(...),
     name: str = Form(...),
     issuer: str = Form(...),
@@ -62,12 +61,14 @@ def add_certification(
     verified: bool = Form(False),
     document: UploadFile = File(None),
 ):
+    # Read file into memory
+    file_bytes = None
     filename = None
+    content_type = None
     if document:
+        file_bytes = await document.read()
         filename = document.filename
-        file_path = UPLOAD_DIR / filename
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(document.file, buffer)
+        content_type = document.content_type
 
     last = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", -1).limit(1))
     position = last[0]["position"] + 1 if last else 0
@@ -84,9 +85,13 @@ def add_certification(
         "cert_id": cert_id,
         "category": category,
         "verified": verified,
-        "document_url": filename,
         "position": position,
     }
+
+    if file_bytes:
+        doc["document"] = file_bytes
+        doc["document_name"] = filename
+        doc["document_content_type"] = content_type
 
     CERTIFICATIONS_COLLECTION.insert_one(doc)
     return cert_serializer(doc)
@@ -104,9 +109,15 @@ def delete_certification(cert_id: str, user_id: str = Query(...)):
     return {"message": "Certification removed"}
 
 # --- Download file ---
-@app.get("/download/{filename}")
-def download_cert(filename: str):
-    file_path = UPLOAD_DIR / filename
-    if not file_path.exists():
+@app.get("/download/{cert_id}")
+def download_cert(cert_id: str, user_id: str = Query(...)):
+    cert = CERTIFICATIONS_COLLECTION.find_one({"_id": cert_id, "user_id": user_id})
+    if not cert or "document" not in cert:
         raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(file_path, media_type="application/octet-stream", filename=filename)
+    
+    file_like = BytesIO(cert["document"])
+    return StreamingResponse(
+        file_like,
+        media_type=cert.get("document_content_type", "application/octet-stream"),
+        headers={"Content-Disposition": f"attachment; filename={cert.get('document_name', 'file')}"}
+    )

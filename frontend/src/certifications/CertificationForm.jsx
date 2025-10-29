@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 export default function CertificationForm({ addCert }) {
   const [name, setName] = useState("");
@@ -9,6 +9,8 @@ export default function CertificationForm({ addCert }) {
   const [certNumber, setCertNumber] = useState("");
   const [documentFile, setDocumentFile] = useState(null);
   const [category, setCategory] = useState("Categories");
+
+  const fileInputRef = useRef(null); // ✅ ref for file input
 
   const categories = [
     "Categories", "IT/Software", "Healthcare", "Finance", "Management", "Engineering",
@@ -33,6 +35,8 @@ export default function CertificationForm({ addCert }) {
     // Reset form
     setName(""); setIssuer(""); setDateEarned(""); setDoesNotExpire(false);
     setExpirationDate(""); setCertNumber(""); setDocumentFile(null); setCategory("Categories");
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -63,7 +67,11 @@ export default function CertificationForm({ addCert }) {
         </select>
       </div>
       <div>
-        <input type="file" onChange={e => setDocumentFile(e.target.files[0])} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          onChange={e => setDocumentFile(e.target.files[0])}
+        />
       </div>
       <div><button type="submit">Add Certification</button></div>
     </form>

@@ -12,34 +12,34 @@ export default function ProjectForm({ addProject }) {
   const [achievements, setAchievements] = useState("");
   const [industry, setIndustry] = useState("");
   const [status, setStatus] = useState("Planned");
-  const [mediaFiles, setMediaFiles] = useState([]);
+  const [files, setFiles] = useState([]);
 
-  const fileInputRef = useRef(null); // ✅ To reset file input
+  const fileRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
     formData.append("role", role);
     formData.append("start_date", startDate);
-    formData.append("end_date", endDate);
-    formData.append("technologies", technologies);
-    formData.append("project_url", projectUrl);
-    formData.append("team_size", teamSize);
-    formData.append("achievements", achievements);
-    formData.append("industry", industry);
+    if (endDate) formData.append("end_date", endDate);
+    if (technologies) formData.append("technologies", technologies);
+    if (projectUrl) formData.append("project_url", projectUrl);
+    if (teamSize) formData.append("team_size", teamSize);
+    if (achievements) formData.append("achievements", achievements);
+    if (industry) formData.append("industry", industry);
     formData.append("status", status);
 
-    mediaFiles.forEach(file => formData.append("media_files", file));
+    files.forEach(f => formData.append("media_files", f));
+
     addProject(formData);
 
-    // ✅ Reset form + clear file input UI
-    setName(""); setDescription(""); setRole(""); setStartDate("");
-    setEndDate(""); setTechnologies(""); setProjectUrl(""); setTeamSize("");
-    setAchievements(""); setIndustry(""); setStatus("Planned");
-    setMediaFiles([]);
-    if (fileInputRef.current) fileInputRef.current.value = ""; // ✅ Reset actual input
+    // Reset form
+    setName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate("");
+    setTechnologies(""); setProjectUrl(""); setTeamSize(""); setAchievements(""); setIndustry(""); setStatus("Planned"); setFiles([]);
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   return (
@@ -51,7 +51,7 @@ export default function ProjectForm({ addProject }) {
         Start: <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
         End: <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
       </div>
-      <div><input placeholder="Technologies/Skills Used (comma separated)" value={technologies} onChange={e => setTechnologies(e.target.value)} /></div>
+      <div><input placeholder="Technologies (comma separated)" value={technologies} onChange={e => setTechnologies(e.target.value)} /></div>
       <div><input placeholder="Project URL (optional)" value={projectUrl} onChange={e => setProjectUrl(e.target.value)} /></div>
       <div><input placeholder="Team Size" value={teamSize} onChange={e => setTeamSize(e.target.value)} /></div>
       <div><input placeholder="Achievements / Outcomes" value={achievements} onChange={e => setAchievements(e.target.value)} /></div>
@@ -64,18 +64,11 @@ export default function ProjectForm({ addProject }) {
           <option>Completed</option>
         </select>
       </div>
-
       <div>
         Photo/Media Upload:
-        <input
-          type="file"
-          multiple
-          ref={fileInputRef}
-          onChange={e => setMediaFiles([...e.target.files])}
-        />
+        <input type="file" multiple ref={fileRef} onChange={e => setFiles([...e.target.files])} />
       </div>
-
-      <button type="submit">Add Project</button>
+      <div><button type="submit">Add Project</button></div>
     </form>
   );
 }

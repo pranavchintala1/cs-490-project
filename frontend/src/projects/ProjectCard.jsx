@@ -1,72 +1,51 @@
 import React, { useState } from "react";
 
-const API_URL = process.env.REACT_APP_API_URL;
-
 export default function ProjectCard({ project, deleteProject }) {
   const [expanded, setExpanded] = useState(false);
-
-  const isImage = (file) =>
-    /\.(png|jpe?g|gif|webp)$/i.test(file);
-
-  const fileUrl = (file) => `${API_URL}/projects/download/${file}`;
+  const isImage = (filename) => /\.(png|jpe?g|gif|webp)$/i.test(filename);
 
   return (
-    <div className="project-card" style={{border:"1px solid #ccc", padding:"10px", margin:"8px", borderRadius:"5px"}}>
-      <div onClick={() => setExpanded(!expanded)} style={{cursor:"pointer"}}>
-        <strong>{project.name}</strong> — {project.status}<br/>
-        <em>{project.role}</em><br/>
-        {project.start_date} - {project.end_date || "Present"}<br/>
+    <div className="project-card" style={{ border: "1px solid #ccc", padding: 10, margin: 8 }}>
+      <div onClick={() => setExpanded(!expanded)} style={{ cursor: "pointer" }}>
+        <strong>{project.name}</strong> — {project.status}<br />
+        <em>{project.industry}</em><br /> {/* ✅ Industry on top */}
+        <em>{project.role}</em><br />
+        {project.start_date} - {project.end_date || "Present"}
       </div>
 
       {expanded && (
-        <>
+        <div style={{ marginTop: 10 }}>
           <p>{project.description}</p>
-          <p><strong>Technologies:</strong> {project.technologies}</p>
-          <p><strong>Team Size:</strong> {project.team_size}</p>
-          <p><strong>Achievements:</strong> {project.achievements}</p>
-          <p><strong>Industry:</strong> {project.industry}</p>
 
-          <a
-  href={
-    project.project_url
-      ? (project.project_url.startsWith("http")
-          ? project.project_url
-          : "https://" + project.project_url)
-      : "#"
-  }
-  target="_blank"
-  rel="noreferrer"
->
-  Project Link
-  </a>
-          <br/>
+          {project.technologies?.length > 0 && (
+            <p><strong>Technologies / Skills:</strong> {project.technologies.join(", ")}</p>
+          )}
+          {project.project_url && <p><strong>Project URL:</strong> <a href={project.project_url}>{project.project_url}</a></p>}
+          {project.team_size && <p><strong>Team Size:</strong> {project.team_size}</p>}
+          {project.achievements && <p><strong>Outcomes / Achievements:</strong> {project.achievements}</p>}
 
           {project.media_files?.length > 0 && (
-            <div>
-              {project.media_files.map((file, idx) => (
-                isImage(file) ? (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {project.media_files.map((file, idx) =>
+                isImage(file.filename) ? (
                   <img
                     key={idx}
-                    src={fileUrl(file)}
-                    alt=""
-                    style={{
-                      width:"80px", height:"80px",
-                      objectFit:"cover", margin:"4px",
-                      borderRadius:"5px"
-                    }}
+                    src={`data:${file.content_type};base64,${file.data}`}
+                    alt={file.filename}
+                    style={{ width: 100, height: 100, objectFit: "cover" }}
                   />
                 ) : (
-                  <a key={idx} href={fileUrl(file)} download>{file}</a>
+                  <span key={idx} style={{ display: "block" }}>📎 {file.filename}</span>
                 )
-              ))}
+              )}
             </div>
           )}
-        </>
+        </div>
       )}
 
-      <div style={{ marginTop:"6px" }}>
-        <button onClick={() => deleteProject(project.id)}>🗑 Delete</button>
-      </div>
+      <button style={{ marginTop: 6 }} onClick={() => deleteProject(project.id)}>
+        🗑 Delete
+      </button>
     </div>
   );
 }

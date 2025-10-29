@@ -1,11 +1,12 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Form, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
-from pydantic import BaseModel
-import uuid
 from db.models import PROJECTS_COLLECTION
+import uuid
+import base64
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,38 +15,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class Project(BaseModel):
-    user_id: str
-    name: str
-    description: str
-    role: str
-    start_date: str
-    end_date: Optional[str] = None
-    skills_used: List[str] = []
-    team_size: Optional[int] = None
-    details: Optional[str] = None
-    outcomes: Optional[str] = None
-    industry_type: Optional[str] = None
-    media_urls: List[str] = []
-    status: Optional[str] = "Planned"
-    position: Optional[int] = 0
-
-class ProjectUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    role: Optional[str] = None
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
-    skills_used: Optional[List[str]] = None
-    team_size: Optional[int] = None
-    details: Optional[str] = None
-    outcomes: Optional[str] = None
-    industry_type: Optional[str] = None
-    media_urls: Optional[List[str]] = None
-    status: Optional[str] = None
-    position: Optional[int] = None
-
 def project_serializer(p):
+    media_files = [
+        {
+            "filename": f["filename"],
+            "content_type": f.get("content_type"),
+            "data": base64.b64encode(f["content"]).decode("utf-8")
+        }
+        for f in p.get("media_files", [])
+    ]
+    
     return {
         "id": p["_id"],
         "user_id": p["user_id"],
@@ -54,14 +33,14 @@ def project_serializer(p):
         "role": p["role"],
         "start_date": p["start_date"],
         "end_date": p.get("end_date"),
-        "skills_used": p.get("skills_used", []),
+        "technologies": p.get("technologies", []),
+        "project_url": p.get("project_url"),
         "team_size": p.get("team_size"),
-        "details": p.get("details"),
-        "outcomes": p.get("outcomes"),
-        "industry_type": p.get("industry_type"),
-        "media_urls": p.get("media_urls", []),
+        "achievements": p.get("achievements"),
+        "industry": p.get("industry"),
         "status": p.get("status", "Planned"),
-        "position": p.get("position", 0)
+        "position": p.get("position", 0),
+        "media_files": media_files,
     }
 
 @app.get("/")
@@ -70,36 +49,52 @@ def get_projects(user_id: str = Query("temp_user")):
     return [project_serializer(p) for p in projects]
 
 @app.post("/")
-def add_project(project: Project):
-    last = list(PROJECTS_COLLECTION.find({"user_id": project.user_id}).sort("position", -1).limit(1))
-    project.position = last[0]["position"] + 1 if last else 0
+async def add_project(
+    user_id: str = Form(...),
+    name: str = Form(...),
+    description: str = Form(...),
+    role: str = Form(...),
+    start_date: str = Form(...),
+    end_date: Optional[str] = Form(None),
+    technologies: Optional[str] = Form(None),
+    project_url: Optional[str] = Form(None),
+    team_size: Optional[int] = Form(None),
+    achievements: Optional[str] = Form(None),
+    industry: Optional[str] = Form(None),
+    status: Optional[str] = Form("Planned"),
+    media_files: Optional[List[UploadFile]] = File(None),
+):
+    last = list(PROJECTS_COLLECTION.find({"user_id": user_id}).sort("position", -1).limit(1))
+    position = last[0]["position"] + 1 if last else 0
 
-    doc = project.dict()
-    doc["_id"] = str(uuid.uuid4())
+    files_data = []
+    if media_files:
+        for f in media_files:
+            content = await f.read()
+            files_data.append({
+                "filename": f.filename,
+                "content": content,
+                "content_type": f.content_type
+            })
+
+    doc_id = str(uuid.uuid4())
+    doc = {
+        "_id": doc_id,
+        "user_id": user_id,
+        "name": name,
+        "description": description,
+        "role": role,
+        "start_date": start_date,
+        "end_date": end_date,
+        "technologies": technologies.split(",") if technologies else [],
+        "project_url": project_url,
+        "team_size": team_size,
+        "achievements": achievements,
+        "industry": industry,
+        "status": status,
+        "position": position,
+        "media_files": files_data,
+    }
+
     PROJECTS_COLLECTION.insert_one(doc)
     return project_serializer(doc)
-
-@app.put("/{project_id}/")
-def update_project(project_id: str, project: ProjectUpdate, user_id: str = Query(...)):
-    update_data = {k: v for k, v in project.dict().items() if v is not None}
-    if not update_data:
-        raise HTTPException(status_code=400, detail="No valid fields to update")
-
-    result = PROJECTS_COLLECTION.update_one({"_id": project_id, "user_id": user_id}, {"$set": update_data})
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    updated = PROJECTS_COLLECTION.find_one({"_id": project_id})
-    return project_serializer(updated)
-
-@app.delete("/{project_id}/")
-def delete_project(project_id: str, user_id: str = Query(...)):
-    result = PROJECTS_COLLECTION.delete_one({"_id": project_id, "user_id": user_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Project not found")
-
-    remaining = list(PROJECTS_COLLECTION.find({"user_id": user_id}).sort("position", 1))
-    for i, p in enumerate(remaining):
-        PROJECTS_COLLECTION.update_one({"_id": p["_id"]}, {"$set": {"position": i}})
-
-    return {"message": "Project removed"}

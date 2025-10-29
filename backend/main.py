@@ -27,6 +27,3 @@ app.mount("/skills", skills_app)
 app.mount("/education", education_app)
 app.mount("/certifications", certifications_app)
 app.mount("/projects", projects_app)
-
-# Serve uploads for all modules (skills, certifications, etc.)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
