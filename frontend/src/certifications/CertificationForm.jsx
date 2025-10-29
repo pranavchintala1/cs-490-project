@@ -77,7 +77,7 @@ export default function CertificationForm({ addCert }) {
       </div>
       <div>
         <select value={category} onChange={e => setCategory(e.target.value)} required>
-          <option value="" disabled>Select Category</option>
+          <option value="" disabled>Select Industry</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>

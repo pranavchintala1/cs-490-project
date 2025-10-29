@@ -11,24 +11,46 @@ export default function CertificationList() {
   const fetchCerts = async () => {
     const res = await fetch(`${API_URL}?user_id=temp_user`);
     const data = await res.json();
-    setCerts(data || []);
+    setCerts(sortCerts(data || []));
   };
 
   useEffect(() => {
     fetchCerts();
   }, []);
 
+  const sortCerts = (certArray) => {
+    const today = new Date();
+    return certArray
+      .sort((a, b) => {
+        const aExp = a.expiration_date ? new Date(a.expiration_date) : null;
+        const bExp = b.expiration_date ? new Date(b.expiration_date) : null;
+
+        const aExpired = aExp && aExp < today;
+        const bExpired = bExp && bExp < today;
+
+        const aExpSoon = aExp && aExp - today <= 1000 * 60 * 60 * 24 * 90;
+        const bExpSoon = bExp && bExp - today <= 1000 * 60 * 60 * 24 * 90;
+
+        if (aExpired && !bExpired) return -1;
+        if (!aExpired && bExpired) return 1;
+        if (aExpSoon && !bExpSoon) return -1;
+        if (!aExpSoon && bExpSoon) return 1;
+        return 0;
+      })
+      .map((c, i) => ({ ...c, position: i })); // recalc position
+  };
+
   const addCert = async (formData) => {
-    formData.append("user_id", "temp_user"); 
+    formData.append("user_id", "temp_user");
     const res = await fetch(API_URL, { method: "POST", body: formData });
     const added = await res.json();
-    setCerts([...certs, added]);
+    setCerts(sortCerts([...certs, added]));
   };
 
   const deleteCert = async (id) => {
     if (!window.confirm("Delete this certification?")) return;
     await fetch(`${API_URL}/${id}?user_id=temp_user`, { method: "DELETE" });
-    setCerts(certs.filter((c) => c.id !== id));
+    setCerts(sortCerts(certs.filter((c) => c.id !== id)));
   };
 
   const filteredCerts = certs.filter((c) =>

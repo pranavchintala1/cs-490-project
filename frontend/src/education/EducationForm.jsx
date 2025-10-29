@@ -139,7 +139,7 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
 
       <div>
         <input
-          placeholder="GPA"
+          placeholder="GPA (Optional)"
           type="number"
           step="0.1"
           value={gpa}
@@ -156,7 +156,7 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
       </div>
 
       <textarea
-        placeholder="Achievements / Honors"
+        placeholder="Achievements / Honors (Optional)"
         value={achievements}
         onChange={(e) => setAchievements(e.target.value)}
       />

@@ -70,6 +70,7 @@ async def add_certification(
         filename = document.filename
         content_type = document.content_type
 
+    # Assign a temporary position
     last = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}).sort("position", -1).limit(1))
     position = last[0]["position"] + 1 if last else 0
 
@@ -94,7 +95,26 @@ async def add_certification(
         doc["document_content_type"] = content_type
 
     CERTIFICATIONS_COLLECTION.insert_one(doc)
+
+    # --- Recompute positions based on expiration ---
+    certs = list(CERTIFICATIONS_COLLECTION.find({"user_id": user_id}))
+    
+    def cert_sort_key(c):
+        exp = c.get("expiration_date")
+        if exp:
+            exp_date = datetime.strptime(exp, "%Y-%m-%d").date()
+            if exp_date < datetime.today().date():
+                return -2  # expired
+            elif exp_date <= datetime.today().date() + timedelta(days=90):
+                return -1  # expiring soon
+        return 0
+
+    certs.sort(key=cert_sort_key)
+    for i, c in enumerate(certs):
+        CERTIFICATIONS_COLLECTION.update_one({"_id": c["_id"]}, {"$set": {"position": i}})
+
     return cert_serializer(doc)
+
 
 # --- DELETE certification ---
 @app.delete("/{cert_id}")

@@ -64,7 +64,13 @@ export default function ProjectForm({ addProject }) {
       <div><input placeholder="Technologies/Skills (optional, comma separated)" value={technologies} onChange={e => setTechnologies(e.target.value)} /></div>
       <div><input placeholder="Project URL (optional)" value={projectUrl} onChange={e => setProjectUrl(e.target.value)} /></div>
       <div><input placeholder="Team Size" type="number" value={teamSize} onChange={e => setTeamSize(e.target.value)} required min="1" /></div>
-      <div><input placeholder="Achievements / Outcomes (optional)" value={achievements} onChange={e => setAchievements(e.target.value)} /></div>
+      <div>
+  <textarea
+    placeholder="Achievements / Outcomes (optional)"
+    value={achievements}
+    onChange={e => setAchievements(e.target.value)}
+  />
+</div>
       <div><input placeholder="Industry / Project Type (optional)" value={industry} onChange={e => setIndustry(e.target.value)} /></div>
       <div>
         Status:
