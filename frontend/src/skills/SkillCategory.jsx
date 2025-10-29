@@ -54,7 +54,7 @@ export default function SkillCategory({ category, skills, updateSkill, removeSki
         placeholder={`Filter ${category} skills...`}
         value={filterTerm}
         onChange={(e) => setFilterTerm(e.target.value)}
-        style={{ marginBottom: "8px", width: "100%" }}
+        style={{ marginBottom: "8px"}}
       />
 
       <p>
