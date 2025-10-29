@@ -1,17 +1,20 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
+import { sendData } from "../tools/db_commands";
 
 const Nav = () => {
 
-  const token = localStorage.getItem("session"); //Also Change with database later.
+   //Also Change with database later.
   const navigate = useNavigate();
   const { flash, showFlash } = useFlash();
+  const token = "temp"
 
 
   const logout = () => {
 
-    localStorage.removeItem("session"); // Change with database later.
+    sendData()
+    
     showFlash("Successfully Logged out","success");
     navigate("/") // Home link, maybe change later idk.
 
