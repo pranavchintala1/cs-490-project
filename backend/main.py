@@ -245,6 +245,7 @@ async def add_skill(uuid: str, entry: Skill, auth: str = Header(..., alias = "Au
     try:
         parsed_data = entry.model_dump()
         parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
 
         await skills_dao.add_skill(parsed_data)
     except DuplicateKeyError:
@@ -325,6 +326,7 @@ async def add_education(uuid: str, entry: Education, auth: str = Header(..., ali
     try:
         parsed_data = entry.model_dump()
         parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
 
         await education_dao.add_education(parsed_data)
     except DuplicateKeyError:
@@ -405,6 +407,7 @@ async def add_employment(uuid: str, entry: Employment, auth: str = Header(..., a
     try:
         parsed_data = entry.model_dump()
         parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
 
         await employment_dao.add_employment(parsed_data)
     except DuplicateKeyError:
@@ -485,6 +488,7 @@ async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias =
     try:
         parsed_data = entry.model_dump()
         parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
 
         await projects_dao.add_project(parsed_data)
     except DuplicateKeyError:
@@ -565,6 +569,7 @@ async def add_certification(uuid: str, entry: Certification, auth: str = Header(
     try:
         parsed_data = entry.model_dump()
         parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
 
         await certifications_dao.add_cert(parsed_data)
     except DuplicateKeyError:
