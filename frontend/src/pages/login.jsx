@@ -8,6 +8,7 @@ import { PublicClientApplication } from "@azure/msal-browser";
 import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
 import { sendData } from "../tools/db_commands";
+import { useSearchParams } from "react-router-dom";
 
 function Login() {
     // I left all the stylings in the below html blank for whoever needs to look at that (?)
@@ -18,9 +19,18 @@ function Login() {
         formState: { errors },
     } = useForm();
 
+    
     const navigate = useNavigate();
     const { flash, showFlash }  = useFlash();
     const { instance } = useMsal();
+
+    const [searchParams] = useSearchParams(); //maybe broke
+    useEffect(() => {
+    const errParam = searchParams.get("error");
+    if (errParam === "unauthorized") {
+      setError("You must log in to access that page.");
+    }
+  }, [searchParams]);
 
 
     const onSubmit = async (data) => {
