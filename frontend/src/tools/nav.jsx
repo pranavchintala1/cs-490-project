@@ -34,6 +34,7 @@ const Nav = () => {
         <li>
           <NavLink to="/">Home</NavLink>
         </li>
+        
 
         {token ? ( // Shows login and register when person is not logged in, and profile and logout when they are.
         <>
@@ -41,6 +42,9 @@ const Nav = () => {
         <li>
           <NavLink to={`/profile`}>Profile</NavLink>
         </li>
+        <li>
+          <NavLink to="/dashboard">Dashboard</NavLink>
+        </li> 
         <li>
           <button onClick ={logout}>Logout</button>
         </li> 
@@ -55,9 +59,7 @@ const Nav = () => {
         <li>
           <NavLink to="/register">Register</NavLink>
         </li> 
-        <li>
-          <NavLink to="/dashboard">Dashboard</NavLink>
-        </li> 
+        
 
         </>
         )}
