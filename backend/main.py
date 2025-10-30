@@ -144,7 +144,7 @@ async def updatePassword(data):
     try:
         old_data = auth_dao.retieve_user(uuid)
         old_data["password"] = bcrypt.hashpw(newPass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        user_data_dao.update_user(uuid,data)
+        profiles_dao.update_user(uuid,data)
         session_token = session_manager.begin_session(uuid)
     except Exception as e:
         return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
@@ -164,7 +164,7 @@ async def verify_google_token(token: str = Body(...)):
         if (data): # if the user already exists, still log in because it doesn't matter.
             uuid = data["_id"]
         else:
-            await user_data_dao.register_user(uuid, idinfo.model_dump(exclude_none = True))
+            await profiles_dao.register_user(uuid, idinfo.model_dump(exclude_none = True))
         
         session_token = session_manager.begin_session(uuid)
 
