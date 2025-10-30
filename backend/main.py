@@ -1,9 +1,10 @@
-from fastapi import FastAPI,Header,Body
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Header, Body, UploadFile
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta
-import bcrypt
+import bcrypt, zipfile
+from io import BytesIO
 
 
 from mongo.profiles_dao import profiles_dao
@@ -33,6 +34,7 @@ def parse_bearer(auth_header: str = Header(..., alias="Authorization")):
 app = FastAPI()
 
 origins = [ # domains to provide access to
+    "http://localhost:3000",
     "localhost:3000"
 ]
 
@@ -78,7 +80,7 @@ async def login(credentials: LoginCred):
         password_hash = await auth_dao.get_password(credentials.email)
         
         if not password_hash:
-            return JSONResponse(status_code = 400, content = {"detail": "User not found"})
+            return JSONResponse(status_code = 400, content = {"detail": "Invalid email"})
 
         authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception as e:
@@ -86,7 +88,7 @@ async def login(credentials: LoginCred):
     
     if authenticated:
         try:
-            user_id = await auth_dao.get_uuid(credentials.email) # we already checked if the username exists, don't need to check again
+            user_id = await auth_dao.get_uuid(credentials.email)
         except Exception as e:
             return internal_server_error(str(e))
 
@@ -94,19 +96,20 @@ async def login(credentials: LoginCred):
 
         return JSONResponse(status_code = 200, content = {"detail": "Successful login", "uuid": user_id, "session_token": session_token})
     else:
-        return JSONResponse(status_code = 401, content = {"detail": "Incorrect credentials"})
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid email or password"})
 
 @app.post("/api/auth/logout")
-async def logout(uuid: str, auth: str = Header(..., alias = "Authorization")):
+async def logout(data: dict = Body(...), auth: str = Header(..., alias = "Authorization")):
+    uuid = data.get("uuid")
     if not session_auth(uuid, auth) and session_manager.kill_session(uuid):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"}) # successfully auth and kill session before proceeding
     
+    session_manager.kill_session(uuid)
     return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
-  @app.post("/api/auth/forgotpassword")
+@app.post("/api/auth/forgotpassword")
 async def forgotPassword(email: str = Body(..., embed=True)):
 
-
-    exists = await user_auth_dao.get_uuid(email)
+    exists = await auth_dao.get_uuid(email)
 
     try:
         if exists:
@@ -126,9 +129,6 @@ async def resetPassword(token: str):
     uuid,expires = await fp.verify_link(token)
     try:
         if (uuid):
-            print("uuid is good")
-            print(datetime.now())
-            print(expires)
             if(datetime.now() < expires ): # The link is still valid.
                 return JSONResponse(status_code = 200, content = {"uuid": uuid})
     except Exception as e:
@@ -137,34 +137,39 @@ async def resetPassword(token: str):
     
 
 @app.put("/api/user/updatepassword")
-async def updatePassword(data):
-    uuid = data.uuid
-    newPass = data.password
+async def updatePassword(token: str = Body(...),password: str = Body(...)):
 
     try:
-        old_data = user_auth_dao.retieve_user(uuid)
-        old_data["password"] = bcrypt.hashpw(newPass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        user_data_dao.update_user(uuid,data)
-        session_token = session_manager.begin_session(uuid)
+        old_data = await profiles_dao.retrieve_user(token)
+        old_data["password"] = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        await auth_dao.update_password(token,old_data)
+        session_token = session_manager.begin_session(token)
     except Exception as e:
+
         return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
-    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration","uuid":uuid, "session_token": session_token})
+    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration","uuid":token, "session_token": session_token})
 
 
 
 @app.post("/api/auth/verify-google-token")
-async def verify_google_token(token: str = Body(...)):
+async def verify_google_token(token: dict = Body(...)):
+
+    credentials = token.get("credential")
     try:
-        uuid = str(uuid4())
 
-        idinfo = id_token.verify_oauth2_token(token, requests.Request()) # returns user data such as email and profile picture
+        idinfo = id_token.verify_oauth2_token(credentials, requests.Request()) # returns user data such as email and profile picture
 
-        data = user_auth_dao.get_uuid(idinfo["email"])
+        data = await auth_dao.get_uuid(idinfo["email"]) # this returns a uuid
 
         if (data): # if the user already exists, still log in because it doesn't matter.
-            uuid = data["_id"]
+            uuid = data
         else:
-            await user_data_dao.register_user(uuid, idinfo.model_dump(exclude_none = True))
+
+            uuid = str(uuid4())
+            idinfo["username"] = idinfo["email"]
+            await auth_dao.register_user(uuid,idinfo["email"],idinfo["email"],"")
+    
+            await profiles_dao.register_user(uuid, idinfo)
         
         session_token = session_manager.begin_session(uuid)
 
@@ -179,6 +184,8 @@ async def verify_google_token(token: str = Body(...)):
         return JSONResponse(status_code=401, content={"detail":f"Google auth failed: {str(e)}"})
 
     except Exception as e:
+        print(e)
+        print("look up")
 
         return JSONResponse(status_code=500, content={"detail":f"Unknown Error while authenticating: {str(e)}"})
     
@@ -201,12 +208,17 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
     return user_data
 
 @app.put("/api/users/me")
-async def update_profile(uuid: str, profile: ProfileSchema, auth: str = Header(..., alias = "Authorization")):
+async def update_profile(uuid: str, profile: ProfileSchema, pfp: UploadFile = None, auth: str = Header(..., alias = "Authorization")):
     if not session_auth(uuid, auth):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        update_count = await profiles_dao.update_user(uuid, profile.model_dump(exclude_none = True))
+        parsed_data = profile.model_dump(exclude_none = True)
+
+        contents = await pfp.read()
+        parsed_data["profile_picture"] = contents
+
+        update_count = await profiles_dao.update_user(uuid, parsed_data)
     except Exception as e:
         return internal_server_error(str(e))
     if update_count == 0:
@@ -237,11 +249,17 @@ async def add_skill(uuid: str, entry: Skill, auth: str = Header(..., alias = "Au
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await skills_dao.add_skill(uuid, entry.model_dump(exlcude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
+
+        await skills_dao.add_skill(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Skill already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added skill", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/skills")
 async def retrieve_skill(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -312,11 +330,17 @@ async def add_education(uuid: str, entry: Education, auth: str = Header(..., ali
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await education_dao.add_education(uuid, entry.model_dump(exlcude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
+
+        await education_dao.add_education(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Education already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added education", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/education")
 async def retrieve_education(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -387,11 +411,17 @@ async def add_employment(uuid: str, entry: Employment, auth: str = Header(..., a
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await employment_dao.add_employment(uuid, entry.model_dump(exlcude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
+
+        await employment_dao.add_employment(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Employment already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added employment", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/employment")
 async def retrieve_employment(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -457,16 +487,66 @@ async def delete_employment(uuid: str, entry_id: str, auth: str = Header(..., al
 #                                                       PROJECTS                                                       #
 ########################################################################################################################
 @app.post("/api/projects")
-async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias = "Authorization")):
+async def add_project(uuid: str, entry: Project, media: list[UploadFile] = None, auth: str = Header(..., alias = "Authorization")):
     if not session_auth(uuid, auth):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await projects_dao.add_project(uuid, entry.model_dump(exlcude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
+
+        if media:
+            ready_media = {}
+            for file in media:
+                contents = await file.read()
+                ready_media[file.filename()] = contents
+            parsed_data["media"] = ready_media
+
+        await projects_dao.add_project(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Project already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added projects", "entry_id": parsed_data["_id"]})
+
+@app.get("/api/projects/media")
+async def download_media(uuid: str, entry_id: str, filename: str, auth: str = Header(..., alias = "Authorization")):
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    try:
+        result = await projects_dao.retrieve_project(entry_id)
+        if not result and not result["media"]:
+            return JSONResponse(status_code = 400, content = {"detail": "Media not found"})
+    except Exception as e:
+        return internal_server_error(str(e))
+    
+    return Response(content = result["media"][filename], media_type = "application/octet-stream", headers = {"Content-Disposition": f"attachment; filename={filename}"})
+
+@app.get("/api/projects/media/all")
+async def download_all_media(uuid: str, entry_id, auth: str = Header(..., alias = "Authorization")):
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    try:
+        result = projects_dao.retrieve_project(entry_id)
+    except Exception as e:
+        return internal_server_error(str(e))
+    
+    if not result and not result["media"]:
+        return JSONResponse(status_code = 400, content = {"detail": "Project and associated media do not exist"})
+    
+    buffer = BytesIO()
+    files = result["media"]
+    with zipfile.ZipFile(buffer, "w") as zf:
+        for filename in files:
+            zf.writestr(filename, files[filename])
+
+    buffer.seek(0)
+    return StreamingResponse(content = buffer, media_type = "application/zip", headers = {"Content-Disposition": "attachment; filename=media.zip"})
+
 
 @app.get("/api/projects")
 async def retrieve_project(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -532,16 +612,26 @@ async def delete_project(uuid: str, entry_id: str, auth: str = Header(..., alias
 #                                                     CERTIFICATION                                                    #
 ########################################################################################################################
 @app.post("/api/certifications")
-async def add_certification(uuid: str, entry: Certification, auth: str = Header(..., alias = "Authorization")):
+async def add_certification(uuid: str, entry: Certification, document: UploadFile = None, auth: str = Header(..., alias = "Authorization")):
     if not session_auth(uuid, auth):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await certifications_dao.add_cert(uuid, entry.model_dump(exlcude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+        parsed_data["user_id"] = uuid
+
+        if document:
+            contents = await document.read()
+            parsed_data["document"] = contents
+
+        await certifications_dao.add_cert(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Certification already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added certifications", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/certifications")
 async def retrieve_certification(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -556,6 +646,20 @@ async def retrieve_certification(uuid: str, entry_id: str, auth: str = Header(..
     if not result:
         return JSONResponse(status_code = 400, content = {"detail": "Certification does not exist"})
     return result
+
+@app.get("/api/certifications/media")
+async def download_media(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    try:
+        result = await certifications_dao.retrieve_cert(entry_id)
+        if not result and not result["document"]:
+            return JSONResponse(status_code = 400, content = {"detail": "Certification and associated media not found"})
+    except Exception as e:
+        return internal_server_error(str(e))
+    filename = result["document_name"]
+    return Response(content = result["document"], media_type = "application/octet-stream", headers = {"Content-Disposition": f"attachment; filename={filename}"})
 
 @app.get("/api/certifications/me")
 async def retrieve_all_certifications(uuid: str, auth: str = Header(..., alias = "Authorization")):

@@ -62,11 +62,14 @@ function Register() {
 
         const OAuthSubmit = async (data) => {
 
-            const res = sendData(data,"api/auth/verify-google-token"); // Link this account with local non-google account later.
+        
+
+            const res = await sendData(data,"/api/auth/verify-google-token"); // Link this account with local non-google account later.
 
             if (!res){
                  
             showFlash("Something went wrong when registering","error");
+            return;
 
             }
 
