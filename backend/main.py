@@ -658,7 +658,8 @@ async def download_media(uuid: str, entry_id: str, auth: str = Header(..., alias
             return JSONResponse(status_code = 400, content = {"detail": "Certification and associated media not found"})
     except Exception as e:
         return internal_server_error(str(e))
-    return Response(content = result["document"], media_type = "application/octet-stream", headers = {"Content-Disposition": f"attachment; filename={result["document_name"]}"})
+    filename = result["document_name"]
+    return Response(content = result["document"], media_type = "application/octet-stream", headers = {"Content-Disposition": f"attachment; filename={filename}"})
 
 @app.get("/api/certifications/me")
 async def retrieve_all_certifications(uuid: str, auth: str = Header(..., alias = "Authorization")):
