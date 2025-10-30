@@ -7,7 +7,7 @@ class SkillDAO:
     async def add_skill(self, uuid, data: dict):
         return await self.collection.insert_one(data)
 
-    async def retrieve_skills(self, uuid: str): # all skills
+    async def retrieve_all_skills(self, uuid: str): # all skills
         return await self.collection.find({"uuid": uuid})
     
     async def retrieve_skill(self, entry_id: str): # one skill
@@ -21,4 +21,4 @@ class SkillDAO:
         result = await self.collection.delete_one({"_id": entry_id})
         return result.deleted_count
     
-skill_dao = SkillDAO()
+skills_dao = SkillDAO()

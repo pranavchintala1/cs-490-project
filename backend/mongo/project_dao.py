@@ -21,4 +21,4 @@ class ProjectDAO:
         result = await self.collection.delete_one({"_id": entry_id})
         return result.deleted_count
 
-project_dao = ProjectDAO()
+projects_dao = ProjectDAO()
