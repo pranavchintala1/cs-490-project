@@ -19,7 +19,7 @@ origins = [ # domains to provide access to
 
 app.add_middleware(
     CORSMiddleware,
-    allow_orgins = origins,
+    allow_origins = origins,
     allow_credentials = True,
     allow_methods = ["*"],
     allow_headers = ["*"]
