@@ -49,10 +49,8 @@ function Login() {
         if (res.status != 200) { //If the entered password does NOT match the stored password.
   
                showFlash(json.detail,"error");
-
-               if (res.status == 400){
-                    reset();  
-               }     
+                reset();  
+    
                return;     
             
         } 
@@ -84,7 +82,7 @@ function Login() {
         const json = await res.json();
         if (res.status != 200){
 
-                showFlash(res.details,"error");
+                showFlash(json.detail,"error");
                 return;
                         
             }
