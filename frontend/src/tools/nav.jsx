@@ -1,19 +1,29 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
+import { sendData } from "../tools/db_commands";
 
 const Nav = () => {
 
-  const token = localStorage.getItem("session"); //Also Change with database later.
+   //Also Change with database later.
   const navigate = useNavigate();
   const { flash, showFlash } = useFlash();
+  const token = localStorage.getItem("session")
 
 
-  const logout = () => {
+  const logout = async () => {
 
-    localStorage.removeItem("session"); // Change with database later.
+    const res = await sendData({"uuid":localStorage.getItem("uuid")},"/api/auth/logout",token)
+    if(!res){
+        showFlash("Error logging out","error");
+        return;
+    }
+    
+    localStorage.removeItem("session")
+    localStorage.removeItem("uuid")
     showFlash("Successfully Logged out","success");
     navigate("/") // Home link, maybe change later idk.
+    return;
 
   };
 
@@ -28,7 +38,7 @@ const Nav = () => {
         <>
 
         <li>
-          <NavLink to={`/profile/${token}`}>Profile</NavLink>
+          <NavLink to={`/profile`}>Profile</NavLink>
         </li>
         <li>
           <button onClick ={logout}>Logout</button>
