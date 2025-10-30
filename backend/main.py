@@ -245,6 +245,7 @@ async def update_profile(
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
+        content = pfp.read() if pfp else None
         parsed_data = {
             "username": username,
             "email": email,
@@ -255,7 +256,7 @@ async def update_profile(
             "biography": biography,
             "industry": industry,
             "experience_level": experience_level,
-            "image": pfp.read() if pfp else None,
+            "image": content,
             "image_type": pfp.content_type if pfp else None,
             "image_name": pfp.filename if pfp else None
         }
