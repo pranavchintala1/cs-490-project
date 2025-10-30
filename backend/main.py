@@ -151,18 +151,24 @@ async def updatePassword(token: str = Body(...),password: str = Body(...)):
 
 
 @app.post("/api/auth/verify-google-token")
-async def verify_google_token(token: str = Body(...)):
+async def verify_google_token(token: dict = Body(...)):
+
+    credentials = token.get("credential")
     try:
-        uuid = str(uuid4())
 
-        idinfo = id_token.verify_oauth2_token(token, requests.Request()) # returns user data such as email and profile picture
+        idinfo = id_token.verify_oauth2_token(credentials, requests.Request()) # returns user data such as email and profile picture
 
-        data = auth_dao.get_uuid(idinfo["email"])
+        data = await auth_dao.get_uuid(idinfo["email"]) # this returns a uuid
 
         if (data): # if the user already exists, still log in because it doesn't matter.
-            uuid = data["_id"]
+            uuid = data
         else:
-            await profiles_dao.register_user(uuid, idinfo.model_dump(exclude_none = True))
+
+            uuid = str(uuid4())
+            idinfo["username"] = idinfo["email"]
+            await auth_dao.register_user(uuid,idinfo["email"],idinfo["email"],"")
+    
+            await profiles_dao.register_user(uuid, idinfo)
         
         session_token = session_manager.begin_session(uuid)
 
@@ -177,6 +183,8 @@ async def verify_google_token(token: str = Body(...)):
         return JSONResponse(status_code=401, content={"detail":f"Google auth failed: {str(e)}"})
 
     except Exception as e:
+        print(e)
+        print("look up")
 
         return JSONResponse(status_code=500, content={"detail":f"Unknown Error while authenticating: {str(e)}"})
     

@@ -15,6 +15,7 @@ EDUCATION = os.getenv("EDUCATION_COLLECTION")
 CERTIFICATION = os.getenv("CERTIFICATION_COLLECTION")
 PROJECTS = os.getenv("PROJECTS_COLLECTION")
 RESET_LINKS = os.getenv("RESET_LINKS_COLLECTION")
+GOOGLE_OAUTH = os.getenv("GOOGLE_OAUTH_CREDENTIALS")
 
 mongo_client = AsyncMongoClient(MONGO_CONNECTION_STRING, tls = True, tlsCAFile=certifi.where())
 db_client = mongo_client.get_database(DATABASE_NAME)
