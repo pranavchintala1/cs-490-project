@@ -1,9 +1,10 @@
-from fastapi import FastAPI,Header,Body
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Header, Body, UploadFile
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta
-import bcrypt
+import bcrypt, zipfile
+from io import BytesIO
 
 
 from mongo.profiles_dao import profiles_dao
@@ -79,7 +80,7 @@ async def login(credentials: LoginCred):
         password_hash = await auth_dao.get_password(credentials.email)
         
         if not password_hash:
-            return JSONResponse(status_code = 400, content = {"detail": "Invalid email or password"})
+            return JSONResponse(status_code = 400, content = {"detail": "Invalid email"})
 
         authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception as e:
@@ -87,7 +88,7 @@ async def login(credentials: LoginCred):
     
     if authenticated:
         try:
-            user_id = await auth_dao.get_uuid(credentials.email) # we already checked if the username exists, don't need to check again
+            user_id = await auth_dao.get_uuid(credentials.email)
         except Exception as e:
             return internal_server_error(str(e))
 
@@ -207,12 +208,17 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
     return user_data
 
 @app.put("/api/users/me")
-async def update_profile(uuid: str, profile: ProfileSchema, auth: str = Header(..., alias = "Authorization")):
+async def update_profile(uuid: str, profile: ProfileSchema, pfp: UploadFile = None, auth: str = Header(..., alias = "Authorization")):
     if not session_auth(uuid, auth):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        update_count = await profiles_dao.update_user(uuid, profile.model_dump(exclude_none = True))
+        parsed_data = profile.model_dump(exclude_none = True)
+
+        contents = await pfp.read()
+        parsed_data["profile_picture"] = contents
+
+        update_count = await profiles_dao.update_user(uuid, parsed_data)
     except Exception as e:
         return internal_server_error(str(e))
     if update_count == 0:
@@ -481,7 +487,7 @@ async def delete_employment(uuid: str, entry_id: str, auth: str = Header(..., al
 #                                                       PROJECTS                                                       #
 ########################################################################################################################
 @app.post("/api/projects")
-async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias = "Authorization")):
+async def add_project(uuid: str, entry: Project, media: list[UploadFile] = None, auth: str = Header(..., alias = "Authorization")):
     if not session_auth(uuid, auth):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
@@ -490,6 +496,13 @@ async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias =
         parsed_data["_id"] = str(uuid4())
         parsed_data["user_id"] = uuid
 
+        if media:
+            ready_media = {}
+            for file in media:
+                contents = await file.read()
+                ready_media[file.filename()] = contents
+            parsed_data["media"] = ready_media
+
         await projects_dao.add_project(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Project already exists"})
@@ -497,6 +510,43 @@ async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias =
         return internal_server_error(str(e))
     
     return JSONResponse(status_code = 200, content = {"detail": "Successfully added projects", "entry_id": parsed_data["_id"]})
+
+@app.get("/api/projects/media")
+async def download_media(uuid: str, entry_id: str, filename: str, auth: str = Header(..., alias = "Authorization")):
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    try:
+        result = await projects_dao.retrieve_project(entry_id)
+        if not result and not result["media"]:
+            return JSONResponse(status_code = 400, content = {"detail": "Media not found"})
+    except Exception as e:
+        return internal_server_error(str(e))
+    
+    return Response(content = result["media"][filename], media_type = "application/octet-stream", headers = {"Content-Disposition": f"attachment; filename={filename}"})
+
+@app.get("/api/projects/media/all")
+async def download_all_media(uuid: str, entry_id, auth: str = Header(..., alias = "Authorization")):
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    try:
+        result = projects_dao.retrieve_project(entry_id)
+    except Exception as e:
+        return internal_server_error(str(e))
+    
+    if not result and not result["media"]:
+        return JSONResponse(status_code = 400, content = {"detail": "Project and associated media do not exist"})
+    
+    buffer = BytesIO()
+    files = result["media"]
+    with zipfile.ZipFile(buffer, "w") as zf:
+        for filename in files:
+            zf.writestr(filename, files[filename])
+
+    buffer.seek(0)
+    return StreamingResponse(content = buffer, media_type = "application/zip", headers = {"Content-Disposition": "attachment; filename=media.zip"})
+
 
 @app.get("/api/projects")
 async def retrieve_project(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -562,7 +612,7 @@ async def delete_project(uuid: str, entry_id: str, auth: str = Header(..., alias
 #                                                     CERTIFICATION                                                    #
 ########################################################################################################################
 @app.post("/api/certifications")
-async def add_certification(uuid: str, entry: Certification, auth: str = Header(..., alias = "Authorization")):
+async def add_certification(uuid: str, entry: Certification, document: UploadFile = None, auth: str = Header(..., alias = "Authorization")):
     if not session_auth(uuid, auth):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
@@ -570,6 +620,10 @@ async def add_certification(uuid: str, entry: Certification, auth: str = Header(
         parsed_data = entry.model_dump()
         parsed_data["_id"] = str(uuid4())
         parsed_data["user_id"] = uuid
+
+        if document:
+            contents = await document.read()
+            parsed_data["document"] = contents
 
         await certifications_dao.add_cert(parsed_data)
     except DuplicateKeyError:
@@ -592,6 +646,19 @@ async def retrieve_certification(uuid: str, entry_id: str, auth: str = Header(..
     if not result:
         return JSONResponse(status_code = 400, content = {"detail": "Certification does not exist"})
     return result
+
+@app.get("/api/certifications/media")
+async def download_media(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    try:
+        result = await certifications_dao.retrieve_cert(entry_id)
+        if not result and not result["document"]:
+            return JSONResponse(status_code = 400, content = {"detail": "Certification and associated media not found"})
+    except Exception as e:
+        return internal_server_error(str(e))
+    return Response(content = result["document"], media_type = "application/octet-stream", headers = {"Content-Disposition": f"attachment; filename={result["document_name"]}"})
 
 @app.get("/api/certifications/me")
 async def retrieve_all_certifications(uuid: str, auth: str = Header(..., alias = "Authorization")):
