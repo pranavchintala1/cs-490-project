@@ -53,6 +53,7 @@ export const updateMe = async (profileObj, file /* File | null */) => {
   fd.append("full_name", profileObj["full_name"])
   fd.append("phone_number", profileObj["phone_number"])
   fd.append("title", profileObj["title"])
+  fd.append("address", profileObj["address"])
   fd.append("biography", profileObj["biography"])
   fd.append("industry", profileObj["industry"])
   fd.append("experience_level", profileObj["experience_level"])
