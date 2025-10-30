@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CategoryCard from '../components/Card';
+import ProgressTracker from '../components/ProgressTracker';
 
 // Simulate API calls to a generic database
 const fetchDataFromAPI = async (endpoint) => {
@@ -19,7 +20,9 @@ const fetchDataFromAPI = async (endpoint) => {
       ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
     ],
     'skills': [
-      
+      ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
+      ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
+      ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
     ],
     'education': [
       ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
@@ -186,104 +189,147 @@ const Dashboard = () => {
         }}>
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
-            padding: '15px', // Reduced padding
+            padding: '18px', // Slightly increased padding to give cards breathing room
             borderRadius: '12px',
             border: '1px solid #D1D5DB',
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <h2 style={{
-              fontSize: '20px', // Slightly smaller
-              fontWeight: '600',
-              color: '#003366', // Primary Blue
-              marginBottom: '10px', // Reduced margin
-              textAlign: 'center'
-            }}>
+            <a 
+              href="/profile" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
               Profile
-            </h2>
+            </a>
             <CategoryCard data={data.profile} />
           </div>
           
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
-            padding: '15px', // Reduced padding
+            padding: '18px', // Slightly increased padding to give cards breathing room
             borderRadius: '12px',
             border: '1px solid #D1D5DB',
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <h2 style={{
-              fontSize: '20px', // Slightly smaller
-              fontWeight: '600',
-              color: '#003366', // Primary Blue
-              marginBottom: '10px', // Reduced margin
-              textAlign: 'center'
-            }}>
+            <a 
+              href="/employment-history" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
               Employment History
-            </h2>
+            </a>
             <CategoryCard data={data.employmentHistory} />
           </div>
           
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
-            padding: '15px', // Reduced padding
+            padding: '18px', // Slightly increased padding to give cards breathing room
             borderRadius: '12px',
             border: '1px solid #D1D5DB',
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <h2 style={{
-              fontSize: '20px', // Slightly smaller
-              fontWeight: '600',
-              color: '#003366', // Primary Blue
-              marginBottom: '10px', // Reduced margin
-              textAlign: 'center'
-            }}>
+            <a 
+              href="/skills" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
               Skills
-            </h2>
+            </a>
             <CategoryCard data={data.skills} />
           </div>
           
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
-            padding: '15px', // Reduced padding
+            padding: '18px', // Slightly increased padding to give cards breathing room
             borderRadius: '12px',
             border: '1px solid #D1D5DB',
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <h2 style={{
-              fontSize: '20px', // Slightly smaller
-              fontWeight: '600',
-              color: '#003366', // Primary Blue
-              marginBottom: '10px', // Reduced margin
-              textAlign: 'center'
-            }}>
+            <a 
+              href="/education" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
               Education
-            </h2>
+            </a>
             <CategoryCard data={data.education} />
           </div>
           
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
-            padding: '15px', // Reduced padding
+            padding: '18px', // Slightly increased padding to give cards breathing room
             borderRadius: '12px',
             border: '1px solid #D1D5DB',
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <h2 style={{
-              fontSize: '20px', // Slightly smaller
-              fontWeight: '600',
-              color: '#003366', // Primary Blue
-              marginBottom: '10px', // Reduced margin
-              textAlign: 'center'
-            }}>
+            <a 
+              href="/projects" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
               Projects
-            </h2>
+            </a>
             <CategoryCard data={data.projects} />
           </div>
         </div>
+        
+        {/* Progress Tracker */}
+        <ProgressTracker data={data} />
       </div>
     </div>
   );
