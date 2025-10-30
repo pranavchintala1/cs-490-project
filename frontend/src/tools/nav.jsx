@@ -13,8 +13,9 @@ const Nav = () => {
 
   const logout = async () => {
 
-    const res = await sendData({"uuid":localStorage.getItem("uuid")},"/api/auth/logout",token)
-    if(!res){
+    const res = await sendData({uuid:localStorage.getItem("uuid")},"/api/auth/logout",token)
+    console.log(res.status)
+    if(!res || res.status != 200){
         showFlash("Error logging out","error");
         return;
     }
