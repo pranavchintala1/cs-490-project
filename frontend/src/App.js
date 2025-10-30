@@ -7,7 +7,7 @@ import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import Profile from "./pages/profile";
-import EmploymentPage from "./employment/EmploymentPage";
+import EmploymentPage from "./pages/employment/EmploymentPage";
 import ForgotPassword from "./pages/forgotPassword";
 import ResetPassword from "./pages/resetPassword";
 import Dashboard from "./pages/dashboard";
