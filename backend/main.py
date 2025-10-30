@@ -33,6 +33,7 @@ def parse_bearer(auth_header: str = Header(..., alias="Authorization")):
 app = FastAPI()
 
 origins = [ # domains to provide access to
+    "http://localhost:3000"
     "localhost:3000"
 ]
 
@@ -78,7 +79,7 @@ async def login(credentials: LoginCred):
         password_hash = await auth_dao.get_password(credentials.email)
         
         if not password_hash:
-            return JSONResponse(status_code = 400, content = {"detail": "User not found"})
+            return JSONResponse(status_code = 400, content = {"detail": "Invalid email or password"})
 
         authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception as e:
@@ -94,18 +95,18 @@ async def login(credentials: LoginCred):
 
         return JSONResponse(status_code = 200, content = {"detail": "Successful login", "uuid": user_id, "session_token": session_token})
     else:
-        return JSONResponse(status_code = 401, content = {"detail": "Incorrect credentials"})
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid email or password"})
 
 @app.post("/api/auth/logout")
-async def logout(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    if not session_auth(uuid, auth):
-        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+async def logout(data: dict = Body(...), auth: str = Header(..., alias = "Authorization")):
+    uuid = data.get("uuid")
+    if not session_auth(uuid, auth) and session_manager.kill_session(uuid):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"}) # successfully auth and kill session before proceeding
     
     session_manager.kill_session(uuid)
     return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
 @app.post("/api/auth/forgotpassword")
 async def forgotPassword(email: str = Body(..., embed=True)):
-
 
     exists = await auth_dao.get_uuid(email)
 
@@ -127,9 +128,6 @@ async def resetPassword(token: str):
     uuid,expires = await fp.verify_link(token)
     try:
         if (uuid):
-            print("uuid is good")
-            print(datetime.now())
-            print(expires)
             if(datetime.now() < expires ): # The link is still valid.
                 return JSONResponse(status_code = 200, content = {"uuid": uuid})
     except Exception as e:
@@ -138,18 +136,17 @@ async def resetPassword(token: str):
     
 
 @app.put("/api/user/updatepassword")
-async def updatePassword(data):
-    uuid = data.uuid
-    newPass = data.password
+async def updatePassword(token: str = Body(...),password: str = Body(...)):
 
     try:
-        old_data = auth_dao.retieve_user(uuid)
-        old_data["password"] = bcrypt.hashpw(newPass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-        profiles_dao.update_user(uuid,data)
-        session_token = session_manager.begin_session(uuid)
+        old_data = await profiles_dao.retrieve_user(token)
+        old_data["password"] = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        await auth_dao.update_password(token,old_data)
+        session_token = session_manager.begin_session(token)
     except Exception as e:
+
         return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
-    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration","uuid":uuid, "session_token": session_token})
+    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration","uuid":token, "session_token": session_token})
 
 
 

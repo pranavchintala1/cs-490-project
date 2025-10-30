@@ -77,7 +77,7 @@ class ForgotPassword:
             if data:
                 expires = data["expires"]
                 email = data["email"]
-                uuid = await user_auth_dao.get_uuid(email)
+                uuid = await auth_dao.get_uuid(email)
                 return uuid,expires
         
         except Exception as e:
