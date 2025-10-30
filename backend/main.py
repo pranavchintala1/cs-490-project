@@ -282,7 +282,7 @@ async def retrieve_all_skills(uuid: str, auth: str = Header(..., alias = "Author
     
     try:
         cursor = await skills_dao.retrieve_all_skills(uuid)
-        results = list(cursor)
+        results = await cursor.to_list(None)
 
         if not results:
             return JSONResponse(status_code = 400, content = {"details": "User or skills not available"})
@@ -363,7 +363,7 @@ async def retrieve_all_education(uuid: str, auth: str = Header(..., alias = "Aut
     
     try:
         cursor = await education_dao.retrieve_all_education(uuid)
-        results = list(cursor)
+        results = await cursor.to_list(None)
 
         if not results:
             return JSONResponse(status_code = 400, content = {"details": "User or education not available"})
@@ -444,7 +444,7 @@ async def retrieve_all_employment(uuid: str, auth: str = Header(..., alias = "Au
     
     try:
         cursor = await employment_dao.retrieve_all_employment(uuid)
-        results = list(cursor)
+        results = await cursor.to_list(None)
 
         if not results:
             return JSONResponse(status_code = 400, content = {"details": "User or employment not available"})
@@ -569,7 +569,7 @@ async def retrieve_all_projects(uuid: str, auth: str = Header(..., alias = "Auth
     
     try:
         cursor = await projects_dao.retrieve_all_projects(uuid)
-        results = list(cursor)
+        results = await cursor.to_list(None)
 
         if not results:
             return JSONResponse(status_code = 400, content = {"details": "User or projects not available"})
@@ -668,7 +668,7 @@ async def retrieve_all_certifications(uuid: str, auth: str = Header(..., alias =
     
     try:
         cursor = await certifications_dao.retrieve_all_certs(uuid)
-        results = list(cursor)
+        results = await cursor.to_list(None)
 
         if not results:
             return JSONResponse(status_code = 400, content = {"details": "User or certifications not available"})
