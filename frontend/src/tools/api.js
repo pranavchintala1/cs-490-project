@@ -1,67 +1,80 @@
+// src/tools/api.js
+// 👇 Re-export everything from the legacy root API so nothing is lost.
+export * from "../api";
+
+// --- Non-breaking profile helpers used by profile.jsx ---
+
 const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
+// Accept both new and legacy auth keys so this is drop-in safe.
 function auth() {
-  const token = localStorage.getItem("token") || localStorage.getItem("sessionToken");
-  const uuid  = localStorage.getItem("uuid")  || localStorage.getItem("userId");
-  return { token, uuid };
+  const uuid = localStorage.getItem("uuid") ?? localStorage.getItem("user_id");
+  const token = localStorage.getItem("token") ?? localStorage.getItem("session");
+  return { uuid, token };
 }
 
-async function http(method, path, { params, body, authz = true } = {}) {
+// Generic fetch that **does not** force JSON headers on FormData.
+async function http(method, path, { params, headers = {}, body } = {}) {
   const url = new URL(path, BASE_URL);
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const headers = {};
-  if (body) { headers["Content-Type"] = "application/json"; body = JSON.stringify(body); }
-  if (authz) { const { token } = auth(); if (token) headers["Authorization"] = `Bearer ${token}`; }
 
-  const res = await fetch(url.toString(), { method, headers, body });
+  const h = { ...headers };
+  let payload = body;
+
+  // Only set JSON header when NOT sending FormData (browser must set boundary)
+  if (body && !(body instanceof FormData)) {
+    h["Content-Type"] = "application/json";
+    payload = JSON.stringify(body);
+  }
+
+  const res = await fetch(url.toString(), { method, headers: h, body: payload });
   const text = await res.text();
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}: ${text}`);
+  if (!res.ok) throw new Error(text || `${res.status} ${res.statusText}`);
   return text ? JSON.parse(text) : null;
 }
 
-/* ---------- shape adapters ---------- */
-function toFormShape(doc) {
-  return {
-    id: doc._id,
-    full_name: doc.full_name || "",
-    email: doc.email || "",
-    phone: doc.phone_number || "",
-    location: doc.address || "",
-    headline: doc.title || "",
-    bio: doc.biography || "",
-    experience_level: doc.exp_level || "",
-    industry: doc.industry || "",
-    date_created: doc.date_created,
-    date_updated: doc.date_updated,
-  };
-}
-
-function toPatchPayload(form) {
-
-  return {
-    full_name: form.full_name || null,
-    email: form.email || null,
-    phone_number: form.phone || "",
-    address: form.location || "",
-    title: form.headline || "",
-    biography: form.bio || "",
-    exp_level: form.experience_level || null,
-    industry: form.industry || "",
-  };
-}
-
-/* ---------- API calls ---------- */
-// GET /api/users/me?uuid=:uuid
+/**
+ * GET /api/users/me?uuid=...
+ * Uses Authorization: Bearer <token>
+ */
 export const getMe = async () => {
-  const { uuid } = auth();
-  const raw = await http("GET", "/api/users/me", { params: { uuid } });
-  return toFormShape(raw);
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+  return http("GET", "/api/users/me", {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
 };
 
-// PUT /api/users/me?uuid=:uuid
-export const updateMe = async (formPatch) => {
-  const { uuid } = auth();
-  const payload = toPatchPayload(formPatch);
-  const raw = await http("PUT", "/api/users/me", { params: { uuid }, body: payload });
-  return toFormShape(raw);
+/**
+ * PUT /api/users/me (multipart)
+ * Fields:
+ *   - profile: JSON string of the profile object
+ *   - pfp: optional File (image)
+ *
+ * This matches your existing FastAPI handler that takes
+ *   profile: ProfileSchema, pfp: UploadFile | None
+ */
+export const updateMe = async (profileObj, file /* File | null */) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  const fd = new FormData();
+  fd.append("profile", JSON.stringify(profileObj));   // MUST match backend param name
+  if (file) fd.append("pfp", file);                   // MUST match backend param name
+
+  return http("PUT", "/api/users/me", {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },   // no Content-Type here
+    body: fd,
+  });
+};
+
+/**
+ * Convert the returned picture bytes (base64) into a data URL for <img src=...>
+ * Assumes backend returns the bytes on profile.profile_picture (as shown in Swagger schema).
+ */
+export const profileImageDataUrl = (profile) => {
+  const b64 = profile?.profile_picture;
+  return b64 ? `data:image/*;base64,${b64}` : null;
 };
