@@ -13,7 +13,7 @@ const Home = ({user,session}) => {
   return (
 
         <div>
-            <h2>Homepage for now...</h2>
+            <h2>Welcome! Let's start your profile.</h2>
         </div>
 
 

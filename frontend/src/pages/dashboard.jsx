@@ -58,20 +58,39 @@ const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual a
 
   ///////COMMENT BREAK COMMENT BREAK
 
-  // const apidata = await apiRequest(endpoint);
+  const apidata = await apiRequest(endpoint);
 
-  // function transformData(data, titleKey = "title") {
-  //   return data.map(obj => {
-  //     const title = obj[titleKey];
-  //     const otherValues = Object.entries(obj)
-  //       .filter(([key]) => key !== titleKey)
-  //       .map(([_, value]) => value);
-  //     return [title, otherValues];
-  //   });
-  // }
-  // const formatted=transformData(apidata,name)
+  function transformData(data, titleKey = "title") {
+  return data.map(obj => {
+    // Remove key-value pairs where the value is null or undefined
+    const cleaned = Object.fromEntries(
+      Object.entries(obj).filter(([_, value]) => value != null)
+    );
+
+    // If the cleaned object has no keys, return an empty list
+    if (Object.keys(cleaned).length === 0) {
+      return [];
+    }
+
+    const title = cleaned[titleKey] ?? "(no title)";
+    const otherValues = Object.entries(cleaned)
+      .filter(([key]) => key !== titleKey)
+      .map(([_, value]) => value);
+
+    // If no other values remain, return an empty list
+    if (otherValues.length === 0 && !cleaned[titleKey]) {
+      return [];
+    }
+
+    return [title, otherValues];
+  }).filter(item => item.length > 0); // Remove any empty results
+}
+
+
   
-  // return formatted;
+  const formatted=transformData(apidata,name)
+  
+  return formatted;
 
 };
 
@@ -94,10 +113,10 @@ const Dashboard = () => {
         
         // Make 5 parallel API requests
         const [profileData, employmentData, skillsData, educationData, projectsData] = await Promise.all([
-          fetchDataFromAPI('api/users/me',"profile-name"),
-          fetchDataFromAPI('api/employment/me',"job-name"),
-          fetchDataFromAPI('api/skills/me',"skill-name"),
-          fetchDataFromAPI('api/education/me',"ed-name"),
+          fetchDataFromAPI('api/users/me',"username"),
+          fetchDataFromAPI('api/employment/me',"title"),
+          fetchDataFromAPI('api/skills/me',"name"),
+          fetchDataFromAPI('api/education/me',"institution_name"),
           fetchDataFromAPI('api/projects/me',"project-name")
         ]);
 
