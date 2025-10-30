@@ -79,3 +79,6 @@ class ProfileSchema(BaseModel):
     industry: Optional[str] = None
     experience_level: Optional[str] = None
     profile_picture: Optional[str] = None # url?
+
+class TokenRequest(BaseModel):
+    token: str

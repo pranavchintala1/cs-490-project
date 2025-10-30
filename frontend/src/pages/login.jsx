@@ -49,7 +49,7 @@ function Login() {
 
 
                 localStorage.setItem("session",json.session_token)
-                localStorage.setItem("user_id",json.uuid)
+                localStorage.setItem("uuid",json.uuid)
                 
                 navigate(`/profile`); // make profile later lmao. 
 
@@ -79,7 +79,7 @@ function Login() {
             }
         
         localStorage.setItem("session",json.session_token)
-        localStorage.setItem("user_id",json.uuid)
+        localStorage.setItem("uuid",json.uuid)
                         
         
         navigate(`/profile`);
