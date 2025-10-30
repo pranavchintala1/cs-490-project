@@ -106,7 +106,7 @@ async def logout(uuid: str, auth: str = Header(..., alias = "Authorization")):
 async def forgotPassword(email: str = Body(..., embed=True)):
 
 
-    exists = await user_auth_dao.get_uuid(email)
+    exists = await auth_dao.get_uuid(email)
 
     try:
         if exists:
@@ -142,7 +142,7 @@ async def updatePassword(data):
     newPass = data.password
 
     try:
-        old_data = user_auth_dao.retieve_user(uuid)
+        old_data = auth_dao.retieve_user(uuid)
         old_data["password"] = bcrypt.hashpw(newPass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         user_data_dao.update_user(uuid,data)
         session_token = session_manager.begin_session(uuid)
@@ -159,7 +159,7 @@ async def verify_google_token(token: str = Body(...)):
 
         idinfo = id_token.verify_oauth2_token(token, requests.Request()) # returns user data such as email and profile picture
 
-        data = user_auth_dao.get_uuid(idinfo["email"])
+        data = auth_dao.get_uuid(idinfo["email"])
 
         if (data): # if the user already exists, still log in because it doesn't matter.
             uuid = data["_id"]
