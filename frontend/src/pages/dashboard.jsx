@@ -41,22 +41,48 @@ const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual a
 
 
 
+
+
+    // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500));
+  
+  // Generate mock data based on endpoint
+  const mockData = {
+    'api/users/me': [],
+    'api/employment/me': [],
+    'api/skills/me': [
+      ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
+      ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
+      ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
+    ],
+    'api/education/me': [
+      ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
+      ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
+      ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
+    ],
+    'api/projects/me': []
+  };
+  
+  return mockData[endpoint] || [];
+
+
+
   ///////COMMENT BREAK COMMENT BREAK
 
-  const apidata = await apiRequest(endpoint);
+  // const apidata = await apiRequest(endpoint);
 
-  function transformData(data, titleKey = "title") {
-    return data.map(obj => {
-      const title = obj[titleKey];
-      const otherValues = Object.entries(obj)
-        .filter(([key]) => key !== titleKey)
-        .map(([_, value]) => value);
-      return [title, otherValues];
-    });
-  }
-  const formatted=transformData(apidata,name)
+  // function transformData(data, titleKey = "title") {
+  //   return data.map(obj => {
+  //     const title = obj[titleKey];
+  //     const otherValues = Object.entries(obj)
+  //       .filter(([key]) => key !== titleKey)
+  //       .map(([_, value]) => value);
+  //     return [title, otherValues];
+  //   });
+  // }
+  // const formatted=transformData(apidata,name)
   
-  return formatted;
+  // return formatted;
 
 };
 
