@@ -97,7 +97,12 @@ export default function SkillForm({ addSkill, existingSkills }) {
           {suggestions.map((s, i) => (
             <li
               key={i}
-              style={{ padding: "4px", cursor: "pointer" }}
+              style={{
+                padding: "4px", 
+                cursor: "pointer", 
+                color: "black", // Change text color to black
+                fontSize: "12px" // Make font size smaller
+              }}
               onClick={() => setName(s)}
             >
               {s}
