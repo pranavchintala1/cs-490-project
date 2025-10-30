@@ -76,11 +76,11 @@ const Dashboard = () => {
         
         // Make 5 parallel API requests
         const [profileData, employmentData, skillsData, educationData, projectsData] = await Promise.all([
-          fetchDataFromAPI('me',"profile-name"),
-          fetchDataFromAPI('employment-history',"job-name"),
-          fetchDataFromAPI('skills',"skill-name"),
-          fetchDataFromAPI('education',"ed-name"),
-          fetchDataFromAPI('projects',"project-name")
+          fetchDataFromAPI('api/users/me',"profile-name"),
+          fetchDataFromAPI('api/employment/me',"job-name"),
+          fetchDataFromAPI('api/skills/me',"skill-name"),
+          fetchDataFromAPI('api/education/me',"ed-name"),
+          fetchDataFromAPI('api/projects/me',"project-name")
         ]);
 
         // Store results in state
