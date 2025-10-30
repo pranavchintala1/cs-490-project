@@ -2,7 +2,12 @@ import React, { useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
-
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
+import { PublicClientApplication } from "@azure/msal-browser";
+import { msalConfig } from "../tools/msal";
+import { useMsal } from "@azure/msal-react";
+import { sendData } from "../tools/db_commands";
 
 
 function Register() {
@@ -18,32 +23,93 @@ function Register() {
 
     const { flash, showFlash } = useFlash();
 
+    const { instance } = useMsal();
 
-    const onSubmit = (data) => {
-        const duplicateData = JSON.parse(localStorage.getItem(data.email));
 
-            if (duplicateData){
-                showFlash('Email is taken, choose again.',"error");
-                return;
-            }            
+    const onSubmit = async (data) => {
 
-            const newData = {
-                email: data.email,
-                password: data.password,
-                firstName: data.firstName,
-                lastName: data.lastName,
-                session: "temp",
 
-            };
+        
+        const res = await sendData(data,"/api/auth/register");
 
-            localStorage.setItem(data.email,JSON.stringify(newData)); //replace this with sending data to database.
-            localStorage.setItem("session",newData.session);
+
+        if (!res){
+            showFlash("Something went wrong when registering","error");
+            return;
+
+        }
+
+        const json = await res.json()
+
+        if (res.status != 200){
+            showFlash(json.content,"error");
+        }
+        else{
+
 
             showFlash("Successfully Registered!","Success");
+
+            localStorage.setItem("session",res.session_token);
+            localStorage.setItem("user_id",res.uuid)
+                
             
-            navigate(`/profile/${newData.session}`);
+            navigate(`/profile`);
+
+        }
+            return;
             
         };
+
+        const OAuthSubmit = async (data) => {
+
+            const res = sendData(data,"api/auth/verify-google-token"); // Link this account with local non-google account later.
+
+            if (!res){
+                 
+            showFlash("Something went wrong when registering","error");
+
+            }
+
+            const json = await res.json();
+            if (res.status != 200){
+                
+                showFlash(json.details,"error");
+                return;
+                
+            }
+
+            localStorage.setItem("session",json.session_token)
+            localStorage.setItem("user_id",json.uuid)
+                
+
+            navigate(`/profile`);
+            return;
+
+        };
+
+const handleMicrosoftLogin = async () => {
+  try {
+    const response = await instance.loginPopup({
+      scopes: ["user.read", "openid", "profile", "email"],
+    });
+
+    const { account, idToken } = response;
+    console.log("Logged in user:", account);
+
+    /* update l8r with actual api implementation 
+    await fetch("/api/login/microsoft", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: idToken }),
+    });*/
+
+    // Navigate or update app state
+
+    navigate(`/profile/${account.homeAccountId}`);
+  } catch (error) {
+    console.error("Login failed:", error);
+  }
+};
 
 
     
@@ -52,6 +118,13 @@ function Register() {
             <h2>Register</h2>
 
             <form className="Register" onSubmit={handleSubmit(onSubmit)}>
+
+                 <input
+                    type="text"
+                    {...register("username", { required: true })}
+                    placeholder="Username"
+                />
+
 
                 <input
                     type="email"
@@ -89,6 +162,19 @@ function Register() {
 
                 <input type="submit" style={{}} /> 
             </form>
+
+            <GoogleLogin
+                onSuccess={credentialResponse => {
+                    OAuthSubmit(credentialResponse);
+                }}
+                onError={() => {
+                    console.log('Login Failed');
+                }}
+                />
+
+            <button onClick={handleMicrosoftLogin}>
+            Login with Microsoft
+            </button>
         </>
     );
 
