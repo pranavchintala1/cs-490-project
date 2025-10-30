@@ -40,9 +40,10 @@ function Register() {
         }
 
         const json = await res.json()
+        console.log(json)
 
         if (res.status != 200){
-            showFlash(json.content,"error");
+            showFlash(json.detail,"error");
         }
         else{
 
@@ -76,7 +77,7 @@ function Register() {
             const json = await res.json();
             if (res.status != 200){
                 
-                showFlash(json.details,"error");
+                showFlash(json.detail,"error");
                 return;
                 
             }
