@@ -10,7 +10,7 @@ export async function apiRequest(endpoint, options = {}) {
     ...(options.headers || {}),
   };
 
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers["Authorization"] = `Bearer ${token}`; //TODO replace with actual structure
 
   const url = `${baseURL}/${endpoint}`;
   const config = { ...options, headers };
