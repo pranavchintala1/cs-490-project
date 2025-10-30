@@ -7,14 +7,17 @@ export default function CertificationCard({ cert, onDelete }) {
   const expired = expDate && expDate < today;
 
   let bgColor = "#fff";
+  let textColor = "#000";
   let warningText = "";
 
   if (expired) {
     bgColor = "#a43333ff";
     warningText = "❌ Expired";
+    textColor = "#FFF";
   } else if (expiringSoon) {
     bgColor = "#e08f38ff";
     warningText = "⚠️ Expiring Soon";
+    textColor = "#FFF";
   }
 
   const handleDownload = async () => {
@@ -44,6 +47,7 @@ export default function CertificationCard({ cert, onDelete }) {
       style={{
         backgroundColor: bgColor,
         borderRadius: "4px",
+        color: textColor,
         padding: "8px",
         marginBottom: "8px",
         minHeight: "60px" // ensures space for consistent layout
