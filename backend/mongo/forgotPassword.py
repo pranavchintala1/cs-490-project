@@ -1,7 +1,7 @@
 
 from dotenv import load_dotenv
 from mongo.dao_setup import db_client, RESET_LINKS
-from mongo.user_auth_dao import user_auth_dao
+from mongo.auth_dao import auth_dao
 import os
 import smtplib
 from email.mime.text import MIMEText
