@@ -1,20 +1,21 @@
 import React from "react";
 import { Routes, Route } from 'react-router-dom';
-import Nav from "./tools/nav"
+import Nav from "./tools/nav";
 import logo from './logo.svg';
 import './App.css';
 import Home from "./pages/home";
-import Login from "./pages/login"
-import Register from "./pages/register"
-import Profile from "./pages/profile"
-import ForgotPassword from "./pages/forgotPassword"
-import ResetPassword from "./pages/resetPassword"
+import Login from "./pages/login";
+import Register from "./pages/register";
+import Profile from "./pages/profile";
+import EmploymentPage from "./employment/EmploymentPage";
+import ForgotPassword from "./pages/forgotPassword";
+import ResetPassword from "./pages/resetPassword";
 import Dashboard from "./pages/dashboard";
 import SkillsList from "./pages/skills/SkillList";
 import EducationList from "./pages/education/EducationList";
 import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
-import { FlashProvider, FlashMessage } from "./context/flashContext"
+import { FlashProvider, FlashMessage } from "./context/flashContext";
 
 
 export function App() {
@@ -32,6 +33,7 @@ export function App() {
                 <Route path = "/register" element = {<Register />} />
                 <Route path = "/login" element = {<Login />} />
                 <Route path = "/profile" element = {<Profile />} />
+                <Route path="/employment" element={<EmploymentPage />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path = "/resetPassword/:URL" element = {<ResetPassword />}/>
