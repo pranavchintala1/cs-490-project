@@ -40,10 +40,22 @@ const Nav = () => {
         <>
 
         <li>
-          <NavLink to={`/profile`}>Profile</NavLink>
+          <NavLink to={`/dashboard`}>Dashboard</NavLink>
         </li>
         <li>
-          <NavLink to="/dashboard">Dashboard</NavLink>
+          <NavLink to="/profile">Profile</NavLink>
+        </li>
+        <li>
+          <NavLink to="/employment">Employment</NavLink>
+        </li> 
+        <li>
+          <NavLink to="/skills">Skills</NavLink>
+        </li> 
+        <li>
+          <NavLink to="/education">Education</NavLink>
+        </li> 
+        <li>
+          <NavLink to="/projects">Projects</NavLink>
         </li> 
         <li>
           <button onClick ={logout}>Logout</button>
