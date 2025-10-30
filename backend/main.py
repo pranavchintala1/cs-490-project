@@ -71,6 +71,7 @@ async def register(regist_info: RegistInfo):
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "User already exists"})
     except Exception as e:
+        print(str(e))
         return internal_server_error(str(e))
     return JSONResponse(status_code=200, content={"detail": "Sucessful Registration", "uuid": user_id, "session_token": session_token})
 
@@ -228,7 +229,7 @@ async def retrieve_profile_picture(uuid: str, auth: str = Header(..., alias = "A
 @app.put("/api/users/me")
 async def update_profile(
     uuid: str,
-    pfp: UploadFile = None, 
+    pfp: UploadFile = File(None), 
     auth: str = Header(..., alias = "Authorization"),
     username: str = Form(None, alias = "username"),
     email: str = Form(None, alias = "email"),
@@ -244,7 +245,7 @@ async def update_profile(
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        contents = await pfp.read()
+        content = pfp.read() if pfp else None
         parsed_data = {
             "username": username,
             "email": email,
@@ -255,9 +256,9 @@ async def update_profile(
             "biography": biography,
             "industry": industry,
             "experience_level": experience_level,
-            "image": contents,
-            "image_type": pfp.content_type,
-            "image_name": pfp.filename
+            "image": content,
+            "image_type": pfp.content_type if pfp else None,
+            "image_name": pfp.filename if pfp else None
         }
 
         update_count = await profiles_dao.update_user(uuid, parsed_data)
@@ -683,7 +684,7 @@ async def delete_project(uuid: str, entry_id: str, auth: str = Header(..., alias
 @app.post("/api/certifications")
 async def add_certification(
     uuid: str, 
-    document: UploadFile = None, 
+    document: UploadFile = File(None), 
     auth: str = Header(..., alias = "Authorization"),
     name: str = Form(..., alias = "name"),
     issuer: str = Form(None, alias = "issuer"),
