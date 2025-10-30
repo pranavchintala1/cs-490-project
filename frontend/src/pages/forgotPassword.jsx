@@ -21,7 +21,7 @@ const ForgotPassword = () => {
 
     const onSubmit = (data) => {
 
-        sendData(data.email,"api/auth/forgotpassword")
+        sendData({email:data.email},"/api/auth/forgotpassword")
         
         showFlash('If your email exists, you will receive a password reset link.',"success",5000);
 

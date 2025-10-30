@@ -23,23 +23,35 @@ function Login() {
     const { instance } = useMsal();
 
 
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
 
-        const res = sendData(data); // TODO Change localstorage to whatever database is being used later
+        const res = await sendData(data,"/api/auth/login"); // TODO Change localstorage to whatever database is being used later
+        
+        if (!res){
+            showFlash("Something went wrong when registering","error");
+            return;
 
-            if (res.status != 200) { //If the entered password matches the stored password.
-               showFlash(res.content,"error");
+        }
 
-               if (res.status == 401){
+        const json =  await res.json();
+
+
+        if (res.status != 200) { //If the entered password does NOT match the stored password.
+  
+               showFlash(json.content,"error");
+
+               if (res.status == 400){
                     reset();  
                }          
             
-            } 
-            else {
+        } 
+        else {
 
-                data = data.json()
+
+                localStorage.setItem("session",json.session_token)
+                localStorage.setItem("user_id",json.uuid)
                 
-                navigate(`/profile/${data.uuid}`); // make profile later lmao. 
+                navigate(`/profile`); // make profile later lmao. 
 
             }
 
@@ -67,9 +79,13 @@ function Login() {
             }
 
              data = res.json();
+
+            localStorage.setItem("session",data.session_token)
+            localStorage.setItem("user_id",data.uuid)
+                
                         
 
-            navigate(`/profile/${data.session_token}`);
+            navigate(`/profile`);
             return;
 
 
@@ -94,7 +110,7 @@ const handleMicrosoftLogin = async () => {
 
     // Navigate or update app state
     
-    navigate(`/profile/${account.homeAccountId}`);
+    navigate(`/profile`);
   } catch (error) {
     console.error("Login failed:", error);
   }
@@ -110,7 +126,7 @@ const handleMicrosoftLogin = async () => {
 
                 <input
                     type="email"
-                    {...register("username", { required: true })}
+                    {...register("email", { required: true })}
                     placeholder="Email"
                 />
 

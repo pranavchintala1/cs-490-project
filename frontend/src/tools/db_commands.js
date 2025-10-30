@@ -2,41 +2,51 @@
 
 const url = process.env.REACT_APP_API_URL
 
-export const sendData = async (data,endpoint) => {
+export const sendData = async (data,endpoint,auth=null) => {
 
     // returns null if it cannot connect to the endpoint, undefined if the key doesn't exist.
 
-    
+    const headers = auth
+    ? { "Content-Type": "application/json", "Authorization": `Bearer ${auth}` }
+    : { "Content-Type": "application/json" };
 
     try{
-        const data = await connection(
+        const msg = await connection(
             {
             method:"POST", 
-            headers: {'Content-Type': 'application/json', }, // Indicate that the body is JSON}, 
+            headers: headers,  
             body:JSON.stringify(data)
             },
-            `${url}/${endpoint}`);
+            `${url}${endpoint}`);
 
-        return data;
+        return msg;
     }
-    catch{
+    catch(err){
+        console.error("WHYYYYYYY",err)
         return null;
     }
 
 };
 
-export const getData = async(token,endpoint) =>{
+export const getData = async(token,endpoint,auth=null) =>{
+    const headers = auth
+    ? { "Content-Type": "application/json", "Authorization": `Bearer ${auth}` }
+    : { "Content-Type": "application/json" };
 
     try{
+
+        console.log(`${url}${endpoint}?token=${token}`)
+
         const data = await connection(
             {
             method:"GET", 
-            headers: {'Content-Type': 'application/json'}, // Indicate that the body is JSON}, 
-            },
-            `${url}/${endpoint}?token=${token}`);
+            headers: headers }
+            ,
+            `${url}${endpoint}?token=${token}`);
+            return data;
+        }
 
-        return data;
-    }
+    
     catch{
         return null;
     }
@@ -44,18 +54,20 @@ export const getData = async(token,endpoint) =>{
 
 };
 
-export const updateData = async(token,endpoint) =>{ // this could be merged into the senddata function, but meh
-
+export const updateData = async(data,endpoint,auth=null) =>{ // this could be merged into the senddata function, but meh
+    const headers = auth
+    ? { "Content-Type": "application/json", "Authorization": `Bearer ${auth}` }
+    : { "Content-Type": "application/json" };
     try{
-        const data = await connection(
+        const msg = await connection(
             {
             method:"PUT", 
-            headers: {'Content-Type': 'application/json'}, // Indicate that the body is JSON}, 
+            headers: headers, 
             body:JSON.stringify(data)
             },
-            `${url}/${endpoint}`);
+            `${url}${endpoint}`);
 
-        return data;
+        return msg;
     }
     catch{
         return null;
@@ -70,7 +82,7 @@ const connection = async (request,endpoint) => {
     let response;
 
     try{
-    response = fetch(endpoint,request);
+    response = await fetch(endpoint,request);
 
     }
     catch{

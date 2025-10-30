@@ -15,22 +15,25 @@ sender_email = os.getenv("EMAIL") # setup 2FA in your email. then go to https://
 sender_password = os.getenv("PASSWORD")
 
 
-class forgotPassword:
+
+
+class ForgotPassword:
 
     def __init__(self):
         self.collection = db_client.get_collection(RESET_LINKS)
+
 
     def send_email(self,email):
     # Email details
 
         token = secrets.token_urlsafe(32)  # generates token
-        subject = "Test Email"
+        subject = "Metamorphosis - Password Reset"
         body = f"""
         This is a password reset request for your metamorphosis account,
 
         Click the link below to reset your password. This link expires in 1 hour:
 
-        {"localhost:3000/resetPassword/{token}"}
+        "localhost:3000/resetPassword/{token}"
 
         If you did not make this request, consider resetting your password anyway.
         """ # update localhost later if actual domain is implemented
@@ -47,6 +50,7 @@ class forgotPassword:
                 server.starttls()  # Secure connection
                 server.login(sender_email, sender_password)
                 server.send_message(msg)
+                return token
 
         except Exception as e:
             print("Error:", e)
@@ -73,7 +77,7 @@ class forgotPassword:
             if data:
                 expires = data["expires"]
                 email = data["email"]
-                uuid = user_auth_dao.get_uuid(email)
+                uuid = await user_auth_dao.get_uuid(email)
                 return uuid,expires
         
         except Exception as e:

@@ -1,5 +1,6 @@
 from fastapi import FastAPI,Header,Body
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta
 import bcrypt
@@ -14,7 +15,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from google.auth.exceptions import GoogleAuthError
 
-from mongo.forgotPassword import forgotPassword
+from mongo.forgotPassword import ForgotPassword
 
 from schema import RegistInfo, LoginCred, ProfileSchema, Education, Employment, Project, Skill
 
@@ -23,21 +24,36 @@ app = FastAPI()
 def parse_bearer(auth_header: str = Header(..., alias="Authorization")):
     return auth_header.removeprefix("Bearer ").strip()
 
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,      
+    allow_credentials=True,
+    allow_methods=["*"],         
+    allow_headers=["*"],         
+)
+
 @app.post("/api/auth/register")
 async def register(regist_info: RegistInfo):
     try:
         uuid = str(uuid4())
         # create auth entry
-        await user_auth_dao.register_user(uuid, regist_info.email, regist_info.password)
+        await user_auth_dao.register_user(uuid,regist_info.username, regist_info.email, regist_info.password)
 
         # create data entry
         await user_data_dao.register_user(uuid, regist_info.model_dump(exclude_none = True))
+
+        session_token = session_manager.begin_session(uuid)
+        
 
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "User already exists"})
     except Exception as e:
         return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
-    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration", "uuid": uuid})
+    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration", "uuid": uuid,"session_token":session_token})
 
 @app.post("/api/auth/login")
 async def login(credentials: LoginCred):
@@ -59,7 +75,7 @@ async def login(credentials: LoginCred):
 
         session_token = session_manager.begin_session(user_id)
 
-        return JSONResponse(status_code = 200, content = {"detail": "Successful login", "session_token": session_token})
+        return JSONResponse(status_code = 200, content = {"detail": "Successful login","uuid":user_id, "session_token": session_token})
     else:
         return JSONResponse(status_code = 401, content = {"detail": "Invalid email or password."})
 
@@ -96,31 +112,41 @@ async def add_skill(uuid, entry: Skill):
     if not entry.uuid:
         return JSONResponse(status_code = 400, content = {"detail": "User required"})
     
-@app.post("api/auth/forgotpassword")
-async def forgotPassword(data: str):
+@app.post("/api/auth/forgotpassword")
+async def forgotPassword(email: str = Body(..., embed=True)):
 
-    email = data.email
+
+    exists = await user_auth_dao.get_uuid(email)
+
     try:
-        if user_auth_dao.get_uuid(email):
-            token = forgotPassword.send_email(email)
+        if exists:
+            fp = ForgotPassword() # ugly naming scheme fix later.
+            token = fp.send_email(email)
             uuid = str(uuid4())
-            forgotPassword.store_link(uuid,email,token)
+            await fp.store_link(uuid,email,token)
             return True
     except Exception as e:
+        print(e)
         return None
     
-@app.get("api/auth/resetpassword")
+    
+@app.get("/api/auth/resetpassword")
 async def resetPassword(token: str):
-    uuid,expires = forgotPassword.verify_link(token)
+    fp = ForgotPassword()
+    uuid,expires = await fp.verify_link(token)
     try:
         if (uuid):
-            if(datetime.now() < uuid["expires"]): # The link is still valid.
+            print("uuid is good")
+            print(datetime.now())
+            print(expires)
+            if(datetime.now() < expires ): # The link is still valid.
                 return JSONResponse(status_code = 200, content = {"uuid": uuid})
     except Exception as e:
+        print(e)
         return None
     
 
-@app.put("api/user/updatepassword")
+@app.put("/api/user/updatepassword")
 async def updatePassword(data):
     uuid = data.uuid
     newPass = data.password
@@ -129,13 +155,14 @@ async def updatePassword(data):
         old_data = user_auth_dao.retieve_user(uuid)
         old_data["password"] = bcrypt.hashpw(newPass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         user_data_dao.update_user(uuid,data)
+        session_token = session_manager.begin_session(uuid)
     except Exception as e:
         return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
-    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration", "uuid": uuid})
+    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration","uuid":uuid, "session_token": session_token})
 
 
 
-@app.post("api/auth/verify-google-token")
+@app.post("/api/auth/verify-google-token")
 async def verify_google_token(token: str = Body(...)):
     try:
         uuid = str(uuid4())
@@ -148,8 +175,10 @@ async def verify_google_token(token: str = Body(...)):
             uuid = data["_id"]
         else:
             await user_data_dao.register_user(uuid, idinfo.model_dump(exclude_none = True))
+        
+        session_token = session_manager.begin_session(uuid)
 
-        return JSONResponse(status_code = 200,content={"detail": "success","uuid": uuid})
+        return JSONResponse(status_code = 200,content={"detail": "success","uuid":uuid,"session_token": session_token})
 
     except ValueError:
         
