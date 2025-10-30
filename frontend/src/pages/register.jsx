@@ -30,31 +30,37 @@ function Register() {
 
 
         
-        const res = sendData(data,"/api/auth/register");
+        const res = await sendData(data,"/api/auth/register");
+
 
         if (!res){
             showFlash("Something went wrong when registering","error");
+            return;
 
         }
 
-        data = res.json()
+        const json = await res.json()
 
         if (res.status != 200){
-            showFlash(res.content,"error");
+            showFlash(json.content,"error");
         }
         else{
 
 
             showFlash("Successfully Registered!","Success");
+
+            localStorage.setItem("session",res.session_token);
+            localStorage.setItem("user_id",res.uuid)
+                
             
-            navigate(`/profile/${data.session_token}`);
+            navigate(`/profile`);
 
         }
             return;
             
         };
 
-        const OAuthSubmit = (data) => {
+        const OAuthSubmit = async (data) => {
 
             const res = sendData(data,"api/auth/verify-google-token"); // Link this account with local non-google account later.
 
@@ -64,15 +70,19 @@ function Register() {
 
             }
 
-            data = res.json();
+            const json = await res.json();
             if (res.status != 200){
                 
-                showFlash(data.details,"error");
+                showFlash(json.details,"error");
                 return;
                 
             }
 
-            navigate(`/profile/${data.session_token}`);
+            localStorage.setItem("session",json.session_token)
+            localStorage.setItem("user_id",json.uuid)
+                
+
+            navigate(`/profile`);
             return;
 
         };

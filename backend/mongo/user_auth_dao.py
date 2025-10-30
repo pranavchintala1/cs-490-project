@@ -7,10 +7,11 @@ class UserAuthenticationDAO:
     def __init__(self):
         self.collection = db_client.get_collection(USER_AUTH_COLLECTION)
 
-    async def register_user(self, uuid: str, username: str, password: str) -> bool:
+    async def register_user(self, uuid: str, username: str,email:str, password: str) -> bool:
         body = {
             "_id": uuid,
             "username": username,
+            "email": email,
             "password": bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
             "date_created": datetime.now()
         }

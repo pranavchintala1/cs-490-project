@@ -14,13 +14,13 @@ class RegistInfo(BaseModel):
     address: Optional[str] = None
 
 class Skill(BaseModel):
-    uuid: str
+    user_id: str
     name: str
     proficiency: Optional[str] = None
     category: Optional[str] = None
 
 class Employment(BaseModel):
-    uuid: str 
+    user_id: str 
     #entry_id: str # uniquely identify entries
     title: str
     company: Optional[str] = None
@@ -30,7 +30,7 @@ class Employment(BaseModel):
     description: Optional[str] = None 
 
 class Education(BaseModel):
-    uuid: str
+    user_id: str
     #entry_id: str
     institution_name: str
     degree: Optional[str] = None
@@ -42,7 +42,7 @@ class Education(BaseModel):
     achievements: Optional[str] = None
 
 class Project(BaseModel):
-    uuid: str
+    user_id: str
     # entry_id: str
     project_name: str
     description: Optional[str] = None
@@ -58,7 +58,7 @@ class Project(BaseModel):
     status: Optional[str] = None
 
 class Certification(BaseModel):
-    uuid: str
+    user_id: str
     #entry_id: str
     name: str
     issuer: Optional[str] = None
@@ -71,7 +71,7 @@ class Certification(BaseModel):
 class ProfileSchema(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
-    name: Optional[str] = None
+    full_name: Optional[str] = None
     phone_number: Optional[str] = None
     address: Optional[str] = None
     title: Optional[str] = None
