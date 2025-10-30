@@ -51,9 +51,9 @@ const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual a
       return [title, otherValues];
     });
   }
-  formatted=transformData(apidata,name)
+  const formatted=transformData(apidata,name)
   
-  return data;
+  return formatted;
 
 };
 
