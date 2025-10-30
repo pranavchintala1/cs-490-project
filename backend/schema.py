@@ -2,8 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 class LoginCred(BaseModel):
-    email: str | None = None
-    password: str | None = None
+    email: str
+    password: str
 
 class RegistInfo(BaseModel):
     username: str
@@ -49,7 +49,6 @@ class Project(BaseModel):
     details: Optional[str] = None
     achievements: Optional[str] = None
     industry: Optional[str] = None
-    media: Optional[list[str]] = None # url?
     status: Optional[str] = None
 
 class Certification(BaseModel):
@@ -58,9 +57,10 @@ class Certification(BaseModel):
     date_earned: Optional[str] = None # date?
     date_expiry: Optional[str] = None # date?
     cert_number: Optional[str] = None
-    document: Optional[str] = None # url?
     category: Optional[str] = None
     position: Optional[str] = None
+    verified: Optional[bool] = False
+    document_name: Optional[str] = None
 
 class ProfileSchema(BaseModel):
     username: Optional[str] = None
@@ -72,5 +72,3 @@ class ProfileSchema(BaseModel):
     biography: Optional[str] = None
     industry: Optional[str] = None
     experience_level: Optional[str] = None
-    profile_picture: Optional[str] = None # url?
- 
