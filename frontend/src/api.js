@@ -1,7 +1,7 @@
 // src/api.js
 export async function apiRequest(endpoint, options = {}) {
   const baseURL = "http://localhost:8000"; // TODO replace with actual url
-  const uuid = localStorage.getItem("uuid");
+  const uuid = localStorage.getItem("user_id");
   const token = localStorage.getItem("session");
 
   // attach default headers
@@ -21,7 +21,7 @@ export async function apiRequest(endpoint, options = {}) {
     // Redirect if unauthorized
     if (response.status === 401 || response.status === 403) {
       localStorage.clear();
-      window.location.href = "/login";
+      window.location.href = "/login?error=unauthorized";
       return;
     }
 
