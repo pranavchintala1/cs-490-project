@@ -96,7 +96,7 @@ export default function EducationList() {
 
         {sortedEntries.map((entry) => {
           const yearLabel = entry.currently_enrolled
-            ? "Present"
+            ? "Curr"
             : entry.graduation_date
             ? new Date(entry.graduation_date).getFullYear()
             : "";
@@ -133,7 +133,7 @@ export default function EducationList() {
                   marginRight: "10px",
                   fontSize: "0.9em",
                   marginTop: "2px",
-                  color: "#000", // black year label
+                  color: "#fff", // black year label
                 }}
               >
                 {yearLabel}
