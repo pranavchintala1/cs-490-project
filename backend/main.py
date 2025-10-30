@@ -33,6 +33,13 @@ app.add_middleware(
 def session_auth(uuid, auth_header: str = Header(..., alias = "Authorization")):
     return session_manager.authenticate_session(uuid, auth_header.removeprefix("Bearer ").strip())
 
+def internal_server_error(message: str) -> JSONResponse:
+    return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {message}"})
+
+########################################################################################################################
+#                                                     AUTHENTICATION                                                   #
+########################################################################################################################
+
 @app.post("/api/auth/register")
 async def register(regist_info: RegistInfo):
     try:
@@ -48,7 +55,7 @@ async def register(regist_info: RegistInfo):
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "User already exists"})
     except Exception as e:
-        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
+        return internal_server_error(str(e))
     return JSONResponse(status_code=200, content={"detail": "Sucessful Registration", "uuid": user_id, "session_token": session_token})
 
 @app.post("/api/auth/login")
@@ -61,13 +68,13 @@ async def login(credentials: LoginCred):
 
         authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception as e:
-        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"}) # could pose security risk
+        return internal_server_error(str(e))
     
     if authenticated:
         try:
             user_id = await auth_dao.get_uuid(credentials.email) # we already checked if the username exists, don't need to check again
         except Exception as e:
-            return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {str(e)}"})
+            return internal_server_error(str(e))
 
         session_token = session_manager.begin_session(user_id)
 
@@ -93,7 +100,7 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
     try:
         user_data = await profiles_dao.retrieve_user(uuid)
     except Exception as e:
-        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {str(e)}"})
+        return internal_server_error(str(e))
     
     if not user_data:
         return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
@@ -104,11 +111,10 @@ async def update_profile(uuid: str, profile: ProfileSchema, auth: str = Header(.
     if not session_auth(uuid, auth):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
-    cleaned_data = profile.model_dump(exclude_none = True)
     try:
-        update_count = await profiles_dao.update_user(uuid, cleaned_data)
+        update_count = await profiles_dao.update_user(uuid, profile.model_dump(exclude_none = True))
     except Exception as e:
-        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {str(e)}"})
+        return internal_server_error(str(e))
     if update_count == 0:
         return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
     return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
