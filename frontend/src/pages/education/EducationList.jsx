@@ -1,65 +1,66 @@
 import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
 
-const API_URL = process.env.REACT_APP_API_URL + "/education";
-
 export default function EducationList() {
   const [entries, setEntries] = useState([]);
   const [editEntry, setEditEntry] = useState(null);
 
-  // Load entries
+  // Load dummy entries
   useEffect(() => {
-    fetch(`${API_URL}/?user_id=temp_user`)
-      .then((res) => res.json())
-      .then((data) => setEntries(Array.isArray(data) ? data : []))
-      .catch((err) => console.error(err));
+    const dummyData = [
+      {
+        id: "edu1",
+        degree: "Bachelor of Computer Science",
+        institution: "University of Technology",
+        field_of_study: "Software Engineering",
+        graduation_date: "2019-05-15",
+        currently_enrolled: false,
+        gpa: "3.8",
+        gpa_private: false,
+        achievements: "Dean's List, Coding Club President"
+      },
+      {
+        id: "edu2",
+        degree: "Master of Science in AI",
+        institution: "Tech University",
+        field_of_study: "Artificial Intelligence",
+        graduation_date: "2022-12-20",
+        currently_enrolled: false,
+        gpa: "3.9",
+        gpa_private: false,
+        achievements: "Research Assistant, Published 2 papers"
+      },
+      {
+        id: "edu3",
+        degree: "Full-Stack Web Development Bootcamp",
+        institution: "Online Academy",
+        field_of_study: "Web Development",
+        graduation_date: null,
+        currently_enrolled: true,
+        gpa: null,
+        gpa_private: true,
+        achievements: "Built multiple projects"
+      }
+    ];
+
+    setEntries(dummyData);
   }, []);
 
-  // Add entry
   const addEntry = async (entry) => {
-    try {
-      const entryWithUser = { user_id: "temp_user", ...entry };
-      const res = await fetch(`${API_URL}/`, { // trailing slash
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entryWithUser),
-      });
-      const newEntry = await res.json();
-      setEntries([newEntry, ...entries]);
-    } catch (err) {
-      console.error(err);
-    }
+    const newEntry = { id: `edu${Date.now()}`, user_id: "temp_user", ...entry };
+    setEntries([newEntry, ...entries]);
   };
 
-  // Submit edit
   const submitEdit = async (updatedEntry) => {
-    try {
-      const { id, ...body } = updatedEntry;
-      const res = await fetch(`${API_URL}/${id}?user_id=temp_user`, { // added slash before id
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const updated = await res.json();
-      setEntries(entries.map((e) => (e.id === updated.id ? updated : e)));
-      setEditEntry(null);
-    } catch (err) {
-      console.error(err);
-    }
+    setEntries(entries.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
+    setEditEntry(null);
   };
 
-  // Delete entry
   const deleteEntry = async (id) => {
     if (!window.confirm("Delete this entry?")) return;
-    try {
-      await fetch(`${API_URL}/${id}?user_id=temp_user`, { method: "DELETE" }); // added slash
-      setEntries(entries.filter((e) => e.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+    setEntries(entries.filter((e) => e.id !== id));
   };
 
-  // Sort entries
   const sortedEntries = [...entries].sort((a, b) => {
     if (a.currently_enrolled && !b.currently_enrolled) return -1;
     if (!a.currently_enrolled && b.currently_enrolled) return 1;
@@ -69,7 +70,7 @@ export default function EducationList() {
   });
 
   return (
-    <div>
+    <div style={{ color: "#000" }}> {/* Set all text to black */}
       <h2>Education</h2>
 
       <EducationForm
@@ -109,6 +110,7 @@ export default function EducationList() {
                 marginBottom: "20px",
                 position: "relative",
                 zIndex: 1,
+                color: "#000", // ensure each entry text is black
               }}
             >
               <div style={{ width: "60px", display: "flex", justifyContent: "center" }}>
@@ -130,8 +132,8 @@ export default function EducationList() {
                   textAlign: "right",
                   marginRight: "10px",
                   fontSize: "0.9em",
-                  color: "#555",
                   marginTop: "2px",
+                  color: "#000", // black year label
                 }}
               >
                 {yearLabel}
@@ -144,6 +146,7 @@ export default function EducationList() {
                   padding: "10px",
                   background: entry.currently_enrolled ? "#e0f7fa" : "#f9f9f9",
                   flex: 1,
+                  color: "#000", // black entry text
                 }}
               >
                 <strong>{entry.degree}</strong> at <em>{entry.institution}</em>
