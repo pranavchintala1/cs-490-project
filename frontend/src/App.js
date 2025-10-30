@@ -22,7 +22,11 @@ export function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        <img 
+  src="/image.png" 
+  alt="logo"
+  style={{ width: "100%", maxWidth: "400px", height: "auto", display: "block", margin: "0 auto" }}
+/>
         <>
     
           <FlashProvider>
