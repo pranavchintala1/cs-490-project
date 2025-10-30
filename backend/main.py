@@ -24,7 +24,7 @@ from google.auth.transport import requests
 from google.auth.exceptions import GoogleAuthError
 
 
-from schema import RegistInfo, LoginCred, ProfileSchema, Education, Employment, Project, Skill, Certification
+from schema import RegistInfo, LoginCred, Education, Employment, Project, Skill, Certification
 
 app = FastAPI()
 
@@ -200,7 +200,7 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
     
     try:
         user_data = await profiles_dao.retrieve_user(uuid)
-        user_data.pop("profile_picture")
+        user_data.pop("profile_image")
     except Exception as e:
         return internal_server_error(str(e))
     
@@ -215,7 +215,7 @@ async def retrieve_profile_picture(uuid: str, auth: str = Header(..., alias = "A
     
     try:
         user_data = await profiles_dao.retrieve_user(uuid)
-        picture = user_data["profile_picture"]
+        picture = user_data["profile_image"]
         pic_type = user_data["image_type"]
         pic_name = user_data["image_name"]
     except Exception as e:
@@ -255,7 +255,7 @@ async def update_profile(
             "biography": biography,
             "industry": industry,
             "experience_level": experience_level,
-            "profile_picture": contents,
+            "image": contents,
             "image_type": pfp.content_type,
             "image_name": pfp.filename
         }
