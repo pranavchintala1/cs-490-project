@@ -50,7 +50,7 @@ function Register() {
             showFlash("Successfully Registered!","Success");
 
             localStorage.setItem("session",res.session_token);
-            localStorage.setItem("user_id",res.uuid)
+            localStorage.setItem("uuid",res.uuid)
                 
             
             navigate(`/profile`);
@@ -82,7 +82,7 @@ function Register() {
             }
 
             localStorage.setItem("session",json.session_token)
-            localStorage.setItem("user_id",json.uuid)
+            localStorage.setItem("uuid",json.uuid)
                 
 
             navigate(`/profile`);
@@ -96,23 +96,23 @@ const handleMicrosoftLogin = async () => {
       scopes: ["user.read", "openid", "profile", "email"],
     });
 
-    const { account, idToken } = response;
-    console.log("Logged in user:", account);
+    const { idToken } = response;
 
-    /* update l8r with actual api implementation 
-    await fetch("/api/login/microsoft", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: idToken }),
-    });*/
+    const res = await sendData({token:idToken},"/api/login/microsoft")
 
-    // Navigate or update app state
+    const data = await res.json();
 
-    navigate(`/profile/${account.homeAccountId}`);
+    if (data.valid) {
+      console.log("Token valid! User info:", data.payload);
+      navigate("/profile");
+    } else {
+      console.error("Token invalid:", data.error);
+    }
   } catch (error) {
     console.error("Login failed:", error);
   }
 };
+
 
 
     

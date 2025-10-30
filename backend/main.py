@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Header,Body
+from fastapi import FastAPI,Header,Body,HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
@@ -19,11 +19,15 @@ from pymongo.errors import DuplicateKeyError, WriteError
 import bcrypt
 
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as g_requests
 from google.auth.exceptions import GoogleAuthError
+import requests
+
+from jose import jwt
+from jose.exceptions import JWTError
 
 
-from schema import RegistInfo, LoginCred, ProfileSchema, Education, Employment, Project, Skill, Certification
+from schema import RegistInfo, LoginCred, ProfileSchema, Education, Employment, Project, Skill, Certification,TokenRequest
 
 app = FastAPI()
 
@@ -155,7 +159,7 @@ async def verify_google_token(token: dict = Body(...)):
     credentials = token.get("credential")
     try:
 
-        idinfo = id_token.verify_oauth2_token(credentials, requests.Request()) # returns user data such as email and profile picture
+        idinfo = id_token.verify_oauth2_token(credentials, g_requests.Request()) # returns user data such as email and profile picture
 
         data = await auth_dao.get_uuid(idinfo["email"]) # this returns a uuid
 
@@ -182,10 +186,68 @@ async def verify_google_token(token: dict = Body(...)):
         return JSONResponse(status_code=401, content={"detail":f"Google auth failed: {str(e)}"})
 
     except Exception as e:
+
         print(e)
-        print("look up")
+        return JSONResponse(status_code=500, content={"detail":f"Unknown Error while authenticating: {str(e)}"})
+    
+@app.post("/api/login/microsoft")
+async def login_microsoft(req: TokenRequest):
+
+    MICROSOFT_JWKS_URL = "https://login.microsoftonline.com/common/discovery/v2.0/keys"
+    MICROSOFT_ISSUER = "https://login.microsoftonline.com/common/v2.0"
+    CLIENT_ID = "bbe87bbf-f010-4e1c-aa54-1d3979116bdd" #TODO <-- Anthony move this to env when you have time -Anthony
+
+    token = req.token
+
+    # Get Microsoft public keys
+    jwks = requests.get(MICROSOFT_JWKS_URL).json()
+    
+    # Decode the token header to find 'kid'
+    headers = jwt.get_unverified_header(token)
+    kid = headers["kid"]
+
+    key = next((k for k in jwks["keys"] if k["kid"] == kid), None)
+    if not key:
+        raise HTTPException(status_code=401, detail="Invalid token key")
+
+    try:
+        idinfo = jwt.decode(
+            token,
+            key,
+            algorithms=[key["alg"]],
+            audience=CLIENT_ID,
+            issuer=MICROSOFT_ISSUER,
+        )
+        # Token is valid
+
+        data = await auth_dao.get_uuid(idinfo["email"]) # reusing this code.... WITH NO SURVIVORS!
+
+        if (data): # if the user already exists, still log in because it doesn't matter.
+            uuid = data
+        else:
+
+            uuid = str(uuid4())
+            idinfo["username"] = idinfo["email"]
+            await auth_dao.register_user(uuid,idinfo["email"],idinfo["email"],"")
+    
+            await profiles_dao.register_user(uuid, idinfo)
+        
+        session_token = session_manager.begin_session(uuid)
+
+        return JSONResponse(status_code = 200,content={"detail": "success","uuid":uuid,"session_token": session_token})
+
+    except JWTError as e:
+        return JSONResponse(status_code=401,content={"detail": "Authentication Error"})
+    
+    except ValueError: #Reusing error handling... like a baws!
+        
+        return JSONResponse(status_code=400, content={"detail":"invalid token"})
+
+    except Exception as e:
 
         return JSONResponse(status_code=500, content={"detail":f"Unknown Error while authenticating: {str(e)}"})
+
+
     
 
 ########################################################################################################################
