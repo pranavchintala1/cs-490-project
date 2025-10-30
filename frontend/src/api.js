@@ -1,7 +1,7 @@
 // src/api.js
 export async function apiRequest(endpoint, options = {}) {
   const baseURL = "http://localhost:8000"; // TODO replace with actual url
-  const uuid = localStorage.getItem("user_id");
+  const uuid = localStorage.getItem("uuid");
   const token = localStorage.getItem("session");
 
   // attach default headers
