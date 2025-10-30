@@ -1,11 +1,11 @@
-from mongo.dao_setup import db_client, USER_AUTH_COLLECTION
+from mongo.dao_setup import db_client, AUTH
 
 import bcrypt
 from datetime import datetime
 
 class UserAuthenticationDAO:
     def __init__(self):
-        self.collection = db_client.get_collection(USER_AUTH_COLLECTION)
+        self.collection = db_client.get_collection(AUTH)
 
     async def register_user(self, uuid: str, username: str, email: str, password: str):
         body = {
@@ -28,4 +28,4 @@ class UserAuthenticationDAO:
         result = await self.collection.find_one({"email": email})
         return result["_id"] if result else None
 
-user_auth_dao = UserAuthenticationDAO()
+auth_dao = UserAuthenticationDAO()
