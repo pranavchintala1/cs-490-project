@@ -12,18 +12,18 @@ export async function apiRequest(endpoint, options = {}) {
 
   if (token) headers["Authorization"] = `Bearer ${token}`; //TODO replace with actual structure
 
-  const url = `${baseURL}/${endpoint}?${uuid}`;
+  const url = `${baseURL}${endpoint}?${uuid}`;
   const config = { ...options, headers };
 
   try {
     const response = await fetch(url, config);
 
     // Redirect if unauthorized
-    if (response.status === 401 || response.status === 403 || response.status === 422) {
-      localStorage.clear();
-      window.location.href = "/login?error=unauthorized";
-      return;
-    }
+    // if (response.status === 401 || response.status === 403 || response.status === 422) {
+    //   localStorage.clear();
+    //   window.location.href = "/login?error=unauthorized";
+    //   return;
+    // }
 
     const data = await response.json();
     return data;
