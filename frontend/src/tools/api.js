@@ -47,8 +47,15 @@ export const updateMe = async (profileObj, file /* File | null */) => {
   const { uuid, token } = auth();
   if (!uuid || !token) throw new Error("Not authenticated");
 
-  const fd = new FormData();
-  fd.append("profile", JSON.stringify(profileObj));   
+  const fd = new FormData();  
+  fd.append("username", profileObj["username"])
+  fd.append("email", profileObj["email"])
+  fd.append("full_name", profileObj["full_name"])
+  fd.append("phone_number", profileObj["phone_number"])
+  fd.append("title", profileObj["title"])
+  fd.append("biography", profileObj["biography"])
+  fd.append("industry", profileObj["industry"])
+  fd.append("experience_level", profileObj["experience_level"])
   if (file) fd.append("pfp", file);                   
 
   return http("PUT", "/api/users/me", {
