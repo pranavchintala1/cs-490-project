@@ -260,7 +260,7 @@ const Dashboard = () => {
             minWidth: '300px'
           }}>
             <a 
-              href="/employment-history" 
+              href="/employment" 
               style={{
                 fontSize: '18px', // Slightly reduced from 20px
                 fontWeight: '600',
