@@ -9,6 +9,7 @@ import Register from "./pages/register"
 import Profile from "./pages/profile"
 import ForgotPassword from "./pages/forgotPassword"
 import ResetPassword from "./pages/resetPassword"
+import Dashboard from "./pages/dashboard";
 import { FlashProvider, FlashMessage } from "./context/flashContext"
 
 
@@ -29,6 +30,7 @@ export function App() {
                 <Route path = "/profile/:sessionID" element = {<Profile />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/resetPassword/:URL" element = {<ResetPassword />}/>
+                <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
              </Routes>
             </FlashProvider>
