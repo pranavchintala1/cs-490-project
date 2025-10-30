@@ -5,6 +5,11 @@ from uuid import uuid4
 
 from mongo.profiles_dao import profiles_dao
 from mongo.auth_dao import auth_dao
+from mongo.skill_dao import skills_dao
+from mongo.project_dao import projects_dao
+from mongo.employment_dao import employment_dao
+from mongo.education_dao import education_dao
+from mongo.certification_dao import certifications_dao
 from sessions.session_manager import session_manager
 from pymongo.errors import DuplicateKeyError, WriteError
 import bcrypt

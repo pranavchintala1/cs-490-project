@@ -21,4 +21,4 @@ class CertDAO:
         result = await self.collection.delete_one({"_id": entry_id})
         return result.deleted_count
 
-cert_dao = CertDAO()
+certifications_dao = CertDAO()
