@@ -30,7 +30,6 @@ export function App() {
                 <Route path = "/profile" element = {<Profile />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
-
                 <Route path = "/resetPassword/:URL" element = {<ResetPassword />}/>
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
              </Routes>
