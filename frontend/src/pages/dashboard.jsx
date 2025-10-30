@@ -1,42 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
+import { apiRequest } from "../api";
 
 // Simulate API calls to a generic database
-const fetchDataFromAPI = async (endpoint) => { //TODO update with actual api and enpoints
+const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual api and enpoints
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500));
+  // await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500));
   
-  // Generate mock data based on endpoint
-  const mockData = {
-    'profile': [
-      ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
-      ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
-      ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
-    ],
-    'employment-history': [
-      ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-      ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-      ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-    ],
-    'skills': [
-      ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
-      ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
-      ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
-    ],
-    'education': [
-      ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-      ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-      ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-    ],
-    'projects': [
-      ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
-      ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
-      ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
-    ]
-  };
+  // // Generate mock data based on endpoint
+  // const mockData = {
+  //   'profile': [
+  //     ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
+  //     ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
+  //     ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
+  //   ],
+  //   'employment-history': [
+  //     ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
+  //     ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
+  //     ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
+  //   ],
+  //   'skills': [
+  //     ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
+  //     ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
+  //     ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
+  //   ],
+  //   'education': [
+  //     ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
+  //     ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
+  //     ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
+  //   ],
+  //   'projects': [
+  //     ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
+  //     ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
+  //     ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
+  //   ]
+  // };
   
-  return mockData[endpoint] || [];
+  // return mockData[endpoint] || [];
+
+
+  const apidata = await apiRequest(endpoint);
+
+  function transformData(data, titleKey = "title") {
+    return data.map(obj => {
+      const title = obj[titleKey];
+      const otherValues = Object.entries(obj)
+        .filter(([key]) => key !== titleKey)
+        .map(([_, value]) => value);
+      return [title, otherValues];
+    });
+  }
+  formatted=transformData(apidata,name)
+  
+  return data;
+
 };
 
 // Dashboard component
@@ -58,11 +76,11 @@ const Dashboard = () => {
         
         // Make 5 parallel API requests
         const [profileData, employmentData, skillsData, educationData, projectsData] = await Promise.all([
-          fetchDataFromAPI('profile'),
-          fetchDataFromAPI('employment-history'),
-          fetchDataFromAPI('skills'),
-          fetchDataFromAPI('education'),
-          fetchDataFromAPI('projects')
+          fetchDataFromAPI('me',"profile-name"),
+          fetchDataFromAPI('employment-history',"job-name"),
+          fetchDataFromAPI('skills',"skill-name"),
+          fetchDataFromAPI('education',"ed-name"),
+          fetchDataFromAPI('projects',"project-name")
         ]);
 
         // Store results in state
