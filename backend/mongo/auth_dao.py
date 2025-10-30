@@ -17,7 +17,7 @@ class UserAuthenticationDAO:
         }
         await self.collection.insert_one(body)
 
-    async def get_password(self, email: str) -> bool:
+    async def get_password(self, email: str) -> str | None:
         user_data = await self.collection.find_one({"email": email})
         if user_data:
             return user_data["password"]
