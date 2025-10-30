@@ -80,7 +80,7 @@ async def login(credentials: LoginCred):
         password_hash = await auth_dao.get_password(credentials.email)
         
         if not password_hash:
-            return JSONResponse(status_code = 400, content = {"detail": "Invalid email"})
+            return JSONResponse(status_code = 400, content = {"detail": "Invalid email or password"})
 
         authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception as e:
