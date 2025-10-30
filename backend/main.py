@@ -1,7 +1,10 @@
-from fastapi import FastAPI, Header
+from fastapi import FastAPI,Header,Body
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
+from datetime import datetime, timedelta
+import bcrypt
+
 
 from mongo.profiles_dao import profiles_dao
 from mongo.auth_dao import auth_dao
@@ -10,11 +13,22 @@ from mongo.project_dao import projects_dao
 from mongo.employment_dao import employment_dao
 from mongo.education_dao import education_dao
 from mongo.certification_dao import certifications_dao
+from mongo.forgotPassword import ForgotPassword
 from sessions.session_manager import session_manager
 from pymongo.errors import DuplicateKeyError, WriteError
 import bcrypt
 
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from google.auth.exceptions import GoogleAuthError
+
+
 from schema import RegistInfo, LoginCred, ProfileSchema, Education, Employment, Project, Skill, Certification
+
+app = FastAPI()
+
+def parse_bearer(auth_header: str = Header(..., alias="Authorization")):
+    return auth_header.removeprefix("Bearer ").strip()
 
 app = FastAPI()
 
@@ -24,12 +38,12 @@ origins = [ # domains to provide access to
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = origins,
-    allow_credentials = True,
-    allow_methods = ["*"],
-    allow_headers = ["*"]
+    allow_origins=origins,      
+    allow_credentials=True,
+    allow_methods=["*"],         
+    allow_headers=["*"],         
 )
-
+        
 def session_auth(uuid, auth_header: str = Header(..., alias = "Authorization")):
     return session_manager.authenticate_session(uuid, auth_header.removeprefix("Bearer ").strip())
 
@@ -88,6 +102,86 @@ async def logout(uuid: str, auth: str = Header(..., alias = "Authorization")):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"}) # successfully auth and kill session before proceeding
     
     return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
+  @app.post("/api/auth/forgotpassword")
+async def forgotPassword(email: str = Body(..., embed=True)):
+
+
+    exists = await user_auth_dao.get_uuid(email)
+
+    try:
+        if exists:
+            fp = ForgotPassword() # ugly naming scheme fix later.
+            token = fp.send_email(email)
+            uuid = str(uuid4())
+            await fp.store_link(uuid,email,token)
+            return True
+    except Exception as e:
+        print(e)
+        return None
+    
+    
+@app.get("/api/auth/resetpassword")
+async def resetPassword(token: str):
+    fp = ForgotPassword()
+    uuid,expires = await fp.verify_link(token)
+    try:
+        if (uuid):
+            print("uuid is good")
+            print(datetime.now())
+            print(expires)
+            if(datetime.now() < expires ): # The link is still valid.
+                return JSONResponse(status_code = 200, content = {"uuid": uuid})
+    except Exception as e:
+        print(e)
+        return None
+    
+
+@app.put("/api/user/updatepassword")
+async def updatePassword(data):
+    uuid = data.uuid
+    newPass = data.password
+
+    try:
+        old_data = user_auth_dao.retieve_user(uuid)
+        old_data["password"] = bcrypt.hashpw(newPass.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        user_data_dao.update_user(uuid,data)
+        session_token = session_manager.begin_session(uuid)
+    except Exception as e:
+        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong {str(e)}"})
+    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration","uuid":uuid, "session_token": session_token})
+
+
+
+@app.post("/api/auth/verify-google-token")
+async def verify_google_token(token: str = Body(...)):
+    try:
+        uuid = str(uuid4())
+
+        idinfo = id_token.verify_oauth2_token(token, requests.Request()) # returns user data such as email and profile picture
+
+        data = user_auth_dao.get_uuid(idinfo["email"])
+
+        if (data): # if the user already exists, still log in because it doesn't matter.
+            uuid = data["_id"]
+        else:
+            await user_data_dao.register_user(uuid, idinfo.model_dump(exclude_none = True))
+        
+        session_token = session_manager.begin_session(uuid)
+
+        return JSONResponse(status_code = 200,content={"detail": "success","uuid":uuid,"session_token": session_token})
+
+    except ValueError:
+        
+        return JSONResponse(status_code=400, content={"detail":"invalid token"})
+
+    except GoogleAuthError as e:
+      
+        return JSONResponse(status_code=401, content={"detail":f"Google auth failed: {str(e)}"})
+
+    except Exception as e:
+
+        return JSONResponse(status_code=500, content={"detail":f"Unknown Error while authenticating: {str(e)}"})
+    
 
 ########################################################################################################################
 #                                                       PROFILES                                                       #

@@ -5,14 +5,27 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import { App } from './App';
 import reportWebVitals from './reportWebVitals';
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import { msalConfig } from "./tools/msal";
+import { PublicClientApplication } from "@azure/msal-browser";
+import { MsalProvider } from "@azure/msal-react";
+
+
+const PCA = new PublicClientApplication(msalConfig);
+
+const clientId = process.env.VITE_GOOGLE_CLIENT_ID; // from .env
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <FlashProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <GoogleOAuthProvider clientId={clientId}>
+       <MsalProvider instance={PCA}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+        </MsalProvider>
+      </GoogleOAuthProvider>
     </FlashProvider>
   </React.StrictMode>
 );
