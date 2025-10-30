@@ -1,13 +1,13 @@
-from mongo.dao_setup import db_client, USER_AUTH_COLLECTION
+from mongo.dao_setup import db_client, AUTH
 
 import bcrypt
 from datetime import datetime
 
 class UserAuthenticationDAO:
     def __init__(self):
-        self.collection = db_client.get_collection(USER_AUTH_COLLECTION)
+        self.collection = db_client.get_collection(AUTH)
 
-    async def register_user(self, uuid: str, username: str,email:str, password: str) -> bool:
+    async def register_user(self, uuid: str, username: str, email: str, password: str):
         body = {
             "_id": uuid,
             "username": username,
@@ -17,8 +17,8 @@ class UserAuthenticationDAO:
         }
         await self.collection.insert_one(body)
 
-    async def get_password(self, username: str) -> bool:
-        user_data = await self.collection.find_one({"username": username})
+    async def get_password(self, email: str) -> str | None:
+        user_data = await self.collection.find_one({"email": email})
         if user_data:
             return user_data["password"]
         else:
@@ -27,7 +27,13 @@ class UserAuthenticationDAO:
     async def get_uuid(self, email: str) -> str | None:
         result = await self.collection.find_one({"email": email})
         return result["_id"] if result else None
-        
-       
 
-user_auth_dao = UserAuthenticationDAO()
+    async def update_password(self,uuid,data:dict):
+        updated = await self.collection.update_one({"_id": uuid},{"$set":data})
+        return updated.matched_count
+    
+    async def delete_user(self, uuid: str):
+        result = await self.collection.delete_one({"_id": uuid})
+        return result.deleted_count
+
+auth_dao = UserAuthenticationDAO()
