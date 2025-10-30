@@ -7,7 +7,7 @@ class CertDAO:
     async def add_cert(self, uuid, data: dict):
         return await self.collection.insert_one(data)
 
-    async def retrieve_certs(self, uuid: str): # all projects
+    async def retrieve_all_certs(self, uuid: str): # all projects
         return await self.collection.find({"uuid": uuid})
 
     async def retrieve_cert(self, entry_id: str): # one project
@@ -21,4 +21,4 @@ class CertDAO:
         result = await self.collection.delete_one({"_id": entry_id})
         return result.deleted_count
 
-cert_dao = CertDAO()
+certifications_dao = CertDAO()
