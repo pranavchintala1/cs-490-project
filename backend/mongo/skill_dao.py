@@ -21,4 +21,4 @@ class SkillDAO:
         result = await self.collection.delete_one({"_id": entry_id})
         return result.deleted_count
     
-skill_dao = SkillDAO()
+skills_dao = SkillDAO()
