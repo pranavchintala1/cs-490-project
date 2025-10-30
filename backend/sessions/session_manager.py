@@ -5,8 +5,8 @@ class SessionManager:
     def __init__(self):
         self.sessions: dict[str, dict[str, Any]] = {}
 
-    def authenticate_session(self, uuid: str, usid: str) -> bool:
-        return uuid in self.sessions and usid == self.sessions[uuid]["token"]
+    def authenticate_session(self, uuid: str, session_token: str) -> bool:
+        return uuid in self.sessions and session_token == self.sessions[uuid]["token"]
 
     def begin_session(self, uuid: str) -> str:
         self.sessions[uuid] = {
