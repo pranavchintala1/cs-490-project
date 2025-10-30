@@ -25,8 +25,8 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
-def parse_bearer(auth_header: str = Header(..., alias="Authorization")):
-    return auth_header.removeprefix("Bearer ").strip()
+def session_auth(uuid, auth_header: str = Header(..., alias = "Authorization")):
+    return session_manager.authenticate_session(uuid, auth_header.removeprefix("Bearer ").strip())
 
 @app.post("/api/auth/register")
 async def register(regist_info: RegistInfo):
@@ -72,38 +72,54 @@ async def login(credentials: LoginCred):
 
 @app.post("/api/auth/logout")
 async def logout(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    if session_manager.authenticate_session(uuid, parse_bearer(auth)) and session_manager.kill_session(uuid): # successfully auth and kill session before proceeding
-        return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
-    return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    if not session_auth(uuid, auth) and session_manager.kill_session(uuid):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"}) # successfully auth and kill session before proceeding
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
 
 ########################################################################################################################
 #                                                       PROFILES                                                       #
 ########################################################################################################################
 @app.get("/api/users/me")
 async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    if session_manager.authenticate_session(uuid, parse_bearer(auth)):
-        try:
-            user_data = await profiles_dao.retrieve_user(uuid)
-        except Exception as e:
-            return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {str(e)}"})
-        
-        if not user_data:
-            return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
-        return user_data
-    return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    try:
+        user_data = await profiles_dao.retrieve_user(uuid)
+    except Exception as e:
+        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {str(e)}"})
+    
+    if not user_data:
+        return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
+    return user_data
 
 @app.put("/api/users/me")
 async def update_profile(uuid: str, profile: ProfileSchema, auth: str = Header(..., alias = "Authorization")):
-    if session_manager.authenticate_session(uuid, parse_bearer(auth)):
-        cleaned_data = profile.model_dump(exclude_none = True)
-        try:
-            update_count = await profiles_dao.update_user(uuid, cleaned_data)
-        except Exception as e:
-            return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {str(e)}"})
-        if update_count == 0:
-            return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
-        return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
-    return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    cleaned_data = profile.model_dump(exclude_none = True)
+    try:
+        update_count = await profiles_dao.update_user(uuid, cleaned_data)
+    except Exception as e:
+        return JSONResponse(status_code = 500, content = {"detail": f"Something went wrong: {str(e)}"})
+    if update_count == 0:
+        return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
+
+@app.delete("/api/users/me")
+async def delete_profile(uuid: str, auth: str = Header(..., alias = "Authorization")):
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
+    
+    del_count = auth_dao.delete_user(uuid) # delete from auth
+    if del_count == 0:
+        return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
+    
+    del_count = profiles_dao.delete_user(uuid) # delete from profiles
+    if del_count == 0:
+        return JSONResponse(status_code = 400, content = {"detail": "User profile does not exist"})
 
 ########################################################################################################################
 #                                                       SKILLS                                                         #
