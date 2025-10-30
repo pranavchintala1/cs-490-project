@@ -120,118 +120,145 @@ async def delete_profile(uuid: str, auth: str = Header(..., alias = "Authorizati
     del_count = profiles_dao.delete_user(uuid) # delete from profiles
     if del_count == 0:
         return JSONResponse(status_code = 400, content = {"detail": "User profile does not exist"})
+    
+    return JSONResponse(status_code = 200, content = {"detail": "User data successfully deleted"})
 
 ########################################################################################################################
 #                                                       SKILLS                                                         #
 ########################################################################################################################
 @app.post("/api/skills")
 async def add_skill(uuid: str, entry: Skill, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/skills")
 async def retrieve_skill(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/skills/me")
 async def retrieve_all_skills(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.put("/api/skills")
 async def update_skill(uuid: str, entry_id: str, data: Skill, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.delete("/api/skills")
 async def delete_skill(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 ########################################################################################################################
 #                                                      EDUCATION                                                       #
 ########################################################################################################################
 @app.post("/api/education")
 async def add_education(uuid: str, entry: Education, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/education")
 async def retrieve_education(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/education/me")
 async def retrieve_all_education(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.put("/api/education")
 async def update_education(uuid: str, entry_id: str, data: Education, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.delete("/api/education")
 async def delete_education(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 ########################################################################################################################
 #                                                      EMPLOYMENT                                                      #
 ########################################################################################################################
 @app.post("/api/employment")
 async def add_employment(uuid: str, entry: Employment, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/employment")
 async def retrieve_employment(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/employment/me")
 async def retrieve_all_employment(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.put("/api/employment")
 async def update_education(uuid: str, entry_id: str, data: Employment, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.delete("/api/employment")
 async def delete_employment(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 ########################################################################################################################
 #                                                       PROJECTS                                                       #
 ########################################################################################################################
 @app.post("/api/projects")
 async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/projects")
 async def retrieve_project(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/projects/me")
 async def retrieve_all_projects(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.put("/api/projects")
 async def update_project(uuid: str, entry_id: str, data: Project, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.delete("/api/projects")
 async def delete_project(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 ########################################################################################################################
 #                                                     CERTIFICATION                                                    #
 ########################################################################################################################
 @app.post("/api/certifications")
 async def add_certification(uuid: str, entry: Certification, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/certifications")
 async def retrieve_certification(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.get("/api/certifications/me")
 async def retrieve_all_certifications(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.put("/api/certifications")
 async def update_certification(uuid: str, entry_id: str, data: Certification, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
 
 @app.delete("/api/certifications")
 async def delete_certification(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
-    pass
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
