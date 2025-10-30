@@ -98,9 +98,10 @@ async def login(credentials: LoginCred):
 
 @app.post("/api/auth/logout")
 async def logout(uuid: str, auth: str = Header(..., alias = "Authorization")):
-    if not session_auth(uuid, auth) and session_manager.kill_session(uuid):
-        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"}) # successfully auth and kill session before proceeding
+    if not session_auth(uuid, auth):
+        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
+    session_manager.kill_session(uuid)
     return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
 @app.post("/api/auth/forgotpassword")
 async def forgotPassword(email: str = Body(..., embed=True)):
@@ -237,7 +238,7 @@ async def add_skill(uuid: str, entry: Skill, auth: str = Header(..., alias = "Au
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await skills_dao.add_skill(uuid, entry.model_dump(exlcude_none = True))
+        await skills_dao.add_skill(uuid, entry.model_dump(exclude_none = True))
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Skill already exists"})
     except Exception as e:
@@ -312,7 +313,7 @@ async def add_education(uuid: str, entry: Education, auth: str = Header(..., ali
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await education_dao.add_education(uuid, entry.model_dump(exlcude_none = True))
+        await education_dao.add_education(uuid, entry.model_dump(exclude_none = True))
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Education already exists"})
     except Exception as e:
@@ -387,7 +388,7 @@ async def add_employment(uuid: str, entry: Employment, auth: str = Header(..., a
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await employment_dao.add_employment(uuid, entry.model_dump(exlcude_none = True))
+        await employment_dao.add_employment(uuid, entry.model_dump(exclude_none = True))
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Employment already exists"})
     except Exception as e:
@@ -462,7 +463,7 @@ async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias =
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await projects_dao.add_project(uuid, entry.model_dump(exlcude_none = True))
+        await projects_dao.add_project(uuid, entry.model_dump(exclude_none = True))
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Project already exists"})
     except Exception as e:
@@ -537,7 +538,7 @@ async def add_certification(uuid: str, entry: Certification, auth: str = Header(
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await certifications_dao.add_cert(uuid, entry.model_dump(exlcude_none = True))
+        await certifications_dao.add_cert(uuid, entry.model_dump(exclude_none = True))
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Certification already exists"})
     except Exception as e:
