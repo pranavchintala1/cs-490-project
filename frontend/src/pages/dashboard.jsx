@@ -3,7 +3,7 @@ import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
 
 // Simulate API calls to a generic database
-const fetchDataFromAPI = async (endpoint) => {
+const fetchDataFromAPI = async (endpoint) => { //TODO update with actual api and enpoints
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 500));
   
