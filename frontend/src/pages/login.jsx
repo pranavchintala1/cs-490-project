@@ -48,18 +48,17 @@ function Login() {
 
         if (res.status != 200) { //If the entered password does NOT match the stored password.
   
-               showFlash(json.content,"error");
-
-               if (res.status == 400){
-                    reset();  
-               }          
+               showFlash(json.detail,"error");
+                reset();  
+    
+               return;     
             
         } 
         else {
 
 
                 localStorage.setItem("session",json.session_token)
-                localStorage.setItem("user_id",json.uuid)
+                localStorage.setItem("uuid",json.uuid)
                 
                 navigate(`/profile`); // make profile later lmao. 
 
@@ -82,14 +81,14 @@ function Login() {
         
         const json = await res.json();
         if (res.status != 200){
-                        
-                showFlash(json.details,"error");
+
+                showFlash(json.detail,"error");
                 return;
                         
             }
         
         localStorage.setItem("session",json.session_token)
-        localStorage.setItem("user_id",json.uuid)
+        localStorage.setItem("uuid",json.uuid)
                         
         
         navigate(`/profile`);
