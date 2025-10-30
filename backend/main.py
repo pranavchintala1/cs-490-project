@@ -235,11 +235,16 @@ async def add_skill(uuid: str, entry: Skill, auth: str = Header(..., alias = "Au
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await skills_dao.add_skill(uuid, entry.model_dump(exclude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+
+        await skills_dao.add_skill(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Skill already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added skill", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/skills")
 async def retrieve_skill(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -310,11 +315,16 @@ async def add_education(uuid: str, entry: Education, auth: str = Header(..., ali
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await education_dao.add_education(uuid, entry.model_dump(exclude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+
+        await education_dao.add_education(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Education already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added education", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/education")
 async def retrieve_education(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -385,11 +395,16 @@ async def add_employment(uuid: str, entry: Employment, auth: str = Header(..., a
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await employment_dao.add_employment(uuid, entry.model_dump(exclude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+
+        await employment_dao.add_employment(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Employment already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added employment", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/employment")
 async def retrieve_employment(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -460,11 +475,16 @@ async def add_project(uuid: str, entry: Project, auth: str = Header(..., alias =
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await projects_dao.add_project(uuid, entry.model_dump(exclude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+
+        await projects_dao.add_project(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Project already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added projects", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/projects")
 async def retrieve_project(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
@@ -535,11 +555,16 @@ async def add_certification(uuid: str, entry: Certification, auth: str = Header(
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        await certifications_dao.add_cert(uuid, entry.model_dump(exclude_none = True))
+        parsed_data = entry.model_dump()
+        parsed_data["_id"] = str(uuid4())
+
+        await certifications_dao.add_cert(parsed_data)
     except DuplicateKeyError:
         return JSONResponse(status_code = 400, content = {"detail": "Certification already exists"})
     except Exception as e:
         return internal_server_error(str(e))
+    
+    return JSONResponse(status_code = 200, content = {"detail": "Successfully added certifications", "entry_id": parsed_data["_id"]})
 
 @app.get("/api/certifications")
 async def retrieve_certification(uuid: str, entry_id: str, auth: str = Header(..., alias = "Authorization")):
