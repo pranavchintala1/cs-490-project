@@ -67,7 +67,7 @@ const Dashboard = () => {
         }}>
           {[
             { title: "Profile", dataKey: "profile", link: "/profile" },
-            { title: "Employment History", dataKey: "employmentHistory", link: "/employment-history" },
+            { title: "Employment History", dataKey: "employmentHistory", link: "/employment" },
             { title: "Skills", dataKey: "skills", link: "/skills" },
             { title: "Education", dataKey: "education", link: "/education" },
             { title: "Projects", dataKey: "projects", link: "/projects" }
