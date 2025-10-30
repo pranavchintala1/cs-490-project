@@ -19,7 +19,7 @@ export async function apiRequest(endpoint, options = {}) {
     const response = await fetch(url, config);
 
     // Redirect if unauthorized
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401 || response.status === 403 || response.status === 422) {
       localStorage.clear();
       window.location.href = "/login?error=unauthorized";
       return;
