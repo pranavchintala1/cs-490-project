@@ -18,7 +18,7 @@ class UserDataDAO:
             "biography": None, # 500 char limit
             "industry": None,
             "exp_level": None, # intern, junior, senior, etc.
-            "profile_image": None, # url?
+            "profile_image": data.get("picture"), # <-- Used for google
             "date_created": datetime.now(),
             "date_updated": datetime.now()
         })
