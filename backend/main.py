@@ -229,7 +229,7 @@ async def retrieve_profile_picture(uuid: str, auth: str = Header(..., alias = "A
 @app.put("/api/users/me")
 async def update_profile(
     uuid: str,
-    pfp: UploadFile = None, 
+    pfp: UploadFile = File(None), 
     auth: str = Header(..., alias = "Authorization"),
     username: str = Form(None, alias = "username"),
     email: str = Form(None, alias = "email"),
@@ -684,7 +684,7 @@ async def delete_project(uuid: str, entry_id: str, auth: str = Header(..., alias
 @app.post("/api/certifications")
 async def add_certification(
     uuid: str, 
-    document: UploadFile = None, 
+    document: UploadFile = File(None), 
     auth: str = Header(..., alias = "Authorization"),
     name: str = Form(..., alias = "name"),
     issuer: str = Form(None, alias = "issuer"),
