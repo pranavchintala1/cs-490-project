@@ -42,7 +42,8 @@ const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     try {
-      const response = await updateData(data, "api/user/updatepassword");
+        
+      const response = await updateData(data, "/api/user/updatepassword");
       if (!response) {
         showFlash("Something went wrong", "error");
         return;
