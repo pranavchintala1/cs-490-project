@@ -13,7 +13,8 @@ import { MsalProvider } from "@azure/msal-react";
 
 const PCA = new PublicClientApplication(msalConfig);
 
-const clientId = process.env.VITE_GOOGLE_CLIENT_ID; // from .env
+const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID; // from .env
+console.log(clientId)
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
