@@ -28,7 +28,6 @@ export default function SkillItem({
   backgroundColor: meta.color + "33",
   marginBottom: "4px",
   width: "100%",
-  maxWidth: "250px",
 };
 
   return (
