@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getMe, updateMe, profileImageDataUrl } from "../tools/api";
+import DeleteAccount from "../components/DeleteAccount";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -199,6 +200,8 @@ export default function Profile() {
           {saving ? "Saving…" : "Save Profile"}
         </button>
       </form>
+
+      <DeleteAccount />
     </div>
   );
 }
