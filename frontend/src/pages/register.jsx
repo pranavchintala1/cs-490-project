@@ -50,7 +50,7 @@ function Register() {
             showFlash("Successfully Registered!","Success");
 
             localStorage.setItem("session",res.session_token);
-            localStorage.setItem("user_id",res.uuid)
+            localStorage.setItem("uuid",res.uuid)
                 
             
             navigate(`/profile`);
@@ -82,7 +82,7 @@ function Register() {
             }
 
             localStorage.setItem("session",json.session_token)
-            localStorage.setItem("user_id",json.uuid)
+            localStorage.setItem("uuid",json.uuid)
                 
 
             navigate(`/profile`);
