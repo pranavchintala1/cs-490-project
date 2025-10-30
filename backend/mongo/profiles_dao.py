@@ -1,10 +1,10 @@
-from mongo.dao_setup import db_client, USER_DATA_COLLECTION
+from mongo.dao_setup import db_client, PROFILES
 
 from datetime import datetime
 
 class UserDataDAO:
     def __init__(self):
-        self.collection = db_client.get_collection(USER_DATA_COLLECTION)
+        self.collection = db_client.get_collection(PROFILES)
 
     async def register_user(self, uuid: str, data: dict):
         return await self.collection.insert_one({
@@ -34,4 +34,4 @@ class UserDataDAO:
         result = await self.collection.delete_one({"_id": uuid})
         return result.deleted_count
 
-user_data_dao = UserDataDAO()
+profiles_dao = UserDataDAO()

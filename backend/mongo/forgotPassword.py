@@ -1,7 +1,7 @@
 
 from dotenv import load_dotenv
 from mongo.dao_setup import db_client, RESET_LINKS
-from mongo.user_auth_dao import user_auth_dao
+from mongo.auth_dao import auth_dao
 import os
 import smtplib
 from email.mime.text import MIMEText
@@ -77,7 +77,7 @@ class ForgotPassword:
             if data:
                 expires = data["expires"]
                 email = data["email"]
-                uuid = await user_auth_dao.get_uuid(email)
+                uuid = await auth_dao.get_uuid(email)
                 return uuid,expires
         
         except Exception as e:
