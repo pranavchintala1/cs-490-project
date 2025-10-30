@@ -1,34 +1,62 @@
 
 from dotenv import load_dotenv
 from mongo.dao_setup import db_client, RESET_LINKS
-from mongo.user_auth_dao import user_auth_dao
+from mongo.auth_dao import auth_dao
 import os
+import json
 import smtplib
 from email.mime.text import MIMEText
 import secrets
 from datetime import datetime, timedelta
 import hashlib
-
-
-load_dotenv()
-sender_email = os.getenv("EMAIL") # setup 2FA in your email. then go to https://myaccount.google.com/apppasswords and make one.
-sender_password = os.getenv("PASSWORD")
-
-
-
+import base64
+import pickle
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
 
 class ForgotPassword:
 
     def __init__(self):
         self.collection = db_client.get_collection(RESET_LINKS)
 
+        # Load or create credentials
+        creds = None
+        if os.path.exists("token.pkl"):
+            with open("token.pkl", "rb") as f:
+                creds = pickle.load(f)
 
-    def send_email(self,email):
-    # Email details
+        scopes_env = os.environ.get("SCOPES", "https://www.googleapis.com/auth/gmail.send")
+        SCOPES = scopes_env.split() 
 
-        token = secrets.token_urlsafe(32)  # generates token
+        if not creds:
+            flow = InstalledAppFlow.from_client_config({
+        "installed": {
+            "client_id": os.environ["GOOGLE_CLIENT_ID"],
+            "client_secret": os.environ["GOOGLE_CLIENT_SECRET"],
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": ["http://localhost"]
+        }
+    }, SCOPES)  
+
+            creds = flow.run_local_server(port=0)
+            with open("token.pkl", "wb") as f:
+                pickle.dump(creds, f)
+
+# Build Gmail service
+        self.service = build('gmail', 'v1', credentials=creds)
+
+        # Cache the authorized Gmail email
+        profile = self.service.users().getProfile(userId='me').execute()
+        self.from_email = profile['emailAddress']
+
+    def send_email(self, email):
+        import secrets, base64
+        from email.mime.text import MIMEText
+
+        token = secrets.token_urlsafe(32)
         subject = "Metamorphosis - Password Reset"
-        body = f"""
+        body_text = f"""
         This is a password reset request for your metamorphosis account,
 
         Click the link below to reset your password. This link expires in 1 hour:
@@ -36,26 +64,23 @@ class ForgotPassword:
         "localhost:3000/resetPassword/{token}"
 
         If you did not make this request, consider resetting your password anyway.
-        """ # update localhost later if actual domain is implemented
+        """
 
-        # Create the email message
-        msg = MIMEText(body)
-        msg["From"] = sender_email
+        msg = MIMEText(body_text)
+        msg["From"] = self.from_email
         msg["To"] = email
         msg["Subject"] = subject
 
-        # Send the email
+        raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+        body = {'raw': raw_message}
+
         try:
-            with smtplib.SMTP("smtp.gmail.com", 587) as server:
-                server.starttls()  # Secure connection
-                server.login(sender_email, sender_password)
-                server.send_message(msg)
-                return token
-
+            sent_message = self.service.users().messages().send(userId='me', body=body).execute()
+            print(f"Email sent to {email}!")
+            return token
         except Exception as e:
-            print("Error:", e)
+            print("Error sending email:", e)
 
-    
 
     async def store_link(self,id,email,token):
 
@@ -77,18 +102,8 @@ class ForgotPassword:
             if data:
                 expires = data["expires"]
                 email = data["email"]
-                uuid = await user_auth_dao.get_uuid(email)
+                uuid = await auth_dao.get_uuid(email)
                 return uuid,expires
         
         except Exception as e:
             return None,None
-
-        
-
-
-
-
-
-    
-
-

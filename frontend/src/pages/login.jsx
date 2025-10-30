@@ -68,35 +68,32 @@ function Login() {
             return;
         };
 
-    const OAuthSubmit = (data) => {
+    const OAuthSubmit = async (data) => {
 
 
-        // send data.credential to backend.
-            //if the signature is good...
-            // retrieve user token data from other endpoint. then login.
-            const res = sendData(data,"verify-google-token"); // Link this account with local non-google account later.
-            
-            if (!res){
-                showFlash("Something went wrong","error")
-                return
-            }
-
-            if (res.status != 200){
-                            
-                showFlash(res.content,"error");
-                return;
-                            
-            }
-
-             data = res.json();
-
-            localStorage.setItem("session",data.session_token)
-            localStorage.setItem("user_id",data.uuid)
-                
-                        
-
-            navigate(`/profile`);
+        const res = await sendData(data,"/api/auth/verify-google-token"); // Link this account with local non-google account later.
+        
+        if (!res){
+                         
+            showFlash("Something went wrong when registering","error");
             return;
+        
+            }
+        
+        const json = await res.json();
+        if (res.status != 200){
+                        
+                showFlash(json.details,"error");
+                return;
+                        
+            }
+        
+        localStorage.setItem("session",json.session_token)
+        localStorage.setItem("user_id",json.uuid)
+                        
+        
+        navigate(`/profile`);
+        return;
 
 
 

@@ -27,6 +27,10 @@ class UserAuthenticationDAO:
     async def get_uuid(self, email: str) -> str | None:
         result = await self.collection.find_one({"email": email})
         return result["_id"] if result else None
+
+    async def update_password(self,uuid,data:dict):
+        updated = await self.collection.update_one({"_id": uuid},{"$set":data})
+        return updated.matched_count
     
     async def delete_user(self, uuid: str):
         result = await self.collection.delete_one({"_id": uuid})
