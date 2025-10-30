@@ -6,7 +6,20 @@ export default function ProjectCard({ project, deleteProject }) {
   const isImage = (filename) => /\.(png|jpe?g|gif|webp)$/i.test(filename);
 
   return (
-    <div className="project-card" style={{ border: "1px solid #ccc", padding: 10, margin: 8 }}>
+    <div
+      className="project-card"
+      style={{
+        border: "1px solid #ccc",
+        padding: 10,
+        margin: 8,
+        backgroundColor: "#fff",
+        color: "#000",
+        borderRadius: "8px",
+        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+        maxWidth: "100%",
+        wordBreak: "break-word"
+      }}
+    >
       <div onClick={() => setExpanded(!expanded)} style={{ cursor: "pointer" }}>
         <strong>{project.name}</strong> — {project.status}<br />
         <em>{project.industry}</em><br />
@@ -21,7 +34,9 @@ export default function ProjectCard({ project, deleteProject }) {
           {project.technologies?.length > 0 && (
             <p><strong>Technologies / Skills:</strong> {project.technologies.join(", ")}</p>
           )}
-          {project.project_url && <p><strong>Project URL:</strong> <a href={project.project_url}>{project.project_url}</a></p>}
+          {project.project_url && (
+            <p><strong>Project URL:</strong> <a href={project.project_url} target="_blank" rel="noopener noreferrer">{project.project_url}</a></p>
+          )}
           {project.team_size && <p><strong>Team Size:</strong> {project.team_size}</p>}
           {project.achievements && <p><strong>Outcomes / Achievements:</strong> {project.achievements}</p>}
 
@@ -31,10 +46,10 @@ export default function ProjectCard({ project, deleteProject }) {
                 isImage(file.filename) ? (
                   <img
                     key={idx}
-                    src={`data:${file.content_type};base64,${file.data}`}
+                    src={file.url}  // <-- Use the imported URL directly
                     alt={file.filename}
                     style={{ width: 100, height: 100, objectFit: "cover", cursor: "zoom-in" }}
-                    onClick={() => setZoomedImage(`data:${file.content_type};base64,${file.data}`)}
+                    onClick={() => setZoomedImage(file.url)}
                   />
                 ) : (
                   <span key={idx} style={{ display: "block" }}>📎 {file.filename}</span>
@@ -49,7 +64,6 @@ export default function ProjectCard({ project, deleteProject }) {
         🗑 Delete
       </button>
 
-      {/* Zoomed Image Overlay */}
       {zoomedImage && (
         <div
           onClick={() => setZoomedImage(null)}
