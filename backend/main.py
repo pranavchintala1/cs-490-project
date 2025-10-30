@@ -34,7 +34,7 @@ def parse_bearer(auth_header: str = Header(..., alias="Authorization")):
 app = FastAPI()
 
 origins = [ # domains to provide access to
-    "http://localhost:3000"
+    "http://localhost:3000",
     "localhost:3000"
 ]
 
