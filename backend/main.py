@@ -102,7 +102,7 @@ async def logout(uuid: str, auth: str = Header(..., alias = "Authorization")):
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"}) # successfully auth and kill session before proceeding
     
     return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
-  @app.post("/api/auth/forgotpassword")
+@app.post("/api/auth/forgotpassword")
 async def forgotPassword(email: str = Body(..., embed=True)):
 
 
