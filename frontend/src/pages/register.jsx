@@ -40,9 +40,10 @@ function Register() {
         }
 
         const json = await res.json()
+        console.log(json)
 
         if (res.status != 200){
-            showFlash(json.content,"error");
+            showFlash(json.detail,"error");
         }
         else{
 
@@ -50,7 +51,7 @@ function Register() {
             showFlash("Successfully Registered!","Success");
 
             localStorage.setItem("session",res.session_token);
-            localStorage.setItem("user_id",res.uuid)
+            localStorage.setItem("uuid",res.uuid)
                 
             
             navigate(`/profile`);
@@ -76,13 +77,13 @@ function Register() {
             const json = await res.json();
             if (res.status != 200){
                 
-                showFlash(json.details,"error");
+                showFlash(json.detail,"error");
                 return;
                 
             }
 
             localStorage.setItem("session",json.session_token)
-            localStorage.setItem("user_id",json.uuid)
+            localStorage.setItem("uuid",json.uuid)
                 
 
             navigate(`/profile`);
