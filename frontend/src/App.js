@@ -40,7 +40,7 @@ export function App() {
                 <Route path="/employment" element={<EmploymentPage />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
-                <Route path = "/resetPassword/:URL" element = {<ResetPassword />}/>
+                <Route path = "/resetPassword/:token" element = {<ResetPassword />}/>
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
 
                 <Route path="/skills" element={<SkillsList />} />
