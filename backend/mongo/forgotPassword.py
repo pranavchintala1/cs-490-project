@@ -61,7 +61,7 @@ class ForgotPassword:
 
         Click the link below to reset your password. This link expires in 1 hour:
 
-        "localhost:3000/resetPassword/{token}"
+        http://localhost:3000/resetPassword/{token}
 
         If you did not make this request, consider resetting your password anyway.
         """
@@ -106,4 +106,4 @@ class ForgotPassword:
                 return uuid,expires
         
         except Exception as e:
-            return None,None
+            return (None,None)
