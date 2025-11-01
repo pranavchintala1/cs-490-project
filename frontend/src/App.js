@@ -37,7 +37,7 @@ export function App() {
                 <Route path = "/register" element = {<Register />} />
                 <Route path = "/login" element = {<Login />} />
                 <Route path = "/profile" element = {<Profile />} />
-                <Route path="/employment" element={<EmploymentPage />} />
+                <Route path = "/employment" element={<EmploymentPage />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path = "/resetPassword/:URL" element = {<ResetPassword />}/>
