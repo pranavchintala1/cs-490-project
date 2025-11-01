@@ -10,12 +10,15 @@ import Profile from "./pages/profile";
 import EmploymentPage from "./pages/employment/EmploymentPage";
 import ForgotPassword from "./pages/forgotPassword";
 import ResetPassword from "./pages/resetPassword";
-import Dashboard from "./pages/dashboard";
 import SkillsList from "./pages/skills/SkillList";
 import EducationList from "./pages/education/EducationList";
 import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
+
+
+import Dashboard from "./pages/dashboard";
+// import Dashboard from "./pages/dashboardNew";
 
 
 export function App() {
