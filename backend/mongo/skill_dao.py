@@ -8,7 +8,7 @@ class SkillDAO:
         return await self.collection.insert_one(data)
 
     async def retrieve_all_skills(self, uuid: str): # all skills
-        return await self.collection.find({"user_id": uuid})
+        return self.collection.find({"user_id": uuid})
     
     async def retrieve_skill(self, entry_id: str): # one skill
         return await self.collection.find_one({"_id": entry_id})
