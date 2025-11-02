@@ -490,8 +490,10 @@ async def retrieve_all_employment(uuid: str, auth: str = Header(..., alias = "Au
         results = await cursor.to_list(None)
 
         if not results:
+            print("RIGHT HERE")
             return JSONResponse(status_code = 400, content = {"details": "User or employment not available"})
     except Exception as e:
+        print(str(e))
         return internal_server_error(str(e))
     
     return results
