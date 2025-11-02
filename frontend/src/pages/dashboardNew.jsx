@@ -3,6 +3,7 @@ import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
 import BarChart from '../components/BarChart';
 import { apiRequest } from "../api";
+import CareerTimeline from '../components/Timeline';
 
 // const fetchDataFromAPI = async (endpoint, headerKey) => {
 //   const apidata = await apiRequest(endpoint);
@@ -434,7 +435,11 @@ const Dashboard = () => {
         </div>
       </div>
       {/* Progress Tracker */}
-        <ProgressTracker data={data} />
+        {/* <ProgressTracker data={data} /> */}
+        <CareerTimeline 
+            // careerData={myCareerData} 
+            title="My Career Journey"
+          />
     </div>
   );
 };
