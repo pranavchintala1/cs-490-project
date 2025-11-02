@@ -17,12 +17,14 @@ export default function EmploymentForm({ onAdded }) {
     const { name, value } = e.target;
     setF((prev) => ({ ...prev, [name]: value }));
   };
-
+  //add range check upon entry
+  const rangeCheck = !ongoing && f.start_date && f.end_date && new Date(f.end_date) < new Date(f.start_date);
   const submit = (e) => {
     e.preventDefault();
     setErr("");
     if (!f.title.trim()) return setErr("Title is required.");
     if (!f.start_date) return setErr("Start date is required.");
+    if (!rangeCheck) return setErr("End date cannot be before start date!");
 
     setSaving(true);
     onAdded?.({
@@ -73,7 +75,11 @@ export default function EmploymentForm({ onAdded }) {
             value={f.end_date}
             onChange={onChange}
             disabled={ongoing}
+            min = {f.start_date || undefined}
           />
+          {rangeCheck && !ongoing && (
+            <div style={{color: "crimson", marginTop: 4}}>End Date can't be before the Start Date!</div>
+            )}
         </label>
         <label style={{ alignSelf: "end" }}>
           <input
@@ -92,7 +98,7 @@ export default function EmploymentForm({ onAdded }) {
 
       {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
 
-      <button disabled={saving} style={{ marginTop: 8 }}>
+      <button disabled={saving || rangeCheck} style={{ marginTop: 8 }}>
         {saving ? "Adding…" : "Add"}
       </button>
     </form>
