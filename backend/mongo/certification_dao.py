@@ -8,7 +8,7 @@ class CertDAO:
         return await self.collection.insert_one(data)
 
     async def retrieve_all_certs(self, uuid: str): # all projects
-        return await self.collection.find({"user_id": uuid})
+        return self.collection.find({"user_id": uuid})
 
     async def retrieve_cert(self, entry_id: str): # one project
         return await self.collection.find({"_id": entry_id})
