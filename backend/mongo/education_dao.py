@@ -8,7 +8,7 @@ class EducationDAO:
         return await self.collection.insert_one(data)
 
     async def retrieve_all_education(self, uuid: str):
-        return await self.collection.find({"user_id": uuid})
+        return self.collection.find({"user_id": uuid})
 
     async def retrieve_education(self, entry_id: str):
         return await self.collection.find({"_id": entry_id})

@@ -327,8 +327,8 @@ async def retrieve_all_skills(uuid: str, auth: str = Header(..., alias = "Author
         cursor = await skills_dao.retrieve_all_skills(uuid)
         results = await cursor.to_list(None)
 
-        if not results:
-            return JSONResponse(status_code = 400, content = {"details": "User or skills not available"})
+        # if not results:
+        #     return JSONResponse(status_code = 400, content = {"details": "User or skills not available"})
     except Exception as e:
         return internal_server_error(str(e))
     
@@ -408,8 +408,8 @@ async def retrieve_all_education(uuid: str, auth: str = Header(..., alias = "Aut
         cursor = await education_dao.retrieve_all_education(uuid)
         results = await cursor.to_list(None)
 
-        if not results:
-            return JSONResponse(status_code = 400, content = {"details": "User or education not available"})
+        # if not results:
+        #     return JSONResponse(status_code = 400, content = {"details": "User or education not available"})
     except Exception as e:
         return internal_server_error(str(e))
     
@@ -489,9 +489,9 @@ async def retrieve_all_employment(uuid: str, auth: str = Header(..., alias = "Au
         cursor = await employment_dao.retrieve_all_employment(uuid)
         results = await cursor.to_list(None)
 
-        if not results:
-            print("RIGHT HERE")
-            return JSONResponse(status_code = 400, content = {"details": "User or employment not available"})
+        # if not results:
+        #     print("RIGHT HERE")
+        #     return JSONResponse(status_code = 400, content = {"details": "User or employment not available"})
     except Exception as e:
         print(str(e))
         return internal_server_error(str(e))
@@ -643,8 +643,8 @@ async def retrieve_all_projects(uuid: str, auth: str = Header(..., alias = "Auth
         cursor = await projects_dao.retrieve_all_projects(uuid)
         results = await cursor.to_list(None)
 
-        if not results:
-            return JSONResponse(status_code = 400, content = {"details": "User or projects not available"})
+        # if not results:
+        #     return JSONResponse(status_code = 400, content = {"details": "User or projects not available"})
     except Exception as e:
         return internal_server_error(str(e))
     
@@ -765,8 +765,8 @@ async def retrieve_all_certifications(uuid: str, auth: str = Header(..., alias =
         cursor = await certifications_dao.retrieve_all_certs(uuid)
         results = await cursor.to_list(None)
 
-        if not results:
-            return JSONResponse(status_code = 400, content = {"details": "User or certifications not available"})
+        # if not results:
+        #     return JSONResponse(status_code = 400, content = {"details": "User or certifications not available"})
     except Exception as e:
         return internal_server_error(str(e))
     
