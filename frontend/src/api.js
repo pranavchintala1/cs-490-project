@@ -15,7 +15,7 @@ export async function apiRequest(endpoint, id  = "", options = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`; //TODO replace with actual structure
 
 
-  const url = `${baseURL}${endpoint}${uuid}`;
+  const url = uuid ? `${baseURL}${endpoint}${uuid}` : `${baseURL}${endpoint}${id}` ;
   const config = { ...options, headers };
 console.log("testtest")
 console.log(url)
