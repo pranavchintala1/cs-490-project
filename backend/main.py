@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Header, Body, UploadFile, Form, File
+from fastapi import FastAPI, Header, Body, UploadFile, Form, File, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
@@ -18,11 +18,14 @@ from mongo.forgotPassword import ForgotPassword
 from sessions.session_manager import session_manager
 from pymongo.errors import DuplicateKeyError, WriteError
 import bcrypt
+import os
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from google.auth.exceptions import GoogleAuthError
 
+import httpx
+from jose import jwt, JWTError
 
 from schema import RegistInfo, LoginCred, Education, Employment, Project, Skill, Certification
 
@@ -35,7 +38,10 @@ app = FastAPI()
 
 origins = [ # domains to provide access to
     "http://localhost:3000",
-    "localhost:3000"
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+
 ]
 
 app.add_middleware(
@@ -45,6 +51,9 @@ app.add_middleware(
     allow_methods=["*"],         
     allow_headers=["*"],         
 )
+
+
+
         
 def session_auth(uuid, auth_header: str = Header(..., alias = "Authorization")):
     return session_manager.authenticate_session(uuid, auth_header.removeprefix("Bearer ").strip())
@@ -158,9 +167,14 @@ async def verify_google_token(token: dict = Body(...)):
     credentials = token.get("credential")
     try:
 
-        idinfo = id_token.verify_oauth2_token(credentials, requests.Request()) # returns user data such as email and profile picture
+        GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+
+        idinfo = id_token.verify_oauth2_token(credentials, requests.Request(),GOOGLE_CLIENT_ID) # returns user data such as email and profile picture
 
         data = await auth_dao.get_uuid(idinfo["email"]) # this returns a uuid
+
+        #SEMI-IMPORTANT ---> If a user exists in profiles, but not auth, it will throw an error. I don't think
+        # I need to account for this, since this shouldn't ever happen, but I'm making a note of it here.
 
         if (data): # if the user already exists, still log in because it doesn't matter.
             uuid = data
@@ -190,7 +204,66 @@ async def verify_google_token(token: dict = Body(...)):
 
         return JSONResponse(status_code=500, content={"detail":f"Unknown Error while authenticating: {str(e)}"})
     
+@app.put("/api/login/microsoft")
+async def verify_microsoft_token(request: Request):
 
+    MICROSOFT_ISSUER = os.getenv("MICROSOFT_ISSUER")
+    MICROSOFT_KEYS_URL = os.getenv("MICROSOFT_KEYS_URL")
+    MICROSOFT_CLIENT_ID = os.getenv("MICROSOFT_CLIENT_ID")
+
+    data = await request.json()
+    token = data.get("token")
+
+    if not token:
+        return JSONResponse(status_code=400, content={"detail": "Missing token"})
+
+    async with httpx.AsyncClient() as client:
+        jwks_resp = await client.get(MICROSOFT_KEYS_URL)
+        if jwks_resp.status_code != 200:
+            return JSONResponse(status_code=500, content={"detail": "Could not fetch Microsoft keys"})
+
+        jwks = jwks_resp.json()
+
+    try:
+        header = jwt.get_unverified_header(token)
+        key = next((k for k in jwks["keys"] if k["kid"] == header["kid"]), None)
+        if not key:
+            return JSONResponse(status_code=400, content={"detail": "Key not found"})
+
+        claims = jwt.decode(
+            token,
+            key,
+            algorithms=["RS256"],
+            audience=MICROSOFT_CLIENT_ID,
+            issuer=MICROSOFT_ISSUER,
+        )
+    except JWTError as e:
+        print(e)
+        return JSONResponse(status_code=401, content={"detail": f"Invalid token: {e}"})
+
+    email = claims.get("email") or claims.get("preferred_username")
+    claims["username"] = email # neccesary so register_user doesn't throw a fit.
+    name = claims.get("name")
+    sub = claims.get("sub")
+
+    data = await auth_dao.get_uuid(email)  # this returns a uuid
+
+    if data:  # if the user already exists, still log in because it doesn't matter.
+        uuid = data
+    else:
+        uuid = str(uuid4())
+        await auth_dao.register_user(uuid, email, email, "")
+        await profiles_dao.register_user(uuid, claims)
+
+    if not email:
+        return JSONResponse(status_code=400, content={"detail": "Email not found in token"})
+
+    session_token = session_manager.begin_session(uuid)
+
+    return JSONResponse(
+        status_code=200,
+        content={"detail": "success", "uuid": uuid, "session_token": session_token},
+    )
 ########################################################################################################################
 #                                                       PROFILES                                                       #
 ########################################################################################################################
