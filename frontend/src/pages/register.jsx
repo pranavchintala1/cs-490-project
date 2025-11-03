@@ -8,6 +8,7 @@ import { PublicClientApplication } from "@azure/msal-browser";
 import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
 import { sendData } from "../tools/db_commands";
+import { apiRequest } from "../api";
 
 
 function Register() {
@@ -91,27 +92,47 @@ function Register() {
 
         };
 
-const handleMicrosoftLogin = async () => {
+async function handleMicrosoftLogin() {
   try {
-    const response = await instance.loginPopup({
+
+    const loginResponse = await instance.loginPopup({
       scopes: ["user.read", "openid", "profile", "email"],
+      prompt: "select_account",
     });
 
-    const { account, idToken } = response;
-    console.log("Logged in user:", account);
+    if (!loginResponse?.account) {
+      showFlash("Microsoft login failed. No account found.", "error");
+      return;
+    }
 
-    /* update l8r with actual api implementation 
-    await fetch("/api/login/microsoft", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: idToken }),
-    });*/
+    const tokenResponse = await instance.acquireTokenSilent({
+      scopes: ["user.read", "openid", "profile", "email"],
+      account: loginResponse.account,
+    });
 
-    // Navigate or update app state
+    if (!tokenResponse?.idToken) {
+      showFlash("Unable to acquire Microsoft token.", "error");
+      return;
+    }
 
-    navigate(`/profile/${account.homeAccountId}`);
-  } catch (error) {
-    console.error("Login failed:", error);
+    const res = await apiRequest("/api/login/microsoft", " ", {
+      method: "PUT",
+      headers: {"Content-Type": "application/json",},
+      body: JSON.stringify({ token: tokenResponse.idToken }),
+    });
+
+    if (res.detail !== "success") {
+      showFlash(res.detail,"error")
+      return;
+    }
+
+    localStorage.setItem("session", res.session_token);
+    localStorage.setItem("uuid", res.uuid);
+
+    navigate("/profile");
+  } catch (err) {
+    console.error("Microsoft login failed:", err);
+    showFlash(err.message,"error");
   }
 };
 
