@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function ProjectCard({ project, deleteProject }) {
+export default function ProjectCard({ project, deleteProject, onEdit }) {
   const [expanded, setExpanded] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
   const isImage = (filename) => /\.(png|jpe?g|gif|webp)$/i.test(filename);
@@ -8,17 +8,7 @@ export default function ProjectCard({ project, deleteProject }) {
   return (
     <div
       className="project-card"
-      style={{
-        border: "1px solid #ccc",
-        padding: 10,
-        margin: 8,
-        backgroundColor: "#fff",
-        color: "#000",
-        borderRadius: "8px",
-        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-        maxWidth: "100%",
-        wordBreak: "break-word"
-      }}
+      style={{ border: "1px solid #ccc", padding: 10, margin: 8, backgroundColor: "#fff", color: "#000", borderRadius: "8px" }}
     >
       <div onClick={() => setExpanded(!expanded)} style={{ cursor: "pointer" }}>
         <strong>{project.name}</strong> — {project.status}<br />
@@ -30,13 +20,8 @@ export default function ProjectCard({ project, deleteProject }) {
       {expanded && (
         <div style={{ marginTop: 10 }}>
           <p>{project.description}</p>
-
-          {project.technologies?.length > 0 && (
-            <p><strong>Technologies / Skills:</strong> {project.technologies.join(", ")}</p>
-          )}
-          {project.project_url && (
-            <p><strong>Project URL:</strong> <a href={project.project_url} target="_blank" rel="noopener noreferrer">{project.project_url}</a></p>
-          )}
+          {project.technologies?.length > 0 && <p><strong>Technologies / Skills:</strong> {project.technologies.join(", ")}</p>}
+          {project.project_url && <p><strong>Project URL:</strong> <a href={project.project_url} target="_blank" rel="noopener noreferrer">{project.project_url}</a></p>}
           {project.team_size && <p><strong>Team Size:</strong> {project.team_size}</p>}
           {project.achievements && <p><strong>Outcomes / Achievements:</strong> {project.achievements}</p>}
 
@@ -44,45 +29,23 @@ export default function ProjectCard({ project, deleteProject }) {
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
               {project.media_files.map((file, idx) =>
                 isImage(file.filename) ? (
-                  <img
-                    key={idx}
-                    src={file.url}  // <-- Use the imported URL directly
-                    alt={file.filename}
-                    style={{ width: 100, height: 100, objectFit: "cover", cursor: "zoom-in" }}
-                    onClick={() => setZoomedImage(file.url)}
-                  />
+                  <img key={idx} src={file.url} alt={file.filename} style={{ width: 100, height: 100, objectFit: "cover", cursor: "zoom-in" }} onClick={() => setZoomedImage(file.url)} />
                 ) : (
                   <span key={idx} style={{ display: "block" }}>📎 {file.filename}</span>
                 )
               )}
             </div>
           )}
+
+          <button style={{ marginTop: 6 }} onClick={() => onEdit(project.id)}>✏ Edit</button>
+          <button style={{ marginTop: 6 }} onClick={() => deleteProject(project.id)}>🗑 Delete</button>
+         
         </div>
       )}
 
-      <button style={{ marginTop: 6 }} onClick={() => deleteProject(project.id)}>
-        🗑 Delete
-      </button>
-
       {zoomedImage && (
-        <div
-          onClick={() => setZoomedImage(null)}
-          style={{
-            position: "fixed",
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.8)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-            cursor: "zoom-out"
-          }}
-        >
-          <img
-            src={zoomedImage}
-            alt="Zoomed"
-            style={{ maxWidth: "90%", maxHeight: "90%", borderRadius: "8px" }}
-          />
+        <div onClick={() => setZoomedImage(null)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.8)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000, cursor: "zoom-out" }}>
+          <img src={zoomedImage} alt="Zoomed" style={{ maxWidth: "90%", maxHeight: "90%", borderRadius: "8px" }} />
         </div>
       )}
     </div>
