@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta
-import bcrypt, zipfile
+import bcrypt, zipfile, base64
 from io import BytesIO
 
 
@@ -274,7 +274,7 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
     
     try:
         user_data = await profiles_dao.retrieve_user(uuid)
-        user_data.pop("profile_image")
+        # Keep profile_image in response so frontend can display it
     except Exception as e:
         return internal_server_error(str(e))
     
@@ -318,7 +318,7 @@ async def update_profile(
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        content = await pfp.read() if pfp else None
+        # Build parsed_data without None values for unmodified fields
         parsed_data = {
             "username": username,
             "email": email,
@@ -329,17 +329,30 @@ async def update_profile(
             "biography": biography,
             "industry": industry,
             "experience_level": experience_level,
-            "profile_image": content,
-            "image_type": pfp.content_type if pfp else None,
-            "image_name": pfp.filename if pfp else None
         }
+
+        # Only include profile image fields if a file was uploaded
+        if pfp:
+            file_content = await pfp.read()
+            # Encode binary content as base64 for MongoDB storage
+            base64_content = base64.b64encode(file_content).decode("utf-8")
+            parsed_data["profile_image"] = base64_content
+            parsed_data["image_type"] = pfp.content_type
+            parsed_data["image_name"] = pfp.filename
 
         update_count = await profiles_dao.update_user(uuid, parsed_data)
     except Exception as e:
         return internal_server_error(str(e))
     if update_count == 0:
         return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
-    return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
+
+    # Fetch and return updated profile so frontend has the latest data
+    try:
+        updated_profile = await profiles_dao.retrieve_user(uuid)
+        return JSONResponse(status_code = 200, content = updated_profile)
+    except Exception as e:
+        # If we can't fetch the updated profile, at least return success
+        return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
 
 @app.delete("/api/users/me")
 async def delete_profile(uuid: str, auth: str = Header(..., alias = "Authorization")):
