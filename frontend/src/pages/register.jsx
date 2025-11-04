@@ -148,6 +148,7 @@ async function handleMicrosoftLogin() {
                     type="text"
                     {...register("username", { required: true })}
                     placeholder="Username"
+                    required
                 />
 
 
@@ -163,6 +164,7 @@ async function handleMicrosoftLogin() {
                     pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"
                     {...register("password", { required: true })}
                     placeholder="Password"
+                    title="Password must be minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number"
                 />
 
                 <input
@@ -173,16 +175,24 @@ async function handleMicrosoftLogin() {
                     placeholder="Confirm Password"
                 />
 
+                
+
                 <input
                     type="text"
                     {...register("firstName", { required: true })}
                     placeholder="First Name"
+                    required
+                    pattern="^[A-Za-z]+$"
+                    title="Please enter a valid name only"
                 />
 
                 <input
                     type="text"
                     {...register("lastName", { required: true })}
                     placeholder="Last Name"
+                    required
+                    pattern="^[A-Za-z]+$"
+                    title="Please enter a valid name only"
                 />
 
                 <input type="submit" style={{}} /> 
