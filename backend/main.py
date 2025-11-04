@@ -5,6 +5,7 @@ from uuid import uuid4
 from datetime import datetime, timedelta
 import bcrypt, zipfile, base64
 from io import BytesIO
+from bson import Binary
 
 
 from mongo.profiles_dao import profiles_dao
@@ -28,6 +29,19 @@ import httpx
 from jose import jwt, JWTError
 
 from schema import RegistInfo, LoginCred, Education, Employment, Project, Skill, Certification
+
+def serialize_document(doc):
+
+    if doc is None:
+        return None
+    if isinstance(doc, Binary):
+        return base64.b64encode(doc).decode("utf-8")
+    elif isinstance(doc, dict):
+        return {k: serialize_document(v) for k, v in doc.items()}
+    elif isinstance(doc, list):
+        return [serialize_document(item) for item in doc]
+    else:
+        return doc
 
 app = FastAPI()
 
@@ -276,6 +290,8 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
         user_data = await profiles_dao.retrieve_user(uuid)
 
         if user_data:
+            # Serialize Binary objects and convert dates
+            user_data = serialize_document(user_data)
             if "_id" in user_data:
                 user_data["_id"] = str(user_data["_id"])
             if "date_created" in user_data and user_data["date_created"]:
@@ -359,6 +375,8 @@ async def update_profile(
         updated_profile = await profiles_dao.retrieve_user(uuid)
         #convert to string
         if updated_profile:
+            # Serialize Binary objects and convert dates
+            updated_profile = serialize_document(updated_profile)
             if "_id" in updated_profile:
                 updated_profile["_id"] = str(updated_profile["_id"])
             if "date_created" in updated_profile and updated_profile["date_created"]:
