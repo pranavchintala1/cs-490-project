@@ -274,10 +274,17 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
     
     try:
         user_data = await profiles_dao.retrieve_user(uuid)
-        # Keep profile_image in response so frontend can display it
+
+        if user_data:
+            if "_id" in user_data:
+                user_data["_id"] = str(user_data["_id"])
+            if "date_created" in user_data and user_data["date_created"]:
+                user_data["date_created"] = user_data["date_created"].isoformat()
+            if "date_updated" in user_data and user_data["date_updated"]:
+                user_data["date_updated"] = user_data["date_updated"].isoformat()
     except Exception as e:
         return internal_server_error(str(e))
-    
+
     if not user_data:
         return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
     return user_data
@@ -339,6 +346,7 @@ async def update_profile(
             parsed_data["profile_image"] = base64_content
             parsed_data["image_type"] = pfp.content_type
             parsed_data["image_name"] = pfp.filename
+            print(f"[DEBUG] Image uploaded: size={len(file_content)} bytes, base64_size={len(base64_content)} bytes")
 
         update_count = await profiles_dao.update_user(uuid, parsed_data)
     except Exception as e:
@@ -346,12 +354,22 @@ async def update_profile(
     if update_count == 0:
         return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
 
-    # Fetch and return updated profile so frontend has the latest data
+  
     try:
         updated_profile = await profiles_dao.retrieve_user(uuid)
+        #convert to string
+        if updated_profile:
+            if "_id" in updated_profile:
+                updated_profile["_id"] = str(updated_profile["_id"])
+            if "date_created" in updated_profile and updated_profile["date_created"]:
+                updated_profile["date_created"] = updated_profile["date_created"].isoformat()
+            if "date_updated" in updated_profile and updated_profile["date_updated"]:
+                updated_profile["date_updated"] = updated_profile["date_updated"].isoformat()
+        print(f"[DEBUG] Returning profile with image: {'profile_image' in updated_profile and updated_profile['profile_image'] is not None}")
         return JSONResponse(status_code = 200, content = updated_profile)
     except Exception as e:
         # If we can't fetch the updated profile, at least return success
+        print(f"[DEBUG] Error fetching updated profile: {str(e)}")
         return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
 
 @app.delete("/api/users/me")
