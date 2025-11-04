@@ -28,7 +28,6 @@ const Nav = () => {
     navigate("/");
   };
 
-  // If the user is on /dashboard or hovering over the dropdown, keep it open
   const [showDropdown, setShowDropdown] = React.useState(false);
 
   React.useEffect(() => {
@@ -58,13 +57,22 @@ const Nav = () => {
                 </BootstrapNav.Link>
 
                 <NavDropdown
-                  title="Dashboard"
+                  title={
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation(); // prevents dropdown toggle from hijacking the click
+                        navigate("/dashboard");
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Dashboard
+                    </span>
+                  }
                   id="dashboard-dropdown"
                   className="mx-3"
                   show={showDropdown}
                   onMouseEnter={() => setShowDropdown(true)}
                   onMouseLeave={() => setShowDropdown(false)}
-                  onClick={() => navigate("/dashboard")}
                 >
                   <NavDropdown.Item as={NavLink} to="/employment">
                     Employment
