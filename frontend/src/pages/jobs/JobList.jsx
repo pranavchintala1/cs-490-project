@@ -59,10 +59,18 @@ export default function JobsList() {
 		<div className="jobs-list">
 			<h2>Job Opportunities</h2>
 
-			{/* Job Form always visible on top */}
-			<JobForm addJob={addJob} cancelAdd={() => {}} />
+			{/* Job form always visible on top */}
+			<JobForm addJob={addJob} />
 
-			<div className="job-controls">
+			<div
+				className="job-controls"
+				style={{
+					display: "flex",
+					gap: "10px",
+					margin: "12px 0",
+					flexWrap: "wrap",
+				}}
+			>
 				<input
 					type="text"
 					placeholder="Search by title or company..."
@@ -87,7 +95,15 @@ export default function JobsList() {
 				</select>
 			</div>
 
-			<div className="job-cards">
+			{/* Grid layout for job cards */}
+			<div
+				className="job-cards"
+				style={{
+					display: "grid",
+					gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+					gap: "16px",
+				}}
+			>
 				{filteredJobs.length > 0 ? (
 					filteredJobs.map((job) => (
 						<JobCard key={job.id} job={job} deleteJob={deleteJob} />

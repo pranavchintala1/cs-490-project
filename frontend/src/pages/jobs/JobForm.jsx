@@ -1,126 +1,126 @@
 import React, { useState } from "react";
 
-export default function JobForm({ addJob, cancelAdd }) {
-	const [form, setForm] = useState({
-		title: "",
-		company: "",
-		location: "",
-		salary: "",
-		url: "",
-		deadline: "",
-		industry: "",
-		jobType: "",
-		description: "",
-		status: "Interested",
-	});
-
-	const handleChange = (e) => {
-		const { name, value } = e.target;
-		setForm({ ...form, [name]: value });
-	};
+export default function JobForm({ addJob }) {
+	const [title, setTitle] = useState("");
+	const [company, setCompany] = useState("");
+	const [location, setLocation] = useState("");
+	const [salary, setSalary] = useState("");
+	const [url, setUrl] = useState("");
+	const [deadline, setDeadline] = useState("");
+	const [industry, setIndustry] = useState("");
+	const [jobType, setJobType] = useState("");
+	const [description, setDescription] = useState("");
+	const [status, setStatus] = useState("");
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		if (!form.title || !form.company) {
-			alert("Job title and company are required.");
-			return;
-		}
-		addJob(form);
-		setForm({
-			title: "",
-			company: "",
-			location: "",
-			salary: "",
-			url: "",
-			deadline: "",
-			industry: "",
-			jobType: "",
-			description: "",
-			status: "Interested",
+
+		if (!title.trim()) return alert("Job title is required");
+		if (!company.trim()) return alert("Company name is required");
+		if (!jobType) return alert("Please select a job type");
+		if (!status) return alert("Please select a job status");
+
+		addJob({
+			title: title.trim(),
+			company: company.trim(),
+			location: location.trim(),
+			salary: salary.trim(),
+			url: url.trim(),
+			deadline,
+			industry: industry.trim(),
+			jobType,
+			description: description.trim(),
+			status,
 		});
+
+		setTitle("");
+		setCompany("");
+		setLocation("");
+		setSalary("");
+		setUrl("");
+		setDeadline("");
+		setIndustry("");
+		setJobType("");
+		setDescription("");
+		setStatus("");
 	};
 
 	return (
-		<form className="job-form" onSubmit={handleSubmit}>
-			<h3>Add Job</h3>
-			<input
-				type="text"
-				name="title"
-				placeholder="Job Title *"
-				value={form.title}
-				onChange={handleChange}
-				required
-			/>
-			<input
-				type="text"
-				name="company"
-				placeholder="Company *"
-				value={form.company}
-				onChange={handleChange}
-				required
-			/>
-			<input
-				type="text"
-				name="location"
-				placeholder="Location"
-				value={form.location}
-				onChange={handleChange}
-			/>
-			<input
-				type="text"
-				name="salary"
-				placeholder="Salary Range"
-				value={form.salary}
-				onChange={handleChange}
-			/>
-			<input
-				type="url"
-				name="url"
-				placeholder="Job Posting URL"
-				value={form.url}
-				onChange={handleChange}
-			/>
-			<input
-				type="date"
-				name="deadline"
-				placeholder="Application Deadline"
-				value={form.deadline}
-				onChange={handleChange}
-			/>
-			<select name="industry" value={form.industry} onChange={handleChange}>
-				<option value="">Select Industry</option>
-				<option>Tech</option>
-				<option>Finance</option>
-				<option>Design</option>
-				<option>Education</option>
-			</select>
-			<select name="jobType" value={form.jobType} onChange={handleChange}>
-				<option value="">Select Job Type</option>
-				<option>Full-Time</option>
-				<option>Part-Time</option>
-				<option>Contract</option>
-				<option>Internship</option>
-			</select>
-			<textarea
-				name="description"
-				placeholder="Job Description (max 2000 chars)"
-				maxLength="2000"
-				value={form.description}
-				onChange={handleChange}
-			/>
-			<select name="status" value={form.status} onChange={handleChange}>
-				<option>Interested</option>
-				<option>Applied</option>
-				<option>Phone Screen</option>
-				<option>Interview</option>
-				<option>Offer</option>
-				<option>Rejected</option>
-			</select>
+		<form onSubmit={handleSubmit} className="job-form" style={{ marginBottom: 20 }}>
+			<div><input placeholder="Job Title" value={title} onChange={(e) => setTitle(e.target.value)} required /></div>
+			<div><input placeholder="Company" value={company} onChange={(e) => setCompany(e.target.value)} required /></div>
+			<div><input placeholder="Location" value={location} onChange={(e) => setLocation(e.target.value)} /></div>
+			<div><input placeholder="Salary / Pay Range (optional)" value={salary} onChange={(e) => setSalary(e.target.value)} /></div>
+			<div><input placeholder="Job URL (optional)" value={url} onChange={(e) => setUrl(e.target.value)} /></div>
 
-			<div className="buttons">
-				<button type="submit">Save</button>
-				<button type="button" onClick={cancelAdd}>Cancel</button>
+			<div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+				<label>
+					Application Deadline:
+					<input
+						type="date"
+						value={deadline}
+						onChange={(e) => setDeadline(e.target.value)}
+						style={{ marginLeft: "8px" }}
+					/>
+				</label>
+				<label>
+					Industry:
+					<input
+						placeholder="e.g. Tech, Finance"
+						value={industry}
+						onChange={(e) => setIndustry(e.target.value)}
+						style={{ marginLeft: "8px" }}
+					/>
+				</label>
 			</div>
+
+			<div>
+				<label>Job Type: </label>
+				<select
+					value={jobType}
+					onChange={(e) => setJobType(e.target.value)}
+					disabled={!!jobType} // lock once chosen
+					required
+				>
+					<option value="" disabled>
+						Select Job Type
+					</option>
+					<option>Full-Time</option>
+					<option>Part-Time</option>
+					<option>Internship</option>
+					<option>Contract</option>
+				</select>
+				{jobType && <small style={{ marginLeft: "10px" }}>(Locked after selection)</small>}
+			</div>
+
+			<div>
+				<label>Status: </label>
+				<select
+					value={status}
+					onChange={(e) => setStatus(e.target.value)}
+					required
+				>
+					<option value="" disabled>
+						Select Status
+					</option>
+					<option>Interested</option>
+					<option>Applied</option>
+					<option>Phone Screen</option>
+					<option>Interview</option>
+					<option>Offer</option>
+					<option>Rejected</option>
+				</select>
+			</div>
+
+			<div>
+				<textarea
+					placeholder="Job Description / Notes (optional)"
+					value={description}
+					onChange={(e) => setDescription(e.target.value)}
+				/>
+			</div>
+
+			<div><button type="submit">Add Job</button></div>
 		</form>
 	);
 }
