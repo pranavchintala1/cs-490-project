@@ -53,9 +53,15 @@ const Nav = () => {
         </li> 
         <li>
           <NavLink to="/education">Education</NavLink>
+        </li>
+        <li>
+          <NavLink to="/certifications">Certifications</NavLink>
         </li> 
         <li>
           <NavLink to="/projects">Projects</NavLink>
+        </li>
+        <li>
+          <NavLink to="/jobs">Jobs</NavLink>
         </li> 
         <li>
           <button onClick ={logout}>Logout</button>
