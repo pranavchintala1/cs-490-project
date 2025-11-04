@@ -74,6 +74,7 @@ const ResetPassword = () => {
         pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"
         {...register("password", { required: true })}
         placeholder="Enter new password"
+        title="Password must be minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number"
       />
       <input
         type="password"

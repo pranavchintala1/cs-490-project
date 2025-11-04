@@ -14,14 +14,14 @@ const Nav = () => {
   const logout = async () => {
 
     const res = await sendData({uuid:localStorage.getItem("uuid")},"/api/auth/logout",token)
+    localStorage.removeItem("session")
+    localStorage.removeItem("uuid")
     console.log(res.status)
     if(!res || res.status != 200){
         showFlash("Error logging out","error");
         return;
     }
     
-    localStorage.removeItem("session")
-    localStorage.removeItem("uuid")
     showFlash("Successfully Logged out","success");
     navigate("/") // Home link, maybe change later idk.
     return;
