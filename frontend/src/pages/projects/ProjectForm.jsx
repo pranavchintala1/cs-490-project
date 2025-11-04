@@ -12,10 +12,16 @@ export default function ProjectForm({ addProject }) {
   const [teamSize, setTeamSize] = useState("");
   const [achievements, setAchievements] = useState("");
   const [industry, setIndustry] = useState("");
-  const [status, setStatus] = useState(""); // empty by default
+  const [status, setStatus] = useState(""); 
   const [files, setFiles] = useState([]);
 
   const fileRef = useRef(null);
+
+  const resetForm = () => {
+    setName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
+    setTechnologies(""); setProjectUrl(""); setTeamSize(""); setAchievements(""); setIndustry(""); setStatus(""); setFiles([]);
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -43,16 +49,20 @@ export default function ProjectForm({ addProject }) {
 
     addProject(formData);
 
-    // Reset form
-    setName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
-    setTechnologies(""); setProjectUrl(""); setTeamSize(""); setAchievements(""); setIndustry(""); setStatus(""); setFiles([]);
-    if (fileRef.current) fileRef.current.value = "";
+    resetForm();
   };
 
   return (
     <form onSubmit={handleSubmit} className="project-form">
       <div><input placeholder="Project Name" value={name} onChange={e => setName(e.target.value)} required /></div>
-      <div><textarea placeholder="Description (optional)" value={description} onChange={e => setDescription(e.target.value)} /></div>
+      <div>
+        <textarea 
+          placeholder="Description (optional)" 
+          value={description} 
+          onChange={e => setDescription(e.target.value)} 
+          maxLength={2000} 
+        />
+      </div>
       <div><input placeholder="Role" value={role} onChange={e => setRole(e.target.value)} required /></div>
       <div>
         Start: <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
@@ -65,17 +75,17 @@ export default function ProjectForm({ addProject }) {
       <div><input placeholder="Project URL (optional)" value={projectUrl} onChange={e => setProjectUrl(e.target.value)} /></div>
       <div><input placeholder="Team Size" type="number" value={teamSize} onChange={e => setTeamSize(e.target.value)} required min="1" /></div>
       <div>
-  <textarea
-    placeholder="Achievements / Outcomes (optional)"
-    value={achievements}
-    onChange={e => setAchievements(e.target.value)}
-  />
-</div>
+        <textarea
+          placeholder="Achievements / Outcomes (optional)"
+          value={achievements}
+          onChange={e => setAchievements(e.target.value)}
+        />
+      </div>
       <div><input placeholder="Industry / Project Type (optional)" value={industry} onChange={e => setIndustry(e.target.value)} /></div>
       <div>
         Status:
         <select value={status} onChange={e => setStatus(e.target.value)} required>
-          <option value="" disabled>Select Status</option> {/* disabled placeholder */}
+          <option value="" disabled>Select Status</option>
           <option>Planned</option>
           <option>Ongoing</option>
           <option>Completed</option>
@@ -85,7 +95,10 @@ export default function ProjectForm({ addProject }) {
         Media Upload (optional):
         <input type="file" multiple ref={fileRef} onChange={e => setFiles([...e.target.files])} />
       </div>
-      <div><button type="submit">Add Project</button></div>
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+        <button type="submit">Add Project</button>
+        <button type="button" onClick={resetForm}>Cancel</button>
+      </div>
     </form>
   );
 }

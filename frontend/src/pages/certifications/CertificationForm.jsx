@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-export default function CertificationForm({ addCert }) {
+export default function CertificationForm({ addCert, cancelAdd }) {
   const [name, setName] = useState("");
   const [issuer, setIssuer] = useState("");
   const [dateEarned, setDateEarned] = useState("");
@@ -17,6 +17,12 @@ export default function CertificationForm({ addCert }) {
     "IT/Software", "Healthcare", "Finance", "Management", "Engineering",
     "Education", "Safety", "Legal", "Design", "Marketing", "Other"
   ];
+
+  const resetForm = () => {
+    setName(""); setIssuer(""); setDateEarned(""); setDoesNotExpire(false);
+    setExpirationDate(""); setCertNumber(""); setDocumentFile(null); setCategory(""); setVerified(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -40,12 +46,7 @@ export default function CertificationForm({ addCert }) {
     if (documentFile) formData.append("document", documentFile);
 
     addCert(formData);
-
-    // Reset form
-    setName(""); setIssuer(""); setDateEarned(""); setDoesNotExpire(false);
-    setExpirationDate(""); setCertNumber(""); setDocumentFile(null); setCategory(""); setVerified(false);
-
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    resetForm();
   };
 
   return (
@@ -90,8 +91,9 @@ export default function CertificationForm({ addCert }) {
       <div>
         <input ref={fileInputRef} type="file" onChange={e => setDocumentFile(e.target.files[0])} />
       </div>
-      <div>
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
         <button type="submit">Add Certification</button>
+        <button type="button" onClick={resetForm}>Cancel</button>
       </div>
     </form>
   );
