@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function CertificationCard({ cert, onDelete }) {
+export default function CertificationCard({ cert, onDelete, onEdit }) {
   const today = new Date();
   const expDate = cert.expiration_date ? new Date(cert.expiration_date) : null;
   const expiringSoon = expDate && (expDate - today <= 1000 * 60 * 60 * 24 * 90); 
@@ -32,7 +32,6 @@ export default function CertificationCard({ cert, onDelete }) {
 
       const link = document.createElement("a");
       link.href = url;
-      // use original filename stored in MongoDB
       link.download = cert.document_name || "document";
       link.click();
       URL.revokeObjectURL(url);
@@ -50,36 +49,26 @@ export default function CertificationCard({ cert, onDelete }) {
         color: textColor,
         padding: "8px",
         marginBottom: "8px",
-        minHeight: "60px" // ensures space for consistent layout
+        minHeight: "60px"
       }}
     >
-      {warningText && (
-        <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{warningText}</div>
-      )}
+      {warningText && <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{warningText}</div>}
       <strong>{cert.name}</strong> ({cert.category})<br />
       {cert.issuer} | Earned: {cert.date_earned} |{" "}
       {cert.does_not_expire ? "Does not expire" : `Expires: ${cert.expiration_date || "-"}`}<br />
       {cert.cert_id && <span>Cert #: {cert.cert_id}</span>}<br />
-      Verified:{" "}
-      <span style={{ color: cert.verified ? "green" : "red" }}>
-        {cert.verified ? "✅" : "❌"}
-      </span>
+      Verified: <span style={{ color: cert.verified ? "green" : "red" }}>{cert.verified ? "✅" : "❌"}</span>
       <br />
       {cert.has_document && (
         <span
-          style={{
-            color: "blue",
-            textDecoration: "underline",
-            cursor: "pointer",
-            marginTop: "4px",
-            display: "inline-block"
-          }}
+          style={{ color: "blue", textDecoration: "underline", cursor: "pointer", marginTop: "4px", display: "inline-block" }}
           onClick={handleDownload}
         >
           📄 Download Document
         </span>
       )}
       <br />
+      <button onClick={() => onEdit(cert.id)}>✏ Edit</button>
       <button onClick={() => onDelete(cert.id)}>🗑 Delete</button>
     </div>
   );

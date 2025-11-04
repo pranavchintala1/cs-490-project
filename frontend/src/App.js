@@ -15,9 +15,8 @@ import SkillsList from "./pages/skills/SkillList";
 import EducationList from "./pages/education/EducationList";
 import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
-import JobList from "./pages/jobs/JobList";
-import { FlashProvider, FlashMessage } from "./context/flashContext";
 import JobsList from "./pages/jobs/JobList";
+import { FlashProvider, FlashMessage } from "./context/flashContext";
 
 
 export function App() {
@@ -49,7 +48,7 @@ export function App() {
               <Route path="/education" element={<EducationList />} />
               <Route path="/certifications" element={<CertificationList />} />
               <Route path="/projects" element={<ProjectsList />} />
-              <Route path="/jobs" element={<JobList />} />
+              <Route path="/jobs" element={<JobsList />} />
              </Routes>
             </FlashProvider>
           </>
