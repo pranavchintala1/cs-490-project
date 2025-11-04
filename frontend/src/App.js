@@ -1,6 +1,8 @@
 import React from "react";
 import { Routes, Route } from 'react-router-dom';
 import Nav from "./tools/nav";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 // import logo from './logo.svg';
 import './App.css';
 import Home from "./pages/home";
@@ -23,11 +25,7 @@ export function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img 
-  src="/image.png" 
-  alt="logo"
-  style={{ width: "100%", maxWidth: "400px", height: "auto", display: "block", margin: "0 auto" }}
-/>
+        
         <>
     
           <FlashProvider>
