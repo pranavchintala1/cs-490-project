@@ -69,7 +69,11 @@ export const updateMe = async (profileObj, file /* File | null */) => {
 
 export const profileImageDataUrl = (profile) => {
   const b64 = profile?.profile_picture ?? profile?.profile_image;
-  return b64 ? `data:image/*;base64,${b64}` : null;
+  if (!b64) return null;
+
+  
+  const mimeType = profile?.image_type || "image/jpeg";
+  return `data:${mimeType};base64,${b64}`;
 };
 
 export const listEmployment = async () => {
