@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import SkillForm from "./SkillForm";
 import SkillCategory from "./SkillCategory";
-import SkillItem from "./SkillItem";
 import {
   DndContext,
   closestCenter,
@@ -11,6 +10,9 @@ import {
   DragOverlay,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+
+// Import SkillItem for the DragOverlay
+import SkillItem from "./SkillItem";
 
 export default function SkillList() {
   const [skills, setSkills] = useState([]);
@@ -46,7 +48,9 @@ export default function SkillList() {
   }, []);
 
   const addSkill = (skill) => {
-    const newSkill = { ...skill, id: String(Date.now()), position: skills.length };
+    const categorySkills = skills.filter(s => s.category === skill.category);
+    const newPosition = categorySkills.length;
+    const newSkill = { ...skill, id: String(Date.now()), position: newPosition };
     setSkills([...skills, newSkill]);
   };
 
@@ -71,35 +75,56 @@ export default function SkillList() {
     if (!activeSkill) return;
 
     let newCategory = activeSkill.category;
-    const overSkill = skills.find((s) => s.id === over.id);
-    if (overSkill) newCategory = overSkill.category;
+    let newPosition = 0;
+
+    // Check if dropped on a droppable container (empty category or category area)
+    if (over.id.toString().startsWith('droppable-')) {
+      newCategory = over.id.toString().replace('droppable-', '');
+      const categorySkills = skills.filter((s) => s.category === newCategory && s.id !== activeSkill.id);
+      newPosition = categorySkills.length; // Add to end of category
+    } else {
+      // Dropped on another skill item
+      const overSkill = skills.find((s) => s.id === over.id);
+      if (overSkill) {
+        newCategory = overSkill.category;
+        newPosition = overSkill.position;
+      }
+    }
 
     const oldCategory = activeSkill.category;
     const oldPosition = activeSkill.position;
 
-    const categorySkills = skills
-      .filter((s) => s.category === newCategory && s.id !== activeSkill.id)
-      .sort((a, b) => a.position - b.position);
-
-    const newPosition = overSkill ? overSkill.position : categorySkills.length;
+    // Don't do anything if nothing changed
+    if (oldCategory === newCategory && oldPosition === newPosition) return;
 
     const updatedSkills = skills.map((s) => {
-      if (s.id === activeSkill.id) return { ...s, category: newCategory, position: newPosition };
+      if (s.id === activeSkill.id) {
+        return { ...s, category: newCategory, position: newPosition };
+      }
 
+      // Update positions in the new category
       if (s.category === newCategory) {
         if (oldCategory === newCategory) {
+          // Moving within same category
           if (oldPosition < newPosition && s.position > oldPosition && s.position <= newPosition)
             return { ...s, position: s.position - 1 };
           if (oldPosition > newPosition && s.position >= newPosition && s.position < oldPosition)
             return { ...s, position: s.position + 1 };
         } else {
+          // Moving to different category - shift items down
           if (s.position >= newPosition) return { ...s, position: s.position + 1 };
         }
       }
+
+      // Update positions in the old category when moving to a different category
+      if (s.category === oldCategory && oldCategory !== newCategory) {
+        if (s.position > oldPosition) return { ...s, position: s.position - 1 };
+      }
+
       return s;
     });
 
-    setSkills(updatedSkills.sort((a, b) => a.position - b.position));
+    setSkills(updatedSkills);
   };
 
   const activeSkillObj = skills.find((s) => s.id === activeId);
@@ -111,8 +136,13 @@ export default function SkillList() {
     return acc;
   }, {});
 
+  // Sort skills by position within each category
+  Object.keys(groupedSkills).forEach(cat => {
+    groupedSkills[cat].sort((a, b) => a.position - b.position);
+  });
+
   return (
-    <div>
+    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
       <h2>Add Skill</h2>
       <SkillForm addSkill={addSkill} existingSkills={skills} />
 
@@ -121,6 +151,7 @@ export default function SkillList() {
           placeholder="Search skills globally..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ width: "100%", padding: "8px", fontSize: "16px" }}
         />
       </div>
 
@@ -131,30 +162,34 @@ export default function SkillList() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-          {categories.map((cat) => (
-            <SortableContext
-              key={cat}
-              items={skills.filter((s) => s.category === cat).map((s) => s.id)}
-              strategy={verticalListSortingStrategy}
-            >
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", 
+            gap: "16px",
+            marginBottom: "20px"
+          }}>
+            {categories.map((cat) => (
               <SkillCategory
+                key={cat}
                 category={cat}
                 skills={groupedSkills[cat] || []}
                 updateSkill={updateSkill}
                 removeSkill={removeSkill}
                 activeId={activeId}
               />
-            </SortableContext>
-          ))}
+            ))}
+          </div>
         </SortableContext>
 
         <DragOverlay>
           {activeSkillObj && (
-            <SkillItem
-              skill={activeSkillObj}
-              updateSkill={updateSkill}
-              removeSkill={removeSkill}
-            />
+            <div style={{ cursor: "grabbing", width: "300px" }}>
+              <SkillItem
+                skill={activeSkillObj}
+                updateSkill={updateSkill}
+                removeSkill={removeSkill}
+              />
+            </div>
           )}
         </DragOverlay>
       </DndContext>

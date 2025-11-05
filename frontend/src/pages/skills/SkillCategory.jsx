@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { SortableItem } from "./SortableItem";
+import SkillItem from "./SkillItem";
 import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 export default function SkillCategory({ category, skills, updateSkill, removeSkill, activeId }) {
   const [filterTerm, setFilterTerm] = useState("");
 
-  // Register the category as a droppable
-  const { setNodeRef: droppableRef } = useDroppable({ id: category });
+  // Register the category as a droppable with the category name as ID
+  const { setNodeRef: droppableRef, isOver } = useDroppable({ 
+    id: `droppable-${category}` 
+  });
 
   const filteredSkills = skills.filter((s) =>
     s.name.toLowerCase().includes(filterTerm.toLowerCase())
@@ -36,16 +39,18 @@ export default function SkillCategory({ category, skills, updateSkill, removeSki
   return (
     <div
       style={{
-        marginBottom: "20px",
         padding: "10px",
-        border: "1px dashed #ccc",
+        border: "1px solid #ddd",
         borderRadius: "8px",
-        minHeight: "60px",
+        minHeight: "200px",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
       }}
     >
-      <h3>
+      <h3 style={{ marginTop: 0, marginBottom: "10px", fontSize: "18px" }}>
         {category} ({skills.length})
-        <button onClick={exportCategory} style={{ marginLeft: "10px" }}>
+        <button onClick={exportCategory} style={{ marginLeft: "10px", fontSize: "12px", padding: "4px 8px" }}>
           Export
         </button>
       </h3>
@@ -54,41 +59,57 @@ export default function SkillCategory({ category, skills, updateSkill, removeSki
         placeholder={`Filter ${category} skills...`}
         value={filterTerm}
         onChange={(e) => setFilterTerm(e.target.value)}
-        style={{ marginBottom: "8px"}}
+        style={{ marginBottom: "8px", padding: "6px", width: "100%", boxSizing: "border-box" }}
       />
 
-      <p>
+      <p style={{ fontSize: "20px", marginBottom: "10px" }}>
         {Object.entries(proficiencySummary)
           .map(([l, c]) => `${l}: ${c}`)
-          .join(", ")}
+          .join(", ") || "No skills yet"}
       </p>
 
-      <ul
-        ref={droppableRef} // register droppable here
-        style={{ padding: 0, listStyle: "none", minHeight: "40px" }}
+      <SortableContext 
+        items={filteredSkills.map(s => s.id)} 
+        strategy={verticalListSortingStrategy}
       >
-        {filteredSkills.length ? (
-          filteredSkills.map((skill) => (
-            <SortableItem
-              key={skill.id}
-              skill={skill}
-              updateSkill={updateSkill}
-              removeSkill={removeSkill}
-            />
-          ))
-        ) : (
-          <li
-            style={{
-              padding: "20px 0",
-              color: "#aaa",
+        <ul
+          ref={droppableRef}
+          style={{ 
+            padding: "10px", 
+            margin: 0,
+            listStyle: "none", 
+            minHeight: "100px",
+            backgroundColor: isOver ? "#e8f4f8" : (filteredSkills.length === 0 ? "#f8f8f8" : "transparent"),
+            borderRadius: "4px",
+            transition: "background-color 0.2s",
+            border: isOver ? "2px dashed #4f8ef7" : "2px dashed transparent",
+            flexGrow: 1,
+            boxSizing: "border-box",
+            overflow: "auto",
+          }}
+        >
+          {filteredSkills.length > 0 ? (
+            filteredSkills.map((skill) => (
+              <SkillItem
+                key={skill.id}
+                skill={skill}
+                updateSkill={updateSkill}
+                removeSkill={removeSkill}
+              />
+            ))
+          ) : (
+            <li style={{ 
+              padding: "20px", 
+              color: "#999", 
               textAlign: "center",
-              minHeight: "40px",
-            }}
-          >
-            Drop skills here
-          </li>
-        )}
-      </ul>
+              pointerEvents: "none",
+              listStyle: "none",
+            }}>
+              {isOver ? "Drop here" : "No skills - drag items here or add new ones"}
+            </li>
+          )}
+        </ul>
+      </SortableContext>
     </div>
   );
 }
