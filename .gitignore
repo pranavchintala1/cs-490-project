@@ -18,6 +18,8 @@
 *.env.test.local
 *.env.production.local
 *.env
+*.claude
+*RESUME_API_ENDPOINTS.md
 
 npm-debug.log*
 yarn-debug.log*
