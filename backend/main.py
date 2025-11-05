@@ -3,8 +3,9 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 from datetime import datetime, timedelta
-import bcrypt, zipfile
+import bcrypt, zipfile, base64
 from io import BytesIO
+from bson import Binary
 
 
 from mongo.profiles_dao import profiles_dao
@@ -28,6 +29,19 @@ import httpx
 from jose import jwt, JWTError
 
 from schema import RegistInfo, LoginCred, Education, Employment, Project, Skill, Certification
+
+def serialize_document(doc):
+
+    if doc is None:
+        return None
+    if isinstance(doc, Binary):
+        return base64.b64encode(doc).decode("utf-8")
+    elif isinstance(doc, dict):
+        return {k: serialize_document(v) for k, v in doc.items()}
+    elif isinstance(doc, list):
+        return [serialize_document(item) for item in doc]
+    else:
+        return doc
 
 app = FastAPI()
 
@@ -274,10 +288,19 @@ async def retrieve_profile(uuid: str, auth: str = Header(..., alias = "Authoriza
     
     try:
         user_data = await profiles_dao.retrieve_user(uuid)
-        user_data.pop("profile_image")
+
+        if user_data:
+            # Serialize Binary objects and convert dates
+            user_data = serialize_document(user_data)
+            if "_id" in user_data:
+                user_data["_id"] = str(user_data["_id"])
+            if "date_created" in user_data and user_data["date_created"]:
+                user_data["date_created"] = user_data["date_created"].isoformat()
+            if "date_updated" in user_data and user_data["date_updated"]:
+                user_data["date_updated"] = user_data["date_updated"].isoformat()
     except Exception as e:
         return internal_server_error(str(e))
-    
+
     if not user_data:
         return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
     return user_data
@@ -318,7 +341,7 @@ async def update_profile(
         return JSONResponse(status_code = 401, content = {"detail": "Invalid session"})
     
     try:
-        content = await pfp.read() if pfp else None
+        # Build parsed_data without None values for unmodified fields
         parsed_data = {
             "username": username,
             "email": email,
@@ -329,17 +352,43 @@ async def update_profile(
             "biography": biography,
             "industry": industry,
             "experience_level": experience_level,
-            "profile_image": content,
-            "image_type": pfp.content_type if pfp else None,
-            "image_name": pfp.filename if pfp else None
         }
+
+        # Only include profile image fields if a file was uploaded
+        if pfp:
+            file_content = await pfp.read()
+            # Encode binary content as base64 for MongoDB storage
+            base64_content = base64.b64encode(file_content).decode("utf-8")
+            parsed_data["profile_image"] = base64_content
+            parsed_data["image_type"] = pfp.content_type
+            parsed_data["image_name"] = pfp.filename
+            print(f"[DEBUG] Image uploaded: size={len(file_content)} bytes, base64_size={len(base64_content)} bytes")
 
         update_count = await profiles_dao.update_user(uuid, parsed_data)
     except Exception as e:
         return internal_server_error(str(e))
     if update_count == 0:
         return JSONResponse(status_code = 400, content = {"detail": "User does not exist"})
-    return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
+
+  
+    try:
+        updated_profile = await profiles_dao.retrieve_user(uuid)
+        #convert to string
+        if updated_profile:
+            # Serialize Binary objects and convert dates
+            updated_profile = serialize_document(updated_profile)
+            if "_id" in updated_profile:
+                updated_profile["_id"] = str(updated_profile["_id"])
+            if "date_created" in updated_profile and updated_profile["date_created"]:
+                updated_profile["date_created"] = updated_profile["date_created"].isoformat()
+            if "date_updated" in updated_profile and updated_profile["date_updated"]:
+                updated_profile["date_updated"] = updated_profile["date_updated"].isoformat()
+        print(f"[DEBUG] Returning profile with image: {'profile_image' in updated_profile and updated_profile['profile_image'] is not None}")
+        return JSONResponse(status_code = 200, content = updated_profile)
+    except Exception as e:
+        # If we can't fetch the updated profile, at least return success
+        print(f"[DEBUG] Error fetching updated profile: {str(e)}")
+        return JSONResponse(status_code = 200, content = {"detail": "Successfully updated user"})
 
 @app.delete("/api/users/me")
 async def delete_profile(uuid: str, auth: str = Header(..., alias = "Authorization")):
