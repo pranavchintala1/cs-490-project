@@ -19,6 +19,8 @@ async def add_project(project: Project, uuid: str = Depends(authorize)):
         result = await projects_dao.add_project(model)
     except DuplicateKeyError:
         raise HTTPException(400, "Project already exists") # FIXME: redundant since keys are generated uniquely?
+    except HTTPException as http:
+        raise http
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     

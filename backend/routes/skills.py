@@ -19,6 +19,8 @@ async def add_skill(skill: Skill, uuid: str = Depends(authorize)):
         result = await skills_dao.add_skill(model)
     except DuplicateKeyError:
         raise HTTPException(400, "Skill already exists") # FIXME: redundant since keys are generated uniquely?
+    except HTTPException as http:
+        raise http
     except Exception as e:
         raise HTTPException(500, "Encountered internal server error")
     

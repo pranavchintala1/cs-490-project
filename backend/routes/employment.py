@@ -19,6 +19,8 @@ async def add_employment(employment: Employment, uuid: str = Depends(authorize))
         result = await employment_dao.add_employment(model)
     except DuplicateKeyError:
         raise HTTPException(400, "Employment already exists") # FIXME: redundant since keys are generated uniquely?
+    except HTTPException as http:
+        raise http
     except Exception as e:
         raise HTTPException(500, "Encountered internal server error")
     
