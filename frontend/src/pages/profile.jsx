@@ -79,7 +79,7 @@ export default function Profile() {
 
     try {
       //send on teh single endpoints
-      const updated = await updateMe(
+      await updateMe(
         {
           username: form.username || null,
           email: form.email || null,
@@ -93,8 +93,12 @@ export default function Profile() {
         },
         selectedFile
       );
-      setProfile(updated);
+
+      // Refetch the full profile to get the updated data
+      const updatedProfile = await getMe();
+      setProfile(updatedProfile);
       setMsg("Profile updated.");
+      // Only clear preview/selected file after successful save
       setSelectedFile(null);
       setPreviewUrl(null);
       if (fileRef.current) fileRef.current.value = "";
