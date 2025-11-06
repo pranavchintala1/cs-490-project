@@ -11,26 +11,34 @@ export default function EmploymentEdit({ item, onSave, onCancel }) {
     ongoing: !item.end_date,
   });
   const [msg, setMsg] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const onChange = (e) => {
     const { name, value, type, checked } = e.target;
     setF((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
 
-  const save = () => {
+  const save = async () => {
     if (!f.title.trim()) return setMsg("Title is required.");
     if (!f.start_date) return setMsg("Start date is required.");
 
-    const patch = {
-      title: f.title.trim(),
-      company: f.company || "",
-      location: f.location || "",
-      start_date: f.start_date,
-      end_date: f.ongoing ? null : f.end_date || "",
-      description: f.description || "",
-    };
+    setSaving(true);
+    try {
+      const patch = {
+        title: f.title.trim(),
+        company: f.company || "",
+        location: f.location || "",
+        start_date: f.start_date,
+        end_date: f.ongoing ? null : f.end_date || "",
+        description: f.description || "",
+      };
 
-    onSave?.(patch);
+      await onSave?.(patch);
+    } catch (e) {
+      setMsg(e.message || "Failed to save");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -68,8 +76,8 @@ export default function EmploymentEdit({ item, onSave, onCancel }) {
       {msg && <div style={{ color: "crimson", marginTop: 6 }}>{msg}</div>}
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-        <button onClick={save}>Save</button>
-        <button onClick={onCancel}>Cancel</button>
+        <button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
+        <button onClick={onCancel} disabled={saving}>Cancel</button>
       </div>
     </div>
   );

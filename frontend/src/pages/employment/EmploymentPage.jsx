@@ -1,39 +1,61 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import EmploymentForm from "./EmploymentForm";
 import EmploymentList from "./EmploymentList";
+import { listEmployment, createEmployment, updateEmployment, deleteEmployment } from "../../tools/api";
 
 export default function EmploymentPage() {
-  //dummy
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      title: "SWE intern",
-      company: "NJIT",
-      location: "Newark, NJ",
-      start_date: "2024-06-01",
-      end_date: "2025-08-31",
-      description: "Did stuff",
-    },
-    {
-      id: 2,
-      title: "Assistant",
-      company: "NJIT",
-      location: "Newark, NJ",
-      start_date: "2025-09-01",
-      end_date: null, 
-      description: "Grade homeworks",
-    },
-  ]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
 
- 
   const [q, setQ] = useState("");
-  const [sort, setSort] = useState(""); 
+  const [sort, setSort] = useState("");
   const [onlyCurrent, setOnlyCurrent] = useState(false);
 
-  const addItem = (job) => setItems((prev) => [...prev, { ...job, id: Date.now() }]);
-  const updateItem = (id, patch) =>
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
-  const deleteItem = (id) => setItems((prev) => prev.filter((it) => it.id !== id));
+  // Load employment data on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await listEmployment();
+        setItems(data || []);
+      } catch (e) {
+        setErr(e.message || "Failed to load employment data");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const addItem = async (job) => {
+    try {
+      await createEmployment(job);
+      // Refetch the list after creation
+      const data = await listEmployment();
+      setItems(data || []);
+    } catch (e) {
+      setErr(e.message || "Failed to add employment");
+    }
+  };
+
+  const updateItem = async (id, patch) => {
+    try {
+      await updateEmployment(id, patch);
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+    } catch (e) {
+      setErr(e.message || "Failed to update employment");
+    }
+  };
+
+  const deleteItem = async (id) => {
+    try {
+      await deleteEmployment(id);
+      // Filter by both id and _id since backend returns _id
+      setItems((prev) => prev.filter((it) => (it.id || it._id) !== id));
+    } catch (e) {
+      setErr(e.message || "Failed to delete employment");
+    }
+  };
 
   const filtered = useMemo(() => {
     let r = items;
@@ -60,9 +82,13 @@ export default function EmploymentPage() {
     return r;
   }, [items, q, sort, onlyCurrent]);
 
+  if (loading) return <div style={{ padding: 24 }}>Loading employment data…</div>;
+
   return (
     <div style={{ maxWidth: 900 }}>
       <h1>Employment</h1>
+
+      {err && <div style={{ color: "crimson", marginBottom: 16 }}>{err}</div>}
 
       <section
         style={{
