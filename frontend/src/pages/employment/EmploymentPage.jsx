@@ -18,7 +18,12 @@ export default function EmploymentPage() {
       try {
         setLoading(true);
         const data = await listEmployment();
-        setItems(data || []);
+        // Normalize _id to id for compatibility with backend
+        const normalizedData = (data || []).map(item => ({
+          ...item,
+          id: item.id || item._id
+        }));
+        setItems(normalizedData);
       } catch (e) {
         setErr(e.message || "Failed to load employment data");
       } finally {
@@ -32,7 +37,11 @@ export default function EmploymentPage() {
       await createEmployment(job);
       // Refetch the list after creation
       const data = await listEmployment();
-      setItems(data || []);
+      const normalizedData = (data || []).map(item => ({
+        ...item,
+        id: item.id || item._id
+      }));
+      setItems(normalizedData);
     } catch (e) {
       setErr(e.message || "Failed to add employment");
     }

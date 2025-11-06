@@ -41,7 +41,10 @@ export default function Profile() {
           experience_level: me.experience_level ?? "",
         });
       } catch (e) {
-        setErr(e.message || "Failed to load profile.");
+        // If profile fails to load (e.g., backend returning binary image data),
+        // continue with empty form so user can still update their profile
+        setErr("Note: Profile picture support not yet fully implemented. You can still update other fields.");
+        setProfile({});
       } finally {
         setLoading(false);
       }
