@@ -1,10 +1,14 @@
 from mongo.dao_setup import db_client, PROFILES
+from datetime import datetime, timezone
 
 class UserDataDAO:
     def __init__(self):
         self.collection = db_client.get_collection(PROFILES)
 
     async def add_profile(self, uuid: str, data: dict) -> str:
+        time = datetime.now(timezone.utc)
+        data["date_created"] = time
+        data["date_updated"] = time
         result = await self.collection.insert_one({"_id": uuid, **data})
         return result.inserted_id
 
@@ -12,6 +16,8 @@ class UserDataDAO:
         return await self.collection.find_one({"_id": uuid})
     
     async def update_profile(self, uuid, data: dict) -> int:
+        time = datetime.now(timezone.utc)
+        data["date_updated"] = time
         updated = await self.collection.update_one({"_id": uuid}, {"$set": data})
         return updated.matched_count
 
