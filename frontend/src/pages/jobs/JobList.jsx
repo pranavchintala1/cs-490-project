@@ -13,6 +13,106 @@ import JobPipeline from "./JobPipeline";
 import JobCard from "./JobCard";
 import { apiRequest } from "../../api";
 
+// Deadline Widget Component
+function DeadlineWidget({ jobs, onJobClick }) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const jobsWithDeadlines = jobs
+    .filter(job => job.deadline)
+    .map(job => {
+      const deadlineDate = new Date(job.deadline);
+      deadlineDate.setHours(0, 0, 0, 0);
+      const daysUntil = Math.floor((deadlineDate - today) / (1000 * 60 * 60 * 24));
+      return { ...job, daysUntil, deadlineDate };
+    })
+    .sort((a, b) => a.deadlineDate - b.deadlineDate)
+    .slice(0, 5);
+
+  const getUrgencyColor = (daysUntil) => {
+    if (daysUntil < 0) return "#f44336";
+    if (daysUntil <= 3) return "#ff5722";
+    if (daysUntil <= 7) return "#ff9800";
+    if (daysUntil <= 14) return "#ffc107";
+    return "#4caf50";
+  };
+
+  const getUrgencyLabel = (daysUntil) => {
+    if (daysUntil < 0) return "OVERDUE";
+    if (daysUntil === 0) return "TODAY";
+    if (daysUntil === 1) return "TOMORROW";
+    if (daysUntil <= 7) return "THIS WEEK";
+    return `${daysUntil} DAYS`;
+  };
+
+  if (jobsWithDeadlines.length === 0) return null;
+
+  return (
+    <div style={{
+      background: "white",
+      padding: "20px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      marginBottom: "20px"
+    }}>
+      <h3 style={{ margin: "0 0 16px 0", color: "#333", display: "flex", alignItems: "center", gap: "8px" }}>
+        ⏰ Upcoming Deadlines
+      </h3>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        {jobsWithDeadlines.map(job => (
+          <div
+            key={job.id}
+            onClick={() => onJobClick && onJobClick(job)}
+            style={{
+              padding: "12px",
+              background: "#f9f9f9",
+              borderRadius: "6px",
+              border: `2px solid ${getUrgencyColor(job.daysUntil)}`,
+              cursor: onJobClick ? "pointer" : "default",
+              transition: "transform 0.2s, box-shadow 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: "bold", fontSize: "14px", color: "#333", marginBottom: "4px" }}>
+                  {job.title}
+                </div>
+                <div style={{ fontSize: "13px", color: "#666", marginBottom: "4px" }}>
+                  {job.company}
+                </div>
+                <div style={{ fontSize: "12px", color: "#999" }}>
+                  📅 {new Date(job.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              </div>
+              <div style={{
+                background: getUrgencyColor(job.daysUntil),
+                color: "white",
+                padding: "6px 12px",
+                borderRadius: "4px",
+                fontSize: "11px",
+                fontWeight: "bold",
+                textAlign: "center",
+                minWidth: "80px"
+              }}>
+                {getUrgencyLabel(job.daysUntil)}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function JobList() {
   const [jobs, setJobs] = useState([]);
   const [view, setView] = useState("pipeline");
@@ -42,6 +142,7 @@ export default function JobList() {
       setLoading(true);
       const data = await apiRequest("/api/jobs/me?uuid=", "");
       
+      // Transform backend snake_case to frontend camelCase
       const transformedJobs = (data || []).map(job => ({
         id: job._id,
         title: job.title,
@@ -51,16 +152,23 @@ export default function JobList() {
         url: job.url,
         deadline: job.deadline,
         industry: job.industry,
-        jobType: job.jobType,
+        job_type: job.job_type,
+        jobType: job.job_type,
         description: job.description,
         status: job.status,
-        createdAt: job.createdAt,
-        updatedAt: job.updatedAt,
-        statusHistory: job.statusHistory || [],
+        createdAt: job.date_created || job.createdAt,
+        updatedAt: job.date_updated || job.updatedAt,
+        status_history: job.status_history || [],
+        statusHistory: (job.status_history || []).map(([status, timestamp]) => ({ 
+          status, 
+          timestamp 
+        })),
         notes: job.notes,
         contacts: job.contacts,
-        salaryNotes: job.salaryNotes,
-        interviewNotes: job.interviewNotes
+        salary_notes: job.salary_notes,
+        salaryNotes: job.salary_notes,
+        interview_notes: job.interview_notes,
+        interviewNotes: job.interview_notes
       }));
       
       setJobs(transformedJobs);
@@ -76,14 +184,28 @@ export default function JobList() {
     try {
       const response = await apiRequest("/api/jobs?uuid=", "", {
         method: "POST",
-        body: JSON.stringify(jobData)
+        body: JSON.stringify(jobData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response && response.job_id) {
-        const newJob = { ...jobData, id: response.job_id };
-        setJobs([...jobs, newJob]);
+        // Optimistically add the job with the returned ID instead of reloading
+        const newJob = {
+          id: response.job_id,
+          ...jobData,
+          jobType: jobData.job_type,
+          salaryNotes: jobData.salary_notes,
+          interviewNotes: jobData.interview_notes,
+          statusHistory: (jobData.status_history || []).map(([status, timestamp]) => ({ status, timestamp })),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        setJobs(prev => [...prev, newJob]);
+        setView("pipeline");
       }
-      setView("pipeline");
     } catch (error) {
       console.error("Failed to add job:", error);
       alert("Failed to add job. Please try again.");
@@ -92,25 +214,36 @@ export default function JobList() {
 
   const updateJob = async (jobData) => {
     try {
-      const oldJob = jobs.find((j) => j.id === jobData.id);
-      const statusChanged = oldJob.status !== jobData.status;
-
-      const updatedStatusHistory = statusChanged
-        ? [...(jobData.statusHistory || []), { status: jobData.status, timestamp: new Date().toISOString() }]
-        : jobData.statusHistory;
-
-      await apiRequest(`/api/jobs?job_id=${jobData.id}&uuid=`, "", {
+      const { id, createdAt, updatedAt, statusHistory, jobType, salaryNotes, interviewNotes, ...backendData } = jobData;
+      
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
         method: "PUT",
-        body: JSON.stringify({ ...jobData, statusHistory: updatedStatusHistory })
+        body: JSON.stringify(backendData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      setJobs(jobs.map((j) => (j.id === jobData.id ? { ...jobData, statusHistory: updatedStatusHistory } : j)));
+      // Optimistically update the job in state
+      setJobs(prev => prev.map(job => {
+        if (job.id === id) {
+          return {
+            ...job,
+            ...jobData,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return job;
+      }));
+
       setView("pipeline");
       setEditingJob(null);
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to update job:", error);
       alert("Failed to update job. Please try again.");
+      // Reload on error to ensure consistency
+      loadJobs();
     }
   };
 
@@ -153,11 +286,15 @@ export default function JobList() {
     }
 
     if (activeJob.status !== newStatus) {
+      const now = new Date().toISOString();
+      const updatedStatusHistory = [...activeJob.status_history, [newStatus, now]];
+      
       const updatedJob = {
         ...activeJob,
         status: newStatus,
-        updatedAt: new Date().toISOString(),
-        statusHistory: [...activeJob.statusHistory, { status: newStatus, timestamp: new Date().toISOString() }],
+        updatedAt: now,
+        status_history: updatedStatusHistory,
+        statusHistory: updatedStatusHistory.map(([status, timestamp]) => ({ status, timestamp }))
       };
       
       setJobs(jobs.map((j) => (j.id === activeJob.id ? updatedJob : j)));
@@ -168,13 +305,14 @@ export default function JobList() {
           method: "PUT",
           body: JSON.stringify({
             status: newStatus,
-            statusHistory: updatedJob.statusHistory,
-            updatedAt: updatedJob.updatedAt
-          })
+            status_history: updatedStatusHistory
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
       } catch (error) {
         console.error("Failed to update job status:", error);
-        // Reload jobs to ensure consistency
         loadJobs();
       }
     }
@@ -277,6 +415,9 @@ export default function JobList() {
           {view === "pipeline" ? "+ Add New Job" : "← Back to Pipeline"}
         </button>
       </div>
+
+      {/* Deadline Widget - show only in pipeline view */}
+      {view === "pipeline" && <DeadlineWidget jobs={jobs} onJobClick={(job) => setSelectedJob(job)} />}
 
       {view === "pipeline" && (
         <div style={{ background: "#f9f9f9", padding: "16px", borderRadius: "8px", marginBottom: "20px" }}>
@@ -460,7 +601,40 @@ export default function JobList() {
                 ×
               </button>
             </div>
-            {/* Add more detail content as needed */}
+            <div style={{ marginBottom: "16px" }}>
+              <strong>Company:</strong> {selectedJob.company}
+            </div>
+            {selectedJob.location && (
+              <div style={{ marginBottom: "16px" }}>
+                <strong>Location:</strong> {selectedJob.location}
+              </div>
+            )}
+            {selectedJob.salary && (
+              <div style={{ marginBottom: "16px" }}>
+                <strong>Salary:</strong> {selectedJob.salary}
+              </div>
+            )}
+            {selectedJob.deadline && (
+              <div style={{ marginBottom: "16px" }}>
+                <strong>Deadline:</strong> {new Date(selectedJob.deadline).toLocaleDateString()}
+              </div>
+            )}
+            {selectedJob.description && (
+              <div style={{ marginBottom: "16px" }}>
+                <strong>Description:</strong>
+                <div style={{ whiteSpace: "pre-wrap", marginTop: "8px", color: "#555" }}>
+                  {selectedJob.description}
+                </div>
+              </div>
+            )}
+            {selectedJob.notes && (
+              <div style={{ marginBottom: "16px", background: "#fffbea", padding: "12px", borderRadius: "4px" }}>
+                <strong>Notes:</strong>
+                <div style={{ whiteSpace: "pre-wrap", marginTop: "8px" }}>
+                  {selectedJob.notes}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

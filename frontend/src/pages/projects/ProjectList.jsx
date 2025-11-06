@@ -34,7 +34,9 @@ export default function ProjectsList() {
         details: project.details,
         achievements: project.achievements,
         industry: project.industry,
-        status: project.status
+        status: project.status,
+        project_url: project.project_url,
+        media_files: project.media_files || []
       }));
       
       setProjects(transformedProjects);
@@ -48,14 +50,18 @@ export default function ProjectsList() {
 
   const addProject = async (projectData) => {
     try {
+      // Send as JSON instead of FormData
       const response = await apiRequest("/api/projects?uuid=", "", {
         method: "POST",
-        body: JSON.stringify(projectData)
+        body: JSON.stringify(projectData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response && response.project_id) {
-        const newProject = { ...projectData, id: response.project_id };
-        setProjects([...projects, newProject]);
+        // Reload projects to get the full data
+        await loadProjects();
       }
       setShowForm(false);
     } catch (error) {
@@ -66,13 +72,17 @@ export default function ProjectsList() {
 
   const submitEdit = async (projectData) => {
     try {
+      // Send as JSON instead of FormData
       await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
         method: "PUT",
-        body: JSON.stringify(projectData)
+        body: JSON.stringify(projectData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      const updatedProject = { ...editProject, ...projectData };
-      setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+      // Reload projects to get updated data
+      await loadProjects();
       setEditProject(null);
       setShowForm(false);
     } catch (error) {
