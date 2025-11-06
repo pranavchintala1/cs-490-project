@@ -74,7 +74,7 @@ const Nav = () => {
                   onMouseEnter={() => setShowDropdown(true)}
                   onMouseLeave={() => setShowDropdown(false)}
                 >
-                  <NavDropdown.Item as={NavLink} to="/employment">
+                  <NavDropdown.Item as={NavLink} to="/employment-history">
                     Employment
                   </NavDropdown.Item>
                   <NavDropdown.Item as={NavLink} to="/skills">
