@@ -6,18 +6,18 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
   const expiringSoon = expDate && (expDate - today <= 1000 * 60 * 60 * 24 * 90); 
   const expired = expDate && expDate < today;
 
-  let bgColor = "#fff";
-  let textColor = "#000";
-  let warningText = "";
+  let bgColor = "white";
+  let borderColor = "#ddd";
+  let warningBadge = null;
 
   if (expired) {
-    bgColor = "#a43333ff";
-    warningText = "❌ Expired";
-    textColor = "#FFF";
+    bgColor = "#ffebee";
+    borderColor = "#f44336";
+    warningBadge = { text: "❌ Expired", color: "#f44336" };
   } else if (expiringSoon) {
-    bgColor = "#e08f38ff";
-    warningText = "⚠️ Expiring Soon";
-    textColor = "#FFF";
+    bgColor = "#fff3e0";
+    borderColor = "#ff9800";
+    warningBadge = { text: "⚠️ Expiring Soon", color: "#ff9800" };
   }
 
   const handleDownload = async () => {
@@ -45,31 +45,159 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
     <div
       style={{
         backgroundColor: bgColor,
-        borderRadius: "4px",
-        color: textColor,
-        padding: "8px",
-        marginBottom: "8px",
-        minHeight: "60px"
+        border: `2px solid ${borderColor}`,
+        borderRadius: "8px",
+        padding: "16px",
+        marginBottom: "12px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        transition: "all 0.2s",
+        position: "relative"
       }}
     >
-      {warningText && <div style={{ fontWeight: "bold", marginBottom: "4px" }}>{warningText}</div>}
-      <strong>{cert.name}</strong> ({cert.category})<br />
-      {cert.issuer} | Earned: {cert.date_earned} |{" "}
-      {cert.does_not_expire ? "Does not expire" : `Expires: ${cert.expiration_date || "-"}`}<br />
-      {cert.cert_id && <span>Cert #: {cert.cert_id}</span>}<br />
-      Verified: <span style={{ color: cert.verified ? "green" : "red" }}>{cert.verified ? "✅" : "❌"}</span>
-      <br />
-      {cert.has_document && (
-        <span
-          style={{ color: "blue", textDecoration: "underline", cursor: "pointer", marginTop: "4px", display: "inline-block" }}
-          onClick={handleDownload}
-        >
-          📄 Download Document
-        </span>
+      {warningBadge && (
+        <div style={{
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          background: warningBadge.color,
+          color: "white",
+          padding: "4px 12px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "700"
+        }}>
+          {warningBadge.text}
+        </div>
       )}
-      <br />
-      <button onClick={() => onEdit(cert.id)}>✏ Edit</button>
-      <button onClick={() => onDelete(cert.id)}>🗑 Delete</button>
+
+      <div style={{ paddingRight: warningBadge ? "120px" : "0" }}>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          marginBottom: "8px"
+        }}>
+          <span style={{ fontSize: "24px" }}>📜</span>
+          <h3 style={{
+            margin: 0,
+            fontSize: "18px",
+            color: "#333"
+          }}>
+            {cert.name}
+          </h3>
+        </div>
+
+        <div style={{
+          display: "inline-block",
+          background: "#e3f2fd",
+          color: "#1976d2",
+          padding: "4px 10px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "600",
+          marginBottom: "12px"
+        }}>
+          {cert.category}
+        </div>
+
+        <div style={{ marginBottom: "8px" }}>
+          <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
+            <strong style={{ color: "#333" }}>Issuer:</strong> {cert.issuer}
+          </div>
+          <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
+            <strong style={{ color: "#333" }}>Earned:</strong>{" "}
+            {new Date(cert.date_earned).toLocaleDateString()}
+          </div>
+          <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
+            <strong style={{ color: "#333" }}>Expires:</strong>{" "}
+            {cert.does_not_expire
+              ? "Does not expire"
+              : expDate
+              ? new Date(cert.expiration_date).toLocaleDateString()
+              : "-"}
+          </div>
+          {cert.cert_id && (
+            <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
+              <strong style={{ color: "#333" }}>Cert #:</strong> {cert.cert_id}
+            </div>
+          )}
+        </div>
+
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          marginBottom: "12px",
+          paddingTop: "8px",
+          borderTop: "1px solid #eee"
+        }}>
+          <div style={{ fontSize: "13px" }}>
+            <strong style={{ color: "#333" }}>Verified:</strong>{" "}
+            <span style={{
+              color: cert.verified ? "#34c759" : "#ff3b30",
+              fontWeight: "600"
+            }}>
+              {cert.verified ? "✅ Yes" : "❌ No"}
+            </span>
+          </div>
+
+          {cert.has_document && (
+            <button
+              onClick={handleDownload}
+              style={{
+                padding: "4px 12px",
+                background: "#2196f3",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: "600"
+              }}
+            >
+              📄 Download
+            </button>
+          )}
+        </div>
+
+        <div style={{
+          display: "flex",
+          gap: "10px",
+          paddingTop: "8px",
+          borderTop: "1px solid #eee"
+        }}>
+          <button
+            onClick={() => onEdit(cert)}
+            style={{
+              padding: "8px 16px",
+              background: "#34c759",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600"
+            }}
+          >
+            ✏️ Edit
+          </button>
+          <button
+            onClick={() => onDelete(cert.id)}
+            style={{
+              padding: "8px 16px",
+              background: "#ff3b30",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600"
+            }}
+          >
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

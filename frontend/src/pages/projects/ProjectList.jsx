@@ -46,16 +46,28 @@ export default function ProjectsList() {
   const [industrySearch, setIndustrySearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sort, setSort] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editProject, setEditProject] = useState(null);
 
   const addProject = (formData) => {
-    // For demo, just append a new project with an ID
-    const newProject = { id: Date.now(), ...formData };
+    const newProject = { id: Date.now(), ...Object.fromEntries(formData.entries()) };
     setProjects([...projects, newProject]);
+    setShowForm(false);
+    alert("✅ Project added successfully!");
+  };
+
+  const submitEdit = (formData) => {
+    const updatedProject = { ...editProject, ...Object.fromEntries(formData.entries()) };
+    setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+    setEditProject(null);
+    setShowForm(false);
+    alert("✅ Project updated successfully!");
   };
 
   const deleteProject = (id) => {
     if (!window.confirm("Delete this project?")) return;
     setProjects(projects.filter((p) => p.id !== id));
+    alert("✅ Project deleted successfully!");
   };
 
   const filteredProjects = projects
@@ -65,7 +77,7 @@ export default function ProjectsList() {
         p.name?.toLowerCase().includes(s) ||
         p.role?.toLowerCase().includes(s) ||
         p.description?.toLowerCase().includes(s) ||
-        p.technologies?.some((t) => t.toLowerCase().includes(s))
+        (Array.isArray(p.technologies) && p.technologies.some((t) => t.toLowerCase().includes(s)))
       );
     })
     .filter((p) =>
@@ -81,33 +93,160 @@ export default function ProjectsList() {
     });
 
   return (
-    <div>
-      <h2>Special Projects</h2>
-      <ProjectForm addProject={addProject} />
-
-      <div style={{ display: "flex", gap: "10px", margin: "12px 0", flexWrap: "wrap" }}>
-        <input placeholder="Search projects..." value={search} onChange={(e) => setSearch(e.target.value)} />
-        <input placeholder="Search by Industry..." value={industrySearch} onChange={(e) => setIndustrySearch(e.target.value)} />
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">All Status</option>
-          <option>Planned</option>
-          <option>Ongoing</option>
-          <option>Completed</option>
-        </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="">Sort…</option>
-          <option value="date_desc">Newest</option>
-          <option value="date_asc">Oldest</option>
-        </select>
-        <button onClick={() => window.print()}>🖨 Print</button>
+    <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "20px"
+      }}>
+        <h1 style={{ margin: 0, color: "#333" }}>🚀 Special Projects</h1>
+        <button
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditProject(null);
+          }}
+          style={{
+            padding: "12px 24px",
+            background: "#4f8ef7",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px"
+          }}
+        >
+          {showForm ? "← Cancel" : "+ Add Project"}
+        </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px,1fr))", gap: "16px" }}>
-        {filteredProjects.length === 0 && <p>No projects found.</p>}
-        {filteredProjects.map((p) => (
-          <ProjectCard key={p.id} project={p} deleteProject={deleteProject} />
-        ))}
+      {showForm && (
+        <ProjectForm
+          addProject={addProject}
+          editProject={editProject ? { ...editProject, submit: submitEdit } : null}
+          cancelEdit={() => {
+            setEditProject(null);
+            setShowForm(false);
+          }}
+        />
+      )}
+
+      <div style={{
+        background: "#f9f9f9",
+        padding: "16px",
+        borderRadius: "8px",
+        marginBottom: "20px"
+      }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
+          gap: "12px",
+          alignItems: "center"
+        }}>
+          <input
+            placeholder="🔍 Search projects..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "14px"
+            }}
+          />
+          <input
+            placeholder="Industry..."
+            value={industrySearch}
+            onChange={(e) => setIndustrySearch(e.target.value)}
+            style={{
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "14px"
+            }}
+          />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "14px"
+            }}
+          >
+            <option value="">All Status</option>
+            <option value="Planned">Planned</option>
+            <option value="Ongoing">Ongoing</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            style={{
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "14px"
+            }}
+          >
+            <option value="">Sort By...</option>
+            <option value="date_desc">Newest First</option>
+            <option value="date_asc">Oldest First</option>
+          </select>
+          <button
+            onClick={() => window.print()}
+            style={{
+              padding: "10px 16px",
+              background: "#666",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600"
+            }}
+          >
+            🖨️ Print
+          </button>
+        </div>
       </div>
+
+      {filteredProjects.length === 0 ? (
+        <div style={{
+          background: "#f9f9f9",
+          padding: "40px",
+          borderRadius: "8px",
+          textAlign: "center",
+          color: "#999"
+        }}>
+          <p style={{ fontSize: "16px" }}>
+            {search || industrySearch || statusFilter
+              ? "No projects match your filters"
+              : "No projects yet. Add your first one!"}
+          </p>
+        </div>
+      ) : (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+          gap: "16px"
+        }}>
+          {filteredProjects.map((p) => (
+            <ProjectCard
+              key={p.id}
+              project={p}
+              deleteProject={deleteProject}
+              onEdit={(id) => {
+                const proj = projects.find(p => p.id === id);
+                setEditProject(proj);
+                setShowForm(true);
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

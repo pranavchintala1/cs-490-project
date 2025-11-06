@@ -1,63 +1,338 @@
 import { useState } from "react";
-import EmploymentEdit from "./EmploymentEdit";
+import EmploymentForm from "./EmploymentForm";
 
-export default function EmploymentList({ items = [], onUpdate, onDelete }) {
-  const [editingId, setEditingId] = useState(null);
-  const [deleting, setDeleting] = useState(null);
-
-  if (!items.length) return <div>No employment entries yet.</div>;
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this employment entry?")) return;
-    setDeleting(id);
-    try {
-      await onDelete?.(id);
-    } finally {
-      setDeleting(null);
+export default function EmploymentList() {
+  const [items, setItems] = useState([
+    {
+      id: "1",
+      title: "Senior Software Engineer",
+      company: "Tech Solutions Inc.",
+      location: "San Francisco, CA",
+      start_date: "2022-03-15",
+      end_date: null,
+      description: "Led development of cloud-based solutions using React and Node.js. Managed team of 5 developers and improved application performance by 40%."
+    },
+    {
+      id: "2",
+      title: "Software Developer",
+      company: "Digital Innovations",
+      location: "Remote",
+      start_date: "2020-06-01",
+      end_date: "2022-02-28",
+      description: "Developed and maintained web applications. Collaborated with cross-functional teams to deliver high-quality software products."
+    },
+    {
+      id: "3",
+      title: "Junior Developer",
+      company: "StartUp Co.",
+      location: "New York, NY",
+      start_date: "2018-09-01",
+      end_date: "2020-05-15",
+      description: "Assisted in building frontend features and fixing bugs. Participated in code reviews and agile development processes."
     }
+  ]);
+
+  const [editEntry, setEditEntry] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+
+  const onUpdate = (id, patch) => {
+    setItems(items.map(it => it.id === id ? { ...it, ...patch } : it));
+  };
+
+  const onDelete = (id) => {
+    if (!window.confirm("Delete this employment entry?")) return;
+    setItems(items.filter(it => it.id !== id));
+    alert("✅ Employment deleted successfully!");
+  };
+
+  const onAdded = (data) => {
+    if (data.id) {
+      // Update existing
+      onUpdate(data.id, data);
+      alert("✅ Employment updated successfully!");
+    } else {
+      // Add new
+      const newEntry = { ...data, id: String(Date.now()) };
+      setItems([newEntry, ...items]);
+      alert("✅ Employment added successfully!");
+    }
+    setShowForm(false);
+    setEditEntry(null);
+  };
+
+  // Sort by start date descending (most recent first)
+  const sortedItems = [...items].sort((a, b) => {
+    if (!a.end_date && b.end_date) return -1; // Current positions first
+    if (a.end_date && !b.end_date) return 1;
+    return new Date(b.start_date) - new Date(a.start_date);
+  });
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "Present";
+    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  };
+
+  const calculateDuration = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date();
+    const months = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+    
+    if (years === 0) return `${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}`;
+    if (remainingMonths === 0) return `${years} year${years !== 1 ? 's' : ''}`;
+    return `${years} year${years !== 1 ? 's' : ''}, ${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}`;
   };
 
   return (
-    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-      {items.map((it) => {
-        const itemId = it.id || it._id;
-        return (
-          <li key={itemId} style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
-            {editingId === itemId ? (
-              <EmploymentEdit
-                item={it}
-                onCancel={() => setEditingId(null)}
-                onSave={async (patch) => {
-                  await onUpdate?.(itemId, patch);
-                  setEditingId(null);
-                }}
-              />
-            ) : (
-              <>
-                <div>
-                  <b>{it.title}</b>
-                  {it.company ? ` — ${it.company}` : ""}
-                </div>
+    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "20px"
+      }}>
+        <h1 style={{ margin: 0, color: "#333" }}>💼 Employment History</h1>
+        <button
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditEntry(null);
+          }}
+          style={{
+            padding: "12px 24px",
+            background: "#4f8ef7",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px"
+          }}
+        >
+          {showForm ? "← Cancel" : "+ Add Employment"}
+        </button>
+      </div>
 
-                <div style={{ fontSize: 13, color: "#555" }}>
-                  {it.location || ""}
-                  {it.start_date ? ` • ${it.start_date}` : ""}
-                  {` • ${it.end_date || "Present"}`}
-                </div>
+      {showForm && (
+        <EmploymentForm
+          onAdded={onAdded}
+          editEntry={editEntry}
+          cancelEdit={() => {
+            setEditEntry(null);
+            setShowForm(false);
+          }}
+        />
+      )}
 
-                {it.description && <div style={{ marginTop: 6 }}>{it.description}</div>}
+      {sortedItems.length === 0 ? (
+        <div style={{
+          background: "#f9f9f9",
+          padding: "40px",
+          borderRadius: "8px",
+          textAlign: "center",
+          color: "#999"
+        }}>
+          <p style={{ fontSize: "16px" }}>No employment entries yet. Add your first one!</p>
+        </div>
+      ) : (
+        <div style={{ position: "relative", marginTop: "40px" }}>
+          {/* Timeline vertical line */}
+          <div
+            style={{
+              position: "absolute",
+              left: "30px",
+              top: "8px",
+              bottom: 0,
+              width: "3px",
+              background: "linear-gradient(to bottom, #4f8ef7, #e0e0e0)",
+              zIndex: 0,
+            }}
+          />
 
-                <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                  <button onClick={() => setEditingId(itemId)}>Edit</button>
-                  <button onClick={() => handleDelete(itemId)} disabled={deleting === itemId}>
-                    {deleting === itemId ? "Deleting…" : "Delete"}
-                  </button>
-                </div>
-              </>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            {sortedItems.map((it) => {
+              const isCurrent = !it.end_date;
+              return (
+                <li key={it.id} style={{ marginBottom: "30px", position: "relative", zIndex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "flex-start" }}>
+                    {/* Timeline dot */}
+                    <div style={{
+                      width: "60px",
+                      display: "flex",
+                      justifyContent: "center",
+                      flexShrink: 0
+                    }}>
+                      <div
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "50%",
+                          backgroundColor: isCurrent ? "#4f8ef7" : "#4caf50",
+                          border: "3px solid white",
+                          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                          marginTop: "6px",
+                        }}
+                      />
+                    </div>
+
+                    {/* Date range */}
+                    <div
+                      style={{
+                        width: "140px",
+                        textAlign: "right",
+                        marginRight: "20px",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        marginTop: "6px",
+                        color: "#666",
+                        flexShrink: 0
+                      }}
+                    >
+                      <div>{formatDate(it.start_date)}</div>
+                      <div style={{ margin: "4px 0", color: "#999" }}>—</div>
+                      <div style={{ color: isCurrent ? "#4f8ef7" : "#666" }}>
+                        {formatDate(it.end_date)}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#999", marginTop: "4px" }}>
+                        ({calculateDuration(it.start_date, it.end_date)})
+                      </div>
+                    </div>
+
+                    {/* Content card */}
+                    <div
+                      style={{
+                        border: "2px solid #ddd",
+                        borderRadius: "8px",
+                        padding: "16px",
+                        background: isCurrent
+                          ? "linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%)"
+                          : "white",
+                        flex: 1,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        borderLeft: `4px solid ${isCurrent ? "#4f8ef7" : "#4caf50"}`
+                      }}
+                    >
+                      <div style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "start",
+                        marginBottom: "8px"
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{
+                            margin: 0,
+                            fontSize: "18px",
+                            color: "#333",
+                            marginBottom: "4px"
+                          }}>
+                            {it.title}
+                          </h3>
+                          {it.company && (
+                            <p style={{
+                              margin: "4px 0",
+                              fontSize: "15px",
+                              fontWeight: "600",
+                              color: "#4f8ef7"
+                            }}>
+                              {it.company}
+                            </p>
+                          )}
+                          {it.location && (
+                            <p style={{
+                              margin: "4px 0",
+                              fontSize: "14px",
+                              color: "#666"
+                            }}>
+                              📍 {it.location}
+                            </p>
+                          )}
+                        </div>
+
+                        {isCurrent && (
+                          <span style={{
+                            background: "#4f8ef7",
+                            color: "white",
+                            padding: "4px 12px",
+                            borderRadius: "12px",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            whiteSpace: "nowrap",
+                            marginLeft: "12px"
+                          }}>
+                            Current
+                          </span>
+                        )}
+                      </div>
+
+                      {it.description && (
+                        <div style={{
+                          marginTop: "12px",
+                          padding: "12px",
+                          background: "#f9f9f9",
+                          borderRadius: "6px",
+                          borderLeft: "3px solid #e0e0e0"
+                        }}>
+                          <p style={{
+                            margin: 0,
+                            color: "#555",
+                            fontSize: "13px",
+                            lineHeight: "1.6",
+                            whiteSpace: "pre-wrap"
+                          }}>
+                            {it.description}
+                          </p>
+                        </div>
+                      )}
+
+                      <div style={{
+                        display: "flex",
+                        gap: "10px",
+                        marginTop: "16px",
+                        paddingTop: "12px",
+                        borderTop: "1px solid #eee"
+                      }}>
+                        <button
+                          onClick={() => {
+                            setEditEntry(it);
+                            setShowForm(true);
+                          }}
+                          style={{
+                            padding: "8px 16px",
+                            background: "#34c759",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "13px",
+                            fontWeight: "600"
+                          }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          onClick={() => onDelete(it.id)}
+                          style={{
+                            padding: "8px 16px",
+                            background: "#ff3b30",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "13px",
+                            fontWeight: "600"
+                          }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
