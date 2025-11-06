@@ -61,30 +61,23 @@ const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual a
   const apidata = await apiRequest(endpoint);
 
   function transformData(data, titleKey = "title") {
-  return data.map(obj => {
-    // Remove key-value pairs where the value is null or undefined
-    const cleaned = Object.fromEntries(
-      Object.entries(obj).filter(([_, value]) => value != null)
-    );
+    console.log(typeof data);
+    console.log(data);
+    return data.map(obj => {
+      const cleaned = Object.fromEntries(
+        Object.entries(obj).filter(([_, value]) => value != null)
+      );
+      if (Object.keys(cleaned).length === 0) return [];
 
-    // If the cleaned object has no keys, return an empty list
-    if (Object.keys(cleaned).length === 0) {
-      return [];
-    }
+      const title = cleaned[titleKey] ?? "(no title)";
+      const otherValues = Object.entries(cleaned)
+        .filter(([key]) => key !== titleKey)
+        .map(([_, value]) => value);
 
-    const title = cleaned[titleKey] ?? "(no title)";
-    const otherValues = Object.entries(cleaned)
-      .filter(([key]) => key !== titleKey)
-      .map(([_, value]) => value);
-
-    // If no other values remain, return an empty list
-    if (otherValues.length === 0 && !cleaned[titleKey]) {
-      return [];
-    }
-
-    return [title, otherValues];
-  }).filter(item => item.length > 0); // Remove any empty results
-}
+      if (otherValues.length === 0 && !cleaned[titleKey]) return [];
+      return [title, otherValues];
+    }).filter(item => item.length > 0);
+  }
 
   const formatted=transformData(apidata,name)
   
