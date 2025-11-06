@@ -20,8 +20,8 @@ const Nav = () => {
         return;
     }
     
-    localStorage.removeItem("session")
-    localStorage.removeItem("uuid")
+    localStorage.removeItem("session") //BUG shouldn't this be cleared regardless? 
+    localStorage.removeItem("uuid")//why would we ever have a logout error where it forces you to stay logged in
     showFlash("Successfully Logged out","success");
     navigate("/") // Home link, maybe change later idk.
     return;
@@ -37,6 +37,7 @@ const Nav = () => {
         
 
         {token ? ( // Shows login and register when person is not logged in, and profile and logout when they are.
+        // BUG never actually checks token against server, user will see "logged in" nav even if token is expired or invalid
         <>
 
         <li>
@@ -46,7 +47,7 @@ const Nav = () => {
           <NavLink to="/profile">Profile</NavLink>
         </li>
         <li>
-          <NavLink to="/employment">Employment</NavLink>
+          <NavLink to="/employment-history">Employment</NavLink>
         </li> 
         <li>
           <NavLink to="/skills">Skills</NavLink>

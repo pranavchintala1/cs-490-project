@@ -5,84 +5,93 @@ import BarChart from '../components/BarChart';
 import { apiRequest } from "../api";
 import CareerTimeline from '../components/Timeline';
 
-// const fetchDataFromAPI = async (endpoint, headerKey) => {
-//   const apidata = await apiRequest(endpoint);
+const fetchDataFromAPI = async (endpoint, headerKey) => {
+  const apidata = await apiRequest(endpoint,`?uuid=${localStorage.getItem("uuid")}`);
+  console.log("API response data:", apidata);
 
-//   function transformData(data, titleKey = "title") {
-//     return data.map(obj => {
-//       const cleaned = Object.fromEntries(
-//         Object.entries(obj).filter(([_, value]) => value != null)
-//       );
-//       if (Object.keys(cleaned).length === 0) return [];
+  function transformData(data, titleKey = "title") {
+    const arr = Array.isArray(data)
+    ? data
+    : (data && typeof data === "object")
+      ? [data]
+      : [];
 
-//       const title = cleaned[titleKey] ?? "(no title)";
-//       const otherValues = Object.entries(cleaned)
-//         .filter(([key]) => key !== titleKey)
-//         .map(([_, value]) => value);
+    console.log("ARR response data:", arr);
+    return arr.map(obj => {
+      const cleaned = Object.fromEntries(
+        Object.entries(obj).filter(([_, value]) => value != null)
+      );
+      if (Object.keys(cleaned).length === 0) return [];
 
-//       if (otherValues.length === 0 && !cleaned[titleKey]) return [];
-//       return [title, otherValues];
-//     }).filter(item => item.length > 0);
-//   }
+      const title = cleaned[titleKey] ?? "(no title)";
+      const otherValues = Object.entries(cleaned)
+        .filter(([key]) => key !== titleKey)
+        .map(([_, value]) => value);
 
-//   const formatted = transformData(apidata, headerKey);
-//   return formatted;
-// };
+      if (otherValues.length === 0 && !cleaned[titleKey]) return [];
+      return [title, otherValues];
+    }).filter(item => item.length > 0);
+  }
 
-
-
-
-//////////////////////DEPRECATED
-const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual api and enpoints
-  // // Simulate network delay
-  // await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 500));
-  
-  // // Generate mock data based on endpoint
-  const mockData = {
-    'api/users/me': [
-      ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
-      ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
-      ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
-    ],
-    'api/employment/me': [
-      ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-      ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-      ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-    ],
-    'api/skills/me': [
-      ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
-      ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
-      ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
-    ],
-    'api/education/me': [
-      ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-      ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-      ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-    ],
-    'api/projects/me': [
-      ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
-      ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
-      ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
-    ]
-
-  // // const mockData = {
-  // //   'api/users/me': [],
-  // //   'api/employment/me': [
-  // //     ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-  // //     ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-  // //     ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-  // //   ],
-  // //   'api/skills/me': [],
-  // //   'api/education/me': [
-  // //     ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-  // //     ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-  // //     ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-  // //   ],
-  // //   'api/projects/me': []
-  };
-  
-  return mockData[endpoint] || [];
+  const formatted = transformData(apidata, headerKey);
+  console.log("Formatted response data:", formatted);
+  return formatted;
 };
+
+
+
+
+// //////////////////////DEPRECATED
+// const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual api and enpoints
+//   // // Simulate network delay
+//   // await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 500));
+  
+//   // // Generate mock data based on endpoint
+//   const mockData = {
+//     'api/users/me': [
+//       ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
+//       ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
+//       ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
+//     ],
+//     'api/employment/me': [
+//       ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
+//       ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
+//       ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
+//     ],
+//     'api/skills/me': [
+//       ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
+//       ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
+//       ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
+//     ],
+//     'api/education/me': [
+//       ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
+//       ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
+//       ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
+//     ],
+//     'api/projects/me': [
+//       ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
+//       ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
+//       ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
+//     ]
+
+//   // // const mockData = {
+//   // //   'api/users/me': [],
+//   // //   'api/employment/me': [
+//   // //     ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
+//   // //     ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
+//   // //     ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
+//   // //   ],
+//   // //   'api/skills/me': [],
+//   // //   'api/education/me': [
+//   // //     ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
+//   // //     ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
+//   // //     ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
+//   // //   ],
+//   // //   'api/projects/me': []
+//   };
+  
+//   return mockData[endpoint] || [];
+// };
 //////////////////////DEPRECATED
 
 
@@ -259,49 +268,172 @@ const Dashboard = () => {
               gap: '20px',
             }}
           >
-            {['Profile', 'Employment History', 'Skills', 'Education', 'Projects', 'Certifications'].map((title, i) => (
-              <div
-                key={i}
-                style={{
-                  backgroundColor: '#F9FAFC',
-                  padding: '18px',
-                  borderRadius: '12px',
-                  border: '1px solid #D1D5DB',
-                  boxSizing: 'border-box',
-                  height: '400px', // fixed height for each box
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                <a 
-                  href={`/${title.toLowerCase().replace(/\s+/g, '-')}`}
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    color: '#003366', // Primary Blue
-                    marginBottom: '12px',
-                    textAlign: 'center',
-                    textDecoration: 'none',
-                    display: 'block',
-                    cursor: 'pointer'
-                  }}
-                  onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
-                  onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
-                >
-                  {title}
-                </a>
+            {['Profile', 'Employment History', 'Skills', 'Education', 'Projects', 'Certifications'].map((title, i) => {
+              // Helper function to calculate data completeness
+              // Customize this function based on your specific requirements
+              const getCompletenessStatus = (cardData) => {
+                // No data = Red (incomplete)
+                if (!cardData || cardData.length === 0) {
+                  return 'incomplete';
+                }
+                
+                // Calculate completeness score based on data richness
+                // Currently checking if items have non-empty values
+                const totalItems = cardData.length;
+                const itemsWithContent = cardData.filter(([_, values]) => 
+                  values && values.length > 0 && values.some(v => v && v.trim() !== '')
+                ).length;
+                
+                const completenessRatio = itemsWithContent / totalItems;
+                
+                // Thresholds (customize as needed):
+                // >= 80% = Green (complete/good)
+                // >= 40% = Yellow (partial/could be improved)
+                // < 40% = Red (incomplete)
+                if (completenessRatio >= 0.8) {
+                  return 'complete';
+                } else if (completenessRatio >= 0.4) {
+                  return 'partial';
+                } else {
+                  return 'incomplete';
+                }
+              };
+              
+              // Map card index to data
+              const cardDataMap = [
+                data.profile,
+                data.employmentHistory,
+                data.skills,
+                data.education,
+                data.projects,
+                null // Certifications - not yet in data object
+              ];
+              
+              const status = getCompletenessStatus(cardDataMap[i]);
+              
+              // Status color mapping
+              const statusColors = {
+                'complete': '#10B981',   // Green
+                'partial': '#F59E0B',    // Yellow/Amber
+                'incomplete': '#EF4444'  // Red
+              };
+              
+              const indicatorColor = statusColors[status];
+              
+              return (
                 <div
+                  key={i}
                   style={{
-                    flex: 1, // Take remaining space
-                    overflowY: 'auto',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: '#cbd5e1 transparent',
+                    backgroundColor: '#F9FAFC',
+                    padding: '18px',
+                    borderRadius: '12px',
+                    border: '1px solid #D1D5DB',
+                    boxSizing: 'border-box',
+                    height: '400px',
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}
                 >
-                  <CategoryCard index={i} />
+                  {/* Header with icon, title, and button */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '12px',
+                    }}
+                  >
+                    {/* Status indicator circle on the left */}
+                    <div
+                      title={`Status: ${status === 'complete' ? 'Complete' : status === 'partial' ? 'Could be improved' : 'Incomplete'}`}
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'help',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14">
+                        <circle 
+                          cx="7" 
+                          cy="7" 
+                          r="6" 
+                          fill={indicatorColor}
+                          stroke={indicatorColor}
+                          strokeWidth="1"
+                          opacity="0.9"
+                        >
+                          {status === 'incomplete' && (
+                            <animate
+                              attributeName="opacity"
+                              values="0.9;0.4;0.9"
+                              dur="2s"
+                              repeatCount="indefinite"
+                            />
+                          )}
+                        </circle>
+                      </svg>
+                    </div>
+
+                    {/* Title in the center */}
+                    <a 
+                      href={`/${title.toLowerCase().replace(/\s+/g, '-')}`}
+                      style={{
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        color: '#003366',
+                        textAlign: 'center',
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        flex: 1,
+                        margin: '0 10px',
+                      }}
+                      onMouseOver={(e) => e.target.style.color = '#00A67A'}
+                      onMouseOut={(e) => e.target.style.color = '#003366'}
+                    >
+                      {title}
+                    </a>
+
+                    {/* Button on the right */}
+                    <a
+                      href={`/${title.toLowerCase().replace(/\s+/g, '-')}`}
+                      style={{
+                        backgroundColor: '#003366',
+                        color: '#FFFFFF',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s',
+                        display: 'inline-block',
+                      }}
+                      onMouseOver={(e) => e.target.style.backgroundColor = '#00A67A'}
+                      onMouseOut={(e) => e.target.style.backgroundColor = '#003366'}
+                    >
+                      View
+                    </a>
+                  </div>
+
+                  {/* Card content */}
+                  <div
+                    style={{
+                      flex: 1,
+                      overflowY: 'auto',
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: '#cbd5e1 transparent',
+                    }}
+                  >
+                    <CategoryCard data={cardDataMap[i]} />
+
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Right side: 2 stacked sticky boxes */}
