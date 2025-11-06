@@ -48,7 +48,7 @@ class Education(BaseModel):
     gpa_private: Optional[bool] = False
     education_level: Optional[str] = None
     achievements: Optional[str] = None
-    position: Optional[str] = None
+    position: Optional[int] = None
 
 class Project(BaseModel):
     project_name: Optional[str] = None # NOTE: required for creation
