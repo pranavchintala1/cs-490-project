@@ -24,18 +24,17 @@ export default function ProjectsList() {
       
       const transformedProjects = (data || []).map(project => ({
         id: project._id,
-        name: project.name,
-        status: project.status,
-        industry: project.industry,
+        project_name: project.project_name,
+        description: project.description,
         role: project.role,
         start_date: project.start_date,
         end_date: project.end_date,
-        description: project.description,
-        technologies: project.technologies,
-        project_url: project.project_url,
+        skills: project.skills || [],
         team_size: project.team_size,
+        details: project.details,
         achievements: project.achievements,
-        media_files: project.media_files || []
+        industry: project.industry,
+        status: project.status
       }));
       
       setProjects(transformedProjects);
@@ -47,10 +46,8 @@ export default function ProjectsList() {
     }
   };
 
-  const addProject = async (formData) => {
+  const addProject = async (projectData) => {
     try {
-      const projectData = Object.fromEntries(formData.entries());
-      
       const response = await apiRequest("/api/projects?uuid=", "", {
         method: "POST",
         body: JSON.stringify(projectData)
@@ -67,10 +64,8 @@ export default function ProjectsList() {
     }
   };
 
-  const submitEdit = async (formData) => {
+  const submitEdit = async (projectData) => {
     try {
-      const projectData = Object.fromEntries(formData.entries());
-      
       await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
         method: "PUT",
         body: JSON.stringify(projectData)
@@ -105,10 +100,11 @@ export default function ProjectsList() {
     .filter((p) => {
       const s = search.toLowerCase();
       return (
-        p.name?.toLowerCase().includes(s) ||
+        p.project_name?.toLowerCase().includes(s) ||
         p.role?.toLowerCase().includes(s) ||
         p.description?.toLowerCase().includes(s) ||
-        (Array.isArray(p.technologies) && p.technologies.some((t) => t.toLowerCase().includes(s)))
+        p.details?.toLowerCase().includes(s) ||
+        (Array.isArray(p.skills) && p.skills.some((t) => t.toLowerCase().includes(s)))
       );
     })
     .filter((p) =>
