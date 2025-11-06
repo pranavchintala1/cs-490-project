@@ -19,6 +19,8 @@ async def add_cert(cert: Certification, uuid: str = Depends(authorize)):
         result = await certifications_dao.add_certification(model)
     except DuplicateKeyError:
         raise HTTPException(400, "Certification already exists") # FIXME: redundant since keys are generated uniquely?
+    except HTTPException as http:
+        raise http
     except Exception as e:
         raise HTTPException(500, "Encountered internal server error")
     
