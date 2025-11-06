@@ -1,58 +1,233 @@
 import React, { useState, useEffect } from 'react';
 import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
+import { apiRequest } from "../api";
 
-// Dashboard component with local dummy data only
+// Simulate API calls to a generic database
+const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual api and enpoints
+  // // Simulate network delay
+  // await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 500));
+  
+  // // Generate mock data based on endpoint
+  const mockData = {
+    'api/users/me': [
+      ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
+      ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
+      ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
+    ],
+    'api/employment/me': [
+      ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
+      ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
+      ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
+    ],
+    'api/skills/me': [
+      ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
+      ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
+      ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
+    ],
+    'api/education/me': [
+      ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
+      ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
+      ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
+    ],
+    'api/projects/me': [
+      ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
+      ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
+      ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
+    ]
+
+  // // const mockData = {
+  // //   'api/users/me': [],
+  // //   'api/employment/me': [
+  // //     ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
+  // //     ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
+  // //     ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
+  // //   ],
+  // //   'api/skills/me': [],
+  // //   'api/education/me': [
+  // //     ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
+  // //     ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
+  // //     ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
+  // //   ],
+  // //   'api/projects/me': []
+  };
+  
+  return mockData[endpoint] || [];
+
+
+
+  ///////COMMENT BREAK COMMENT BREAK
+
+  const apidata = await apiRequest(endpoint);
+
+  function transformData(data, titleKey = "title") {
+  return data.map(obj => {
+    // Remove key-value pairs where the value is null or undefined
+    const cleaned = Object.fromEntries(
+      Object.entries(obj).filter(([_, value]) => value != null)
+    );
+
+    // If the cleaned object has no keys, return an empty list
+    if (Object.keys(cleaned).length === 0) {
+      return [];
+    }
+
+    const title = cleaned[titleKey] ?? "(no title)";
+    const otherValues = Object.entries(cleaned)
+      .filter(([key]) => key !== titleKey)
+      .map(([_, value]) => value);
+
+    // If no other values remain, return an empty list
+    if (otherValues.length === 0 && !cleaned[titleKey]) {
+      return [];
+    }
+
+    return [title, otherValues];
+  }).filter(item => item.length > 0); // Remove any empty results
+}
+
+  const formatted=transformData(apidata,name)
+  
+  return formatted;
+
+};
+
+// Dashboard component
 const Dashboard = () => {
   const [data, setData] = useState({
-    profile: [],
-    employmentHistory: [],
-    skills: [],
-    education: [],
-    projects: []
+    profile: null,
+    employmentHistory: null,
+    skills: null,
+    education: null,
+    projects: null
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Dummy data for dashboard
-    const dummyData = {
-      profile: [
-        ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
-        ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
-        ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
-      ],
-      employmentHistory: [
-        ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-        ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-        ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-      ],
-      skills: [
-        ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
-        ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
-        ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
-      ],
-      education: [
-        ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-        ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-        ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-      ],
-      projects: [
-        ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
-        ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
-        ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
-      ]
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+        
+        // Make 5 parallel API requests
+        const [profileData, employmentData, skillsData, educationData, projectsData] = await Promise.all([
+          fetchDataFromAPI('/api/users/me',"username"),
+          fetchDataFromAPI('/api/employment/me',"title"),
+          fetchDataFromAPI('/api/skills/me',"name"),
+          fetchDataFromAPI('/api/education/me',"institution_name"),
+          fetchDataFromAPI('/api/projects/me',"project-name")
+        ]);
+
+        // Store results in state
+        setData({
+          profile: profileData,
+          employmentHistory: employmentData,
+          skills: skillsData,
+          education: educationData,
+          projects: projectsData
+        });
+      } catch (err) {
+        setError('Failed to fetch data');
+        console.error('API Error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setData(dummyData);
+    fetchAllData();
   }, []);
 
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(90deg, #003366, #00A67A)', // Emerald Gradient
+        padding: '20px'
+      }}>
+        <div style={{ width: '100%' }}>
+          <h1 style={{
+            fontSize: '36px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            color: '#FFFFFF', // White text on gradient
+            marginBottom: '40px'
+          }}>
+            Dashboard
+          </h1>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '200px',
+            flexDirection: 'column'
+          }}>
+            <div style={{
+              fontSize: '24px',
+              marginBottom: '10px'
+            }}>⏳</div>
+            <div style={{ 
+              fontSize: '18px', 
+              color: '#FFFFFF' // White text on gradient
+            }}>
+              Loading dashboard data...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(90deg, #003366, #00A67A)', // Emerald Gradient
+        padding: '20px'
+      }}>
+        <div style={{ width: '100%' }}>
+          <h1 style={{
+            fontSize: '36px',
+            fontWeight: 'bold',
+            textAlign: 'center',
+            color: '#FFFFFF', // White text on gradient
+            marginBottom: '40px'
+          }}>
+            Dashboard
+          </h1>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '200px'
+          }}>
+            <div style={{
+              backgroundColor: '#FFFFFF', // Surface White for error container
+              color: '#E53935', // Error Red
+              padding: '15px 20px',
+              borderRadius: '8px',
+              border: '1px solid #E53935', // Error Red border
+              fontSize: '18px'
+            }}>
+              ⚠️ {error}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#001E3C', padding: '20px' }}>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#001E3C', // Deep Navy for main background
+      padding: '20px'
+    }}>
       <div style={{ width: '100%' }}>
         <h1 style={{
           fontSize: '36px',
           fontWeight: 'bold',
           textAlign: 'center',
-          color: '#FFFFFF',
+          color: '#FFFFFF', // White text on dark background
           marginBottom: '40px'
         }}>
           Dashboard
@@ -65,43 +240,147 @@ const Dashboard = () => {
           width: '100%',
           justifyContent: 'flex-start'
         }}>
-          {[
-            { title: "Profile", dataKey: "profile", link: "/profile" },
-            { title: "Employment History", dataKey: "employmentHistory", link: "/employment-history" },
-            { title: "Skills", dataKey: "skills", link: "/skills" },
-            { title: "Education", dataKey: "education", link: "/education" },
-            { title: "Projects", dataKey: "projects", link: "/projects" }
-          ].map(section => (
-            <div key={section.title} style={{
-              backgroundColor: '#F9FAFC',
-              padding: '18px',
-              borderRadius: '12px',
-              border: '1px solid #D1D5DB',
-              flex: '1 1 calc(33.333% - 14px)',
-              minWidth: '300px'
-            }}>
-              <a 
-                href={section.link}
-                style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: '#003366',
-                  marginBottom: '12px',
-                  textAlign: 'center',
-                  textDecoration: 'none',
-                  display: 'block',
-                  cursor: 'pointer'
-                }}
-                onMouseOver={(e) => e.target.style.color = '#00A67A'}
-                onMouseOut={(e) => e.target.style.color = '#003366'}
-              >
-                {section.title}
-              </a>
-              <CategoryCard data={data[section.dataKey]} />
-            </div>
-          ))}
+          <div style={{
+            backgroundColor: '#F9FAFC', // Background Light for section containers
+            padding: '18px', // Slightly increased padding to give cards breathing room
+            borderRadius: '12px',
+            border: '1px solid #D1D5DB',
+            flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
+            minWidth: '300px'
+          }}>
+            <a 
+              href="/profile" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
+              Profile
+            </a>
+            <CategoryCard data={data.profile} />
+          </div>
+          
+          <div style={{
+            backgroundColor: '#F9FAFC', // Background Light for section containers
+            padding: '18px', // Slightly increased padding to give cards breathing room
+            borderRadius: '12px',
+            border: '1px solid #D1D5DB',
+            flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
+            minWidth: '300px'
+          }}>
+            <a 
+              href="/employment-history" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
+              Employment History
+            </a>
+            <CategoryCard data={data.employmentHistory} />
+          </div>
+          
+          <div style={{
+            backgroundColor: '#F9FAFC', // Background Light for section containers
+            padding: '18px', // Slightly increased padding to give cards breathing room
+            borderRadius: '12px',
+            border: '1px solid #D1D5DB',
+            flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
+            minWidth: '300px'
+          }}>
+            <a 
+              href="/skills" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
+              Skills
+            </a>
+            <CategoryCard data={data.skills} />
+          </div>
+          
+          <div style={{
+            backgroundColor: '#F9FAFC', // Background Light for section containers
+            padding: '18px', // Slightly increased padding to give cards breathing room
+            borderRadius: '12px',
+            border: '1px solid #D1D5DB',
+            flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
+            minWidth: '300px'
+          }}>
+            <a 
+              href="/education" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
+              Education
+            </a>
+            <CategoryCard data={data.education} />
+          </div>
+          
+          <div style={{
+            backgroundColor: '#F9FAFC', // Background Light for section containers
+            padding: '18px', // Slightly increased padding to give cards breathing room
+            borderRadius: '12px',
+            border: '1px solid #D1D5DB',
+            flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
+            minWidth: '300px'
+          }}>
+            <a 
+              href="/projects" 
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
+              Projects
+            </a>
+            <CategoryCard data={data.projects} />
+          </div>
         </div>
-
+        
         {/* Progress Tracker */}
         <ProgressTracker data={data} />
       </div>

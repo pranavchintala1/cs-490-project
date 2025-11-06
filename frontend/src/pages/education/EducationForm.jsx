@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
   const [institution, setInstitution] = useState("");
-  const [degree, setDegree] = useState(""); // start empty to force selection
+  const [degree, setDegree] = useState("");
   const [fieldOfStudy, setFieldOfStudy] = useState("");
   const [graduationDate, setGraduationDate] = useState("");
   const [currentlyEnrolled, setCurrentlyEnrolled] = useState(false);
@@ -44,10 +44,6 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
 
     if (!institution.trim() || !degree.trim() || !fieldOfStudy.trim()) {
       return alert("Please fill in all required fields.");
-    }
-
-    if (!degree) {
-      return alert("Please select an Education Level.");
     }
 
     if (!currentlyEnrolled && !graduationDate) {
@@ -161,18 +157,18 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
         onChange={(e) => setAchievements(e.target.value)}
       />
 
-      <button type="submit">{editEntry ? "Save" : "Add"}</button>
-      {editEntry && (
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+        <button type="submit">{editEntry ? "Save" : "Add"}</button>
         <button
           type="button"
           onClick={() => {
-            cancelEdit();
+            cancelEdit && cancelEdit();
             resetForm();
           }}
         >
           Cancel
         </button>
-      )}
+      </div>
     </form>
   );
 }
