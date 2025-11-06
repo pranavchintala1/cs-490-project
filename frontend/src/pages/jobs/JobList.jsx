@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DndContext,
   closestCenter,
@@ -11,79 +11,15 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import JobForm from "./JobForm";
 import JobPipeline from "./JobPipeline";
 import JobCard from "./JobCard";
+import { apiRequest } from "../../api";
 
 export default function JobList() {
-  const [jobs, setJobs] = useState([
-    {
-      id: "1",
-      title: "Frontend Developer",
-      company: "TechCorp",
-      location: "Remote",
-      salary: "$70k–$90k",
-      url: "https://example.com/job1",
-      deadline: "2025-12-01",
-      industry: "Technology",
-      jobType: "Full-Time",
-      description: "Work on frontend interfaces using React and modern web technologies.",
-      status: "Applied",
-      createdAt: "2025-11-01T10:00:00Z",
-      updatedAt: "2025-11-01T10:00:00Z",
-      statusHistory: [{ status: "Applied", timestamp: "2025-11-01T10:00:00Z" }],
-      notes: "Great company culture, work-life balance",
-      contacts: "Recruiter: Jane Smith - jane@techcorp.com",
-      salaryNotes: "Room for negotiation, benefits include stock options",
-      interviewNotes: "",
-    },
-    {
-      id: "2",
-      title: "UX Designer",
-      company: "Designify",
-      location: "New York, NY",
-      salary: "$80k–$100k",
-      url: "",
-      deadline: "2025-11-20",
-      industry: "Design",
-      jobType: "Full-Time",
-      description: "Design modern, user-centered interfaces for web and mobile applications.",
-      status: "Interested",
-      createdAt: "2025-11-02T14:00:00Z",
-      updatedAt: "2025-11-02T14:00:00Z",
-      statusHistory: [{ status: "Interested", timestamp: "2025-11-02T14:00:00Z" }],
-      notes: "",
-      contacts: "",
-      salaryNotes: "",
-      interviewNotes: "",
-    },
-    {
-      id: "3",
-      title: "Backend Engineer",
-      company: "DataSystems",
-      location: "San Francisco, CA",
-      salary: "$90k–$130k",
-      url: "https://example.com/job3",
-      deadline: "2025-11-10",
-      industry: "Technology",
-      jobType: "Full-Time",
-      description: "Build scalable backend systems with Python and PostgreSQL.",
-      status: "Screening",
-      createdAt: "2025-10-28T09:00:00Z",
-      updatedAt: "2025-11-03T11:00:00Z",
-      statusHistory: [
-        { status: "Interested", timestamp: "2025-10-28T09:00:00Z" },
-        { status: "Applied", timestamp: "2025-10-30T14:00:00Z" },
-        { status: "Screening", timestamp: "2025-11-03T11:00:00Z" }
-      ],
-      notes: "Fast-paced environment, exciting tech stack",
-      contacts: "HR: Mike Johnson - hr@datasystems.com",
-      salaryNotes: "",
-      interviewNotes: "Phone screen scheduled for Nov 8th at 2pm",
-    },
-  ]);
-
+  const [jobs, setJobs] = useState([]);
   const [view, setView] = useState("pipeline");
   const [editingJob, setEditingJob] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [activeId, setActiveId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,32 +33,100 @@ export default function JobList() {
   const sensors = useSensors(useSensor(PointerSensor));
   const stages = ["Interested", "Applied", "Screening", "Interview", "Offer", "Rejected"];
 
-  const addJob = (jobData) => {
-    setJobs([...jobs, jobData]);
-    setView("pipeline");
-    alert("✅ Job added successfully!");
+  useEffect(() => {
+    loadJobs();
+  }, []);
+
+  const loadJobs = async () => {
+    try {
+      setLoading(true);
+      const data = await apiRequest("/api/jobs/me?uuid=", "");
+      
+      const transformedJobs = (data || []).map(job => ({
+        id: job._id,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        salary: job.salary,
+        url: job.url,
+        deadline: job.deadline,
+        industry: job.industry,
+        jobType: job.jobType,
+        description: job.description,
+        status: job.status,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt,
+        statusHistory: job.statusHistory || [],
+        notes: job.notes,
+        contacts: job.contacts,
+        salaryNotes: job.salaryNotes,
+        interviewNotes: job.interviewNotes
+      }));
+      
+      setJobs(transformedJobs);
+    } catch (error) {
+      console.error("Failed to load jobs:", error);
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateJob = (jobData) => {
-    const oldJob = jobs.find((j) => j.id === jobData.id);
-    const statusChanged = oldJob.status !== jobData.status;
+  const addJob = async (jobData) => {
+    try {
+      const response = await apiRequest("/api/jobs?uuid=", "", {
+        method: "POST",
+        body: JSON.stringify(jobData)
+      });
 
-    const updatedStatusHistory = statusChanged
-      ? [...(jobData.statusHistory || []), { status: jobData.status, timestamp: new Date().toISOString() }]
-      : jobData.statusHistory;
-
-    setJobs(jobs.map((j) => (j.id === jobData.id ? { ...jobData, statusHistory: updatedStatusHistory } : j)));
-    setView("pipeline");
-    setEditingJob(null);
-    setSelectedJob(null);
-    alert("✅ Job updated successfully!");
+      if (response && response.job_id) {
+        const newJob = { ...jobData, id: response.job_id };
+        setJobs([...jobs, newJob]);
+      }
+      setView("pipeline");
+    } catch (error) {
+      console.error("Failed to add job:", error);
+      alert("Failed to add job. Please try again.");
+    }
   };
 
-  const deleteJob = (id) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
+  const updateJob = async (jobData) => {
+    try {
+      const oldJob = jobs.find((j) => j.id === jobData.id);
+      const statusChanged = oldJob.status !== jobData.status;
+
+      const updatedStatusHistory = statusChanged
+        ? [...(jobData.statusHistory || []), { status: jobData.status, timestamp: new Date().toISOString() }]
+        : jobData.statusHistory;
+
+      await apiRequest(`/api/jobs?job_id=${jobData.id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify({ ...jobData, statusHistory: updatedStatusHistory })
+      });
+
+      setJobs(jobs.map((j) => (j.id === jobData.id ? { ...jobData, statusHistory: updatedStatusHistory } : j)));
+      setView("pipeline");
+      setEditingJob(null);
+      setSelectedJob(null);
+    } catch (error) {
+      console.error("Failed to update job:", error);
+      alert("Failed to update job. Please try again.");
+    }
+  };
+
+  const deleteJob = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this job?")) return;
+    
+    try {
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+        method: "DELETE"
+      });
+
       setJobs(jobs.filter((j) => j.id !== id));
       setSelectedJob(null);
-      alert("✅ Job deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+      alert("Failed to delete job. Please try again.");
     }
   };
 
@@ -130,7 +134,7 @@ export default function JobList() {
     setActiveId(event.active.id);
   };
 
-  const handleDragEnd = ({ active, over }) => {
+  const handleDragEnd = async ({ active, over }) => {
     setActiveId(null);
     if (!active || !over) return;
 
@@ -155,7 +159,24 @@ export default function JobList() {
         updatedAt: new Date().toISOString(),
         statusHistory: [...activeJob.statusHistory, { status: newStatus, timestamp: new Date().toISOString() }],
       };
+      
       setJobs(jobs.map((j) => (j.id === activeJob.id ? updatedJob : j)));
+
+      // Update in backend
+      try {
+        await apiRequest(`/api/jobs?job_id=${activeJob.id}&uuid=`, "", {
+          method: "PUT",
+          body: JSON.stringify({
+            status: newStatus,
+            statusHistory: updatedJob.statusHistory,
+            updatedAt: updatedJob.updatedAt
+          })
+        });
+      } catch (error) {
+        console.error("Failed to update job status:", error);
+        // Reload jobs to ensure consistency
+        loadJobs();
+      }
     }
   };
 
@@ -223,6 +244,15 @@ export default function JobList() {
     border: "1px solid #ccc",
     fontSize: "14px",
   };
+
+  if (loading) {
+    return (
+      <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto", textAlign: "center" }}>
+        <h1 style={{ margin: 0, color: "#333" }}>Job Opportunities Tracker</h1>
+        <p>Loading jobs...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto" }}>
@@ -415,8 +445,22 @@ export default function JobList() {
               padding: "24px",
             }}
           >
-            {/* Job Detail Modal content unchanged */}
-            ...
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "20px" }}>
+              <h2 style={{ margin: 0, color: "#333" }}>{selectedJob.title}</h2>
+              <button
+                onClick={() => setSelectedJob(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  color: "#666"
+                }}
+              >
+                ×
+              </button>
+            </div>
+            {/* Add more detail content as needed */}
           </div>
         </div>
       )}

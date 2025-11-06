@@ -82,7 +82,6 @@ export default function SkillList() {
 
   const updateSkill = async (id, updatedFields) => {
     try {
-      // Fixed: Include skill_id in the endpoint, let apiRequest append uuid
       await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
         method: "PUT",
         body: JSON.stringify(updatedFields)
@@ -101,7 +100,6 @@ export default function SkillList() {
     if (!window.confirm("Remove this skill?")) return;
     
     try {
-      // Fixed: Include skill_id in the endpoint, let apiRequest append uuid
       await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
         method: "DELETE"
       });

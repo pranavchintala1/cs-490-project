@@ -25,11 +25,11 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
 
   useEffect(() => {
     if (editEntry) {
-      setInstitution(editEntry.institution);
+      setInstitution(editEntry.institution_name);
       setDegree(editEntry.degree || "");
       setFieldOfStudy(editEntry.field_of_study);
       setGraduationDate(editEntry.graduation_date || "");
-      setCurrentlyEnrolled(editEntry.currently_enrolled);
+      setCurrentlyEnrolled(editEntry.graduation_date === null || editEntry.currently_enrolled);
       setGpa(editEntry.gpa || "");
       setGpaPrivate(editEntry.gpa_private || false);
       setAchievements(editEntry.achievements || "");
@@ -54,11 +54,10 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
 
     const entryData = {
       id,
-      institution,
+      institution_name: institution,
       degree,
       field_of_study: fieldOfStudy,
       graduation_date: currentlyEnrolled ? null : graduationDate,
-      currently_enrolled: currentlyEnrolled,
       gpa: gpa || null,
       gpa_private: gpaPrivate,
       achievements: achievements || null,
