@@ -92,3 +92,9 @@ class Job(BaseModel):
     salary_notes: Optional[str] = None
     interview_notes: Optional[str] = None
     status_history: Optional[list[tuple[str, str]]] = None
+
+class CoverLetter(BaseModel):
+    category: str
+    industry: str
+    data: dict
+    
