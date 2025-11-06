@@ -3,45 +3,61 @@ import EmploymentEdit from "./EmploymentEdit";
 
 export default function EmploymentList({ items = [], onUpdate, onDelete }) {
   const [editingId, setEditingId] = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
   if (!items.length) return <div>No employment entries yet.</div>;
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this employment entry?")) return;
+    setDeleting(id);
+    try {
+      await onDelete?.(id);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   return (
     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-      {items.map((it) => (
-        <li key={it.id} style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
-          {editingId === it.id ? (
-            <EmploymentEdit
-              item={it}
-              onCancel={() => setEditingId(null)}
-              onSave={(patch) => {
-                onUpdate?.(it.id, patch);
-                setEditingId(null);
-              }}
-            />
-          ) : (
-            <>
-              <div>
-                <b>{it.title}</b>
-                {it.company ? ` — ${it.company}` : ""}
-              </div>
+      {items.map((it) => {
+        const itemId = it.id || it._id;
+        return (
+          <li key={itemId} style={{ borderBottom: "1px solid #eee", padding: "12px 0" }}>
+            {editingId === itemId ? (
+              <EmploymentEdit
+                item={it}
+                onCancel={() => setEditingId(null)}
+                onSave={async (patch) => {
+                  await onUpdate?.(itemId, patch);
+                  setEditingId(null);
+                }}
+              />
+            ) : (
+              <>
+                <div>
+                  <b>{it.title}</b>
+                  {it.company ? ` — ${it.company}` : ""}
+                </div>
 
-              <div style={{ fontSize: 13, color: "#555" }}>
-                {it.location || ""}
-                {it.start_date ? ` • ${it.start_date}` : ""}
-                {` • ${it.end_date || "Present"}`}
-              </div>
+                <div style={{ fontSize: 13, color: "#555" }}>
+                  {it.location || ""}
+                  {it.start_date ? ` • ${it.start_date}` : ""}
+                  {` • ${it.end_date || "Present"}`}
+                </div>
 
-              {it.description && <div style={{ marginTop: 6 }}>{it.description}</div>}
+                {it.description && <div style={{ marginTop: 6 }}>{it.description}</div>}
 
-              <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                <button onClick={() => setEditingId(it.id)}>Edit</button>
-                <button onClick={() => onDelete?.(it.id)}>Delete</button>
-              </div>
-            </>
-          )}
-        </li>
-      ))}
+                <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+                  <button onClick={() => setEditingId(itemId)}>Edit</button>
+                  <button onClick={() => handleDelete(itemId)} disabled={deleting === itemId}>
+                    {deleting === itemId ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
