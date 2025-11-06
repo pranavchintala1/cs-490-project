@@ -18,32 +18,37 @@ export default function EmploymentForm({ onAdded }) {
     setF((prev) => ({ ...prev, [name]: value }));
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setErr("");
     if (!f.title.trim()) return setErr("Title is required.");
     if (!f.start_date) return setErr("Start date is required.");
 
     setSaving(true);
-    onAdded?.({
-      title: f.title.trim(),
-      company: f.company || "",
-      location: f.location || "",
-      start_date: f.start_date,
-      end_date: ongoing ? null : f.end_date || "",
-      description: f.description || "",
-    });
+    try {
+      await onAdded?.({
+        title: f.title.trim(),
+        company: f.company || "",
+        location: f.location || "",
+        start_date: f.start_date,
+        end_date: ongoing ? null : f.end_date || "",
+        description: f.description || "",
+      });
 
-    setF({
-      title: "",
-      company: "",
-      location: "",
-      start_date: "",
-      end_date: "",
-      description: "",
-    });
-    setOngoing(false);
-    setSaving(false);
+      setF({
+        title: "",
+        company: "",
+        location: "",
+        start_date: "",
+        end_date: "",
+        description: "",
+      });
+      setOngoing(false);
+    } catch (e) {
+      setErr(e.message || "Failed to add employment");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
