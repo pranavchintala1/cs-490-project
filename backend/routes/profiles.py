@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, UploadFile, File, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 import gridfs
 from datetime import datetime, timezone
 
