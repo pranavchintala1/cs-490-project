@@ -16,7 +16,7 @@ const formatDate = (dateStr) => {
   return date.toLocaleDateString();
 };
 
-export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
+export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOverlay }) {
   const [expanded, setExpanded] = useState(false);
   
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
@@ -52,6 +52,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
     boxSizing: "border-box",
     marginBottom: "8px",
     cursor: "grab",
+    opacity: job.archived ? 0.6 : 1,
   };
 
   const buttonStyle = {
@@ -70,6 +71,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>
               {job.title}
+              {job.archived && <span style={{ marginLeft: "8px", fontSize: "12px", color: "#999" }}>📦 Archived</span>}
             </div>
             <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
               {job.company}
@@ -117,7 +119,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
         )}
 
         {expanded && (
-          <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #eee" }}>
+          <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #eee", color: "#000" }}>
             {job.salary && <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Salary:</strong> {job.salary}</p>}
             {job.industry && <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Industry:</strong> {job.industry}</p>}
             {job.jobType && <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Type:</strong> {job.jobType}</p>}
@@ -189,6 +191,28 @@ export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
               >
                 ✏ Edit
               </button>
+              {onArchive && !job.archived && (
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    const reason = prompt("Reason for archiving (optional):");
+                    if (reason !== null) {
+                      onArchive(job.id, reason);
+                    }
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{ 
+                    ...buttonStyle,
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    background: "#607d8b", 
+                    color: "white" 
+                  }}
+                >
+                  🗄 Archive
+                </button>
+              )}
               <button 
                 onClick={(e) => { 
                   e.stopPropagation(); 
