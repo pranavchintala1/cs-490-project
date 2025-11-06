@@ -162,7 +162,7 @@ async def verify_google_token(token: dict = Body(...)):
 
             uuid = str(uuid4())
             idinfo["username"] = idinfo["email"]
-            await auth_dao.register_user(uuid,idinfo["email"],idinfo["email"],"")
+            await auth_dao.add_user(uuid,idinfo["email"],idinfo["email"],"")
     
             await profiles_dao.add_profile(uuid, idinfo)
         
