@@ -74,42 +74,214 @@ export default function CertificationForm({ addCert, editCert, cancelEdit }) {
     cancelEdit && cancelEdit();
   };
 
+  const inputStyle = {
+    width: "100%",
+    padding: "10px",
+    marginBottom: "12px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    fontSize: "14px",
+    boxSizing: "border-box"
+  };
+
+  const labelStyle = {
+    display: "block",
+    marginBottom: "6px",
+    fontWeight: "600",
+    fontSize: "14px",
+    color: "#333"
+  };
+
+  const sectionStyle = {
+    marginBottom: "20px",
+    padding: "16px",
+    background: "#f9f9f9",
+    borderRadius: "6px"
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="cert-form">
-      <h3>{editCert ? "Edit Certification" : "Add Certification"}</h3>
-      <input placeholder="Certification Name" value={name} onChange={e => setName(e.target.value)} required />
-      <input placeholder="Issuer" value={issuer} onChange={e => setIssuer(e.target.value)} required />
-      <label>Date Earned</label>
-      <input type="date" value={dateEarned} onChange={e => setDateEarned(e.target.value)} required />
+    <div style={{
+      background: "white",
+      padding: "20px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      marginBottom: "24px"
+    }}>
+      <h2 style={{ marginTop: 0, color: "#333" }}>
+        {editCert ? "✏️ Edit Certification" : "📜 Add Certification"}
+      </h2>
 
-      {!doesNotExpire && (
-        <>
-          <label>Expiration Date</label>
-          <input type="date" value={expirationDate} onChange={e => setExpirationDate(e.target.value)} required={!doesNotExpire} />
-        </>
-      )}
-      <label>
-        <input type="checkbox" checked={doesNotExpire} onChange={e => setDoesNotExpire(e.target.checked)} />
-        Does Not Expire
-      </label>
+      <form onSubmit={handleSubmit}>
+        {/* Basic Information */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📋 Basic Information
+          </h3>
+          
+          <label style={labelStyle}>Certification Name *</label>
+          <input
+            style={inputStyle}
+            placeholder="e.g., AWS Certified Solutions Architect"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
+          />
 
-      <input placeholder="Certification Number/ID" value={certNumber} onChange={e => setCertNumber(e.target.value)} required />
-      <select value={category} onChange={e => setCategory(e.target.value)} required>
-        <option value="" disabled>Select Industry</option>
-        {categories.map(c => <option key={c} value={c}>{c}</option>)}
-      </select>
+          <label style={labelStyle}>Issuing Organization *</label>
+          <input
+            style={inputStyle}
+            placeholder="e.g., Amazon Web Services, Microsoft, Google"
+            value={issuer}
+            onChange={e => setIssuer(e.target.value)}
+            required
+          />
 
-      <label>
-        <input type="checkbox" checked={verified} onChange={e => setVerified(e.target.checked)} />
-        Verified by Reviewer
-      </label>
+          <label style={labelStyle}>Category *</label>
+          <select
+            style={inputStyle}
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            required
+          >
+            <option value="" disabled>Select Category</option>
+            {categories.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
 
-      <input ref={fileInputRef} type="file" onChange={e => setDocumentFile(e.target.files[0])} />
+          <label style={labelStyle}>Certification Number/ID *</label>
+          <input
+            style={inputStyle}
+            placeholder="e.g., AWS-12345-ABCDE"
+            value={certNumber}
+            onChange={e => setCertNumber(e.target.value)}
+            required
+          />
+        </div>
 
-      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-        <button type="submit">{editCert ? "Save" : "Add Certification"}</button>
-        <button type="button" onClick={() => { resetForm(); cancelEdit && cancelEdit(); }}>Cancel</button>
-      </div>
-    </form>
+        {/* Date Information */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📅 Date Information
+          </h3>
+
+          <label style={labelStyle}>Date Earned *</label>
+          <input
+            style={inputStyle}
+            type="date"
+            value={dateEarned}
+            onChange={e => setDateEarned(e.target.value)}
+            required
+          />
+
+          <label style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            marginBottom: "12px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#333"
+          }}>
+            <input
+              type="checkbox"
+              checked={doesNotExpire}
+              onChange={e => setDoesNotExpire(e.target.checked)}
+              style={{ width: "18px", height: "18px", cursor: "pointer" }}
+            />
+            Does Not Expire
+          </label>
+
+          {!doesNotExpire && (
+            <>
+              <label style={labelStyle}>Expiration Date *</label>
+              <input
+                style={inputStyle}
+                type="date"
+                value={expirationDate}
+                onChange={e => setExpirationDate(e.target.value)}
+                required={!doesNotExpire}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Verification & Document */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            ✅ Verification & Document
+          </h3>
+
+          <label style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            marginBottom: "12px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#333"
+          }}>
+            <input
+              type="checkbox"
+              checked={verified}
+              onChange={e => setVerified(e.target.checked)}
+              style={{ width: "18px", height: "18px", cursor: "pointer" }}
+            />
+            Verified by Reviewer
+          </label>
+
+          <label style={labelStyle}>Upload Certificate Document (Optional)</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={e => setDocumentFile(e.target.files[0])}
+            style={{
+              ...inputStyle,
+              padding: "8px",
+              cursor: "pointer"
+            }}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <button
+            type="button"
+            onClick={() => {
+              resetForm();
+              cancelEdit && cancelEdit();
+            }}
+            style={{
+              padding: "12px 24px",
+              background: "#999",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            style={{
+              padding: "12px 24px",
+              background: "#4f8ef7",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600"
+            }}
+          >
+            {editCert ? "💾 Save Changes" : "➕ Add Certification"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
