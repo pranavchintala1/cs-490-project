@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Body, Header, Form
-from fastapi.exceptions import HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
 from pymongo.errors import DuplicateKeyError
 
 from uuid import uuid4
 import bcrypt
-import datetime
+from datetime import datetime, timezone
 
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -16,79 +15,111 @@ from mongo.auth_dao import auth_dao
 from mongo.profiles_dao import profiles_dao
 from mongo.forgotPassword import ForgotPassword
 from sessions.session_manager import session_manager
-from schema import RegistInfo, LoginCred
+from sessions.session_authorizer import authorize
+from schema import RegistInfo, LoginCred, Profile
 
-auth_router = APIRouter("/auth")
+auth_router = APIRouter(prefix = "/auth")
 
-@auth_router.post("/register")
-async def register(regist_info: RegistInfo):
+@auth_router.post("/register", tags = ["profiles"])
+async def register(info: RegistInfo):
+    # Authentication
     try:
-        user_id = str(uuid4())
-        # create auth entry
-        await auth_dao.register_user(user_id, regist_info.username, regist_info.email, regist_info.password)
-
-        # create data entry
-        await profiles_dao.register_user(user_id, regist_info.model_dump(exclude_none = True))
-
-        session_token = session_manager.begin_session(user_id)
-
+        uuid = str(uuid4())
+        pass_hash = bcrypt.hashpw(info.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        result = await auth_dao.add_user(uuid, {"email": info.email.lower(), "username": info.username, "password": pass_hash})
     except DuplicateKeyError:
-        return JSONResponse(status_code = 400, content = {"detail": "User already exists"})
+        raise HTTPException(400, "User already exists")
     except Exception as e:
-        return HTTPException(status_code = 400, detail = f"Something went wrong {str(e)}")
-    return JSONResponse(status_code=200, content={"detail": "Sucessful Registration", "uuid": user_id, "session_token": session_token})
-
-@auth_router.post("/login")
-async def login(credentials: LoginCred):
+        raise HTTPException(500, "Encountered internal service error")
+    
+    # User Profile
     try:
-        password_hash = await auth_dao.get_password(credentials.email)
-        
-        if not password_hash:
-            return JSONResponse(status_code = 400, content = {"detail": "Invalid email"})
+        time = datetime.now(timezone.utc)
 
-        authenticated = bcrypt.checkpw(credentials.password.encode("utf-8"), password_hash.encode("utf-8"))
+        data = info.model_dump()
+        data.pop("password")
+        profile = Profile.model_construct(**data)
+
+        await profiles_dao.add_profile(uuid, profile.model_dump())
+    except DuplicateKeyError:
+        raise HTTPException(400, "User profile already exists")
     except Exception as e:
-        return HTTPException(status_code = 400, detail = f"Something went wrong {str(e)}")
+        raise HTTPException(500, "Encountered internal service error")
+
+    # Begin Session
+    session_token = session_manager.begin_session(uuid)
+
+    return {"detail": "Sucessfully registered user", "uuid": uuid, "session_token": session_token}
+
+@auth_router.post("/login", tags = ["profiles"])
+async def login(credentials: LoginCred):
+    # Authentication (for real this time)
+    try:
+        pass_hash = await auth_dao.get_password(credentials.email.lower())
+
+        # Get uuid via associated email
+        uuid = await auth_dao.get_uuid(credentials.email.lower())
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal server error")
     
-    if authenticated:
-        try:
-            user_id = await auth_dao.get_uuid(credentials.email)
-        except Exception as e:
-            return HTTPException(status_code = 400, detail = f"Something went wrong {str(e)}")
+    if not pass_hash:
+        raise HTTPException(401, "Invalid email address")
+    
+    if bcrypt.checkpw(credentials.password.encode("utf-8"), pass_hash.encode("utf-8")):
+        # begin session
+        session_token = session_manager.begin_session(uuid)
 
-        session_token = session_manager.begin_session(user_id)
-
-        return JSONResponse(status_code = 200, content = {"detail": "Successful login", "uuid": user_id, "session_token": session_token})
+        return {"detail": "Successfully logged in", "uuid": uuid, "session_token": session_token}
     else:
-        return JSONResponse(status_code = 401, content = {"detail": "Invalid email or password"})
+        raise HTTPException(401, "Invalid credentials provided")
 
-@auth_router.post("/logout")
-async def logout(data: dict = Body(...), authorization: str = Header(...)):
-    uuid = data.get("uuid")
-    if not session_manager.authenticate_session(uuid, authorization.removeprefix("Bearer ").strip()) and session_manager.kill_session(uuid):
-        return JSONResponse(status_code = 401, content = {"detail": "Invalid session"}) # successfully auth and kill session before proceeding
+@auth_router.post("/logout", tags = ["profiles"])
+async def logout(uuid: str = Depends(authorize)):
+    if session_manager.kill_session(uuid):
+        return {"detail": "Successfully logged out"}
+    else:
+        raise HTTPException(400, "Session not found")
+
+@auth_router.post("/validate-session")
+async def validate_session(uuid: str = Depends(authorize)):
+    return {"detail": "Successfully validated session"}
+
+@auth_router.post("/check-password")
+async def check_password(credentials: LoginCred):
+    try:
+        pass_hash = await auth_dao.get_password(credentials.email.lower())
+
+        uuid = await auth_dao.get_uuid(credentials.email.lower())
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal service error")
     
-    session_manager.kill_session(uuid)
-    return JSONResponse(status_code = 200, content = {"detail": "Successfully logged out"})
-@auth_router.post("/forgotpassword")
-async def forgotPassword(email: str = Body(..., embed=True)):
+    if not pass_hash:
+        raise HTTPException(401, "Invalid email address")
+    
+    if bcrypt.checkpw(credentials.password.encode("utf-8"), pass_hash.encode("utf-8")):
+        return {"detail": "Valid login"}
+    else:
+        raise HTTPException(401, "Invalid login")
 
-    exists = await auth_dao.get_uuid(email)
+@auth_router.post("/password/forgot", tags = ["profiles"])
+async def forgot_password(email: str = Body(..., embed=True)):
+
+    exists = await auth_dao.get_uuid(email.lower())
 
     try:
         if exists:
             fp = ForgotPassword() # ugly naming scheme fix later.
-            token = fp.send_email(email)
+            token = fp.send_email(email.lower())
             uuid = str(uuid4())
-            await fp.store_link(uuid,email,token)
+            await fp.store_link(uuid,email.lower(),token)
             return True
     except Exception as e:
         print(e)
         return None
     
     
-@auth_router.get("/resetpassword")
-async def resetPassword(token: str):
+@auth_router.get("/password/reset", tags = ["profiles"])
+async def reset_password(token: str):
     fp = ForgotPassword()
     uuid,expires = await fp.verify_link(token)
     try:
@@ -100,11 +131,11 @@ async def resetPassword(token: str):
         return None
     
 
-@auth_router.put("/user/updatepassword")
-async def updatePassword(token: str = Body(...),password: str = Body(...)):
+@auth_router.put("/password/update", tags = ["profiles"])
+async def update_password(token: str = Body(...),password: str = Body(...)):
 
     try:
-        old_data = await profiles_dao.retrieve_user(token)
+        old_data = await profiles_dao.get_profile(token)
         old_data["password"] = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         await auth_dao.update_password(token,old_data)
         session_token = session_manager.begin_session(token)
@@ -115,7 +146,7 @@ async def updatePassword(token: str = Body(...),password: str = Body(...)):
 
 
 
-@auth_router.post("/verify-google-token")
+@auth_router.post("/verify-google-token", tags = ["profiles"])
 async def verify_google_token(token: dict = Body(...)):
 
     credentials = token.get("credential")
@@ -133,7 +164,7 @@ async def verify_google_token(token: dict = Body(...)):
             idinfo["username"] = idinfo["email"]
             await auth_dao.register_user(uuid,idinfo["email"],idinfo["email"],"")
     
-            await profiles_dao.register_user(uuid, idinfo)
+            await profiles_dao.add_profile(uuid, idinfo)
         
         session_token = session_manager.begin_session(uuid)
 
@@ -144,11 +175,11 @@ async def verify_google_token(token: dict = Body(...)):
         }
 
     except ValueError:
-        return HTTPException(status_code=400, detail = "invalid token")
+        raise HTTPException(status_code=400, detail = "invalid token")
 
     except GoogleAuthError as e:
-        return HTTPException(status_code=401, detail = f"Google auth failed: {str(e)}")
+        raise HTTPException(status_code=401, detail = f"Google auth failed: {str(e)}")
 
     except Exception as e:
-        return HTTPException(status_code=500, detail = f"Unknown Error while authenticating: {str(e)}")
+        raise HTTPException(status_code=500, detail = f"Unknown Error while authenticating: {str(e)}")
     
