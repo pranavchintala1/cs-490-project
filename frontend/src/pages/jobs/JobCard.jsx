@@ -2,6 +2,20 @@ import React, { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+// Helper to parse date without timezone issues
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+// Helper to format date for display
+const formatDate = (dateStr) => {
+  if (!dateStr) return null;
+  const date = parseLocalDate(dateStr);
+  return date.toLocaleDateString();
+};
+
 export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
   const [expanded, setExpanded] = useState(false);
   
@@ -20,8 +34,10 @@ export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
   const daysInStage = Math.floor((new Date() - new Date(lastStatusChange)) / (1000 * 60 * 60 * 24));
 
   // Check if deadline is approaching (within 7 days)
-  const deadlineDate = job.deadline ? new Date(job.deadline) : null;
+  const deadlineDate = job.deadline ? parseLocalDate(job.deadline) : null;
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize to start of day
+  
   const daysUntilDeadline = deadlineDate ? Math.floor((deadlineDate - today) / (1000 * 60 * 60 * 24)) : null;
   const deadlineWarning = daysUntilDeadline !== null && daysUntilDeadline <= 7 && daysUntilDeadline >= 0;
   const deadlinePassed = daysUntilDeadline !== null && daysUntilDeadline < 0;
@@ -90,7 +106,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, isOverlay }) {
             fontWeight: (deadlineWarning || deadlinePassed) ? "bold" : "normal"
           }}>
             ⏰ {deadlinePassed ? "EXPIRED: " : deadlineWarning ? "URGENT: " : ""}
-            {new Date(job.deadline).toLocaleDateString()}
+            {formatDate(job.deadline)}
           </div>
         )}
         

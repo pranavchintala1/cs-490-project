@@ -179,28 +179,26 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             📅 Timeline & Team
           </h3>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={labelStyle}>Start Date *</label>
-              <input
-                style={inputStyle}
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                required
-              />
-            </div>
-            <div>
+          <label style={labelStyle}>Start Date *</label>
+          <input
+            style={inputStyle}
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            required
+          />
+
+          {!noEndDate && (
+            <>
               <label style={labelStyle}>End Date</label>
               <input
                 style={inputStyle}
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                disabled={noEndDate}
               />
-            </div>
-          </div>
+            </>
+          )}
 
           <label style={{
             display: "flex",
@@ -215,7 +213,12 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             <input
               type="checkbox"
               checked={noEndDate}
-              onChange={e => setNoEndDate(e.target.checked)}
+              onChange={e => {
+                setNoEndDate(e.target.checked);
+                if (e.target.checked) {
+                  setEndDate("");
+                }
+              }}
               style={{ width: "18px", height: "18px", cursor: "pointer" }}
             />
             Ongoing / Continuous Project

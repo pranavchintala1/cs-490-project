@@ -12,6 +12,20 @@ const statusEmojis = {
   Completed: "✅"
 };
 
+// Helper to parse date without timezone issues
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+// Helper to format date for display
+const formatDate = (dateStr) => {
+  if (!dateStr) return null;
+  const date = parseLocalDate(dateStr);
+  return date.toLocaleDateString();
+};
+
 export default function ProjectCard({ project, deleteProject, onEdit }) {
   const [expanded, setExpanded] = useState(false);
   const [zoomedImage, setZoomedImage] = useState(null);
@@ -83,8 +97,8 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
 
           <div style={{ fontSize: "14px", color: "#666" }}>
             <strong style={{ color: "#333" }}>Timeline:</strong>{" "}
-            {new Date(project.start_date).toLocaleDateString()} -{" "}
-            {project.end_date ? new Date(project.end_date).toLocaleDateString() : "Present"}
+            {formatDate(project.start_date)} -{" "}
+            {project.end_date ? formatDate(project.end_date) : "Present"}
           </div>
         </div>
 
