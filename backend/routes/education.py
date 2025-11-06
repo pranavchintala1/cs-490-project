@@ -19,6 +19,8 @@ async def add_education(education: Education, uuid: str = Depends(authorize)):
         result = await education_dao.add_education(model)
     except DuplicateKeyError:
         raise HTTPException(400, "Education already exists") # FIXME: redundant since keys are generated uniquely?
+    except HTTPException as http:
+        raise http
     except Exception as e:
         raise HTTPException(500, "Encountered internal server error")
     
