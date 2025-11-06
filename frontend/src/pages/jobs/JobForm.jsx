@@ -26,13 +26,13 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       setUrl(editJob.url || "");
       setDeadline(editJob.deadline || "");
       setIndustry(editJob.industry || "");
-      setJobType(editJob.jobType || "");
+      setJobType(editJob.job_type || editJob.jobType || "");
       setDescription(editJob.description || "");
       setStatus(editJob.status || "Interested");
       setNotes(editJob.notes || "");
       setContacts(editJob.contacts || "");
-      setSalaryNotes(editJob.salaryNotes || "");
-      setInterviewNotes(editJob.interviewNotes || "");
+      setSalaryNotes(editJob.salary_notes || editJob.salaryNotes || "");
+      setInterviewNotes(editJob.interview_notes || editJob.interviewNotes || "");
       setId(editJob.id);
     }
   }, [editJob]);
@@ -55,36 +55,58 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     setId(null);
   };
 
+  const validateUrl = (urlString) => {
+    if (!urlString || urlString.trim() === "") return true;
+    try {
+      const urlObj = new URL(urlString);
+      return urlObj.protocol === "http:" || urlObj.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title.trim()) return alert("Job title is required");
     if (!company.trim()) return alert("Company name is required");
+    
+    // Validate URL if provided
+    if (url.trim() && !validateUrl(url.trim())) {
+      return alert("Please enter a valid URL starting with http:// or https://");
+    }
 
     const now = new Date().toISOString();
+    
+    // Backend expects snake_case and tuple format for status_history
     const jobData = { 
-      id: id || `job${Date.now()}`, 
-      title, 
-      company, 
-      location, 
-      salary, 
-      url, 
-      deadline, 
-      industry, 
-      jobType, 
-      description, 
-      status,
-      notes,
-      contacts,
-      salaryNotes,
-      interviewNotes,
-      createdAt: editJob?.createdAt || now,
-      updatedAt: now,
-      statusHistory: editJob?.statusHistory || [{ status, timestamp: now }]
+      title: title.trim(),
+      company: company.trim(),
+      location: location.trim() || undefined,
+      salary: salary.trim() || undefined,
+      url: url.trim() || undefined,
+      deadline: deadline || undefined,
+      industry: industry || undefined,
+      job_type: jobType || undefined,
+      description: description.trim() || undefined,
+      status: status,
+      notes: notes.trim() || undefined,
+      contacts: contacts.trim() || undefined,
+      salary_notes: salaryNotes.trim() || undefined,
+      interview_notes: interviewNotes.trim() || undefined
     };
 
+    // Only include status_history for new jobs or if status changed
     if (editJob) {
+      // Add the id to jobData for editing
+      jobData.id = id;
+      
+      const statusChanged = editJob.status !== status;
+      if (statusChanged) {
+        jobData.status_history = [...(editJob.status_history || []), [status, now]];
+      }
       editJob.submit(jobData);
     } else {
+      jobData.status_history = [[status, now]];
       addJob(jobData);
     }
 
@@ -173,12 +195,20 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
 
         <label style={labelStyle}>Job Posting URL</label>
         <input 
-          style={inputStyle}
+          style={{
+            ...inputStyle,
+            border: url.trim() && !validateUrl(url.trim()) ? "2px solid #f44336" : "1px solid #ccc"
+          }}
           type="url"
-          placeholder="https://..."
+          placeholder="https://example.com/job-posting"
           value={url} 
           onChange={(e) => setUrl(e.target.value)} 
         />
+        {url.trim() && !validateUrl(url.trim()) && (
+          <div style={{ color: "#f44336", fontSize: "12px", marginTop: "-8px", marginBottom: "12px" }}>
+            Please enter a valid URL starting with http:// or https://
+          </div>
+        )}
       </div>
 
       {/* Job Details */}
@@ -193,7 +223,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
               value={industry} 
               onChange={(e) => setIndustry(e.target.value)}
             >
-              <option value="" disabled>Select Industry</option>
+              <option value="">Select Industry</option>
               <option value="Technology">Technology</option>
               <option value="Finance">Finance</option>
               <option value="Healthcare">Healthcare</option>
@@ -214,7 +244,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
               value={jobType} 
               onChange={(e) => setJobType(e.target.value)}
             >
-              <option value="" disabled>Select Type</option>
+              <option value="">Select Type</option>
               <option value="Full-Time">Full-Time</option>
               <option value="Part-Time">Part-Time</option>
               <option value="Internship">Internship</option>
@@ -230,7 +260,6 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
               value={status} 
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="" disabled>Select Status</option>
               <option value="Interested">Interested</option>
               <option value="Applied">Applied</option>
               <option value="Screening">Screening</option>
