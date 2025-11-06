@@ -1,34 +1,31 @@
 import React, { useState, useRef, useEffect } from "react";
 
 export default function ProjectForm({ addProject, editProject, cancelEdit }) {
-  const [name, setName] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [description, setDescription] = useState("");
   const [role, setRole] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [noEndDate, setNoEndDate] = useState(false);
-  const [technologies, setTechnologies] = useState("");
-  const [projectUrl, setProjectUrl] = useState("");
+  const [skills, setSkills] = useState("");
   const [teamSize, setTeamSize] = useState("");
+  const [details, setDetails] = useState("");
   const [achievements, setAchievements] = useState("");
   const [industry, setIndustry] = useState("");
   const [status, setStatus] = useState("");
-  const [files, setFiles] = useState([]);
   const [id, setId] = useState(null);
-
-  const fileRef = useRef(null);
 
   useEffect(() => {
     if (editProject) {
-      setName(editProject.name || "");
+      setProjectName(editProject.project_name || "");
       setDescription(editProject.description || "");
       setRole(editProject.role || "");
       setStartDate(editProject.start_date || "");
       setEndDate(editProject.end_date || "");
       setNoEndDate(!editProject.end_date);
-      setTechnologies(editProject.technologies || "");
-      setProjectUrl(editProject.project_url || "");
+      setSkills(Array.isArray(editProject.skills) ? editProject.skills.join(", ") : editProject.skills || "");
       setTeamSize(editProject.team_size || "");
+      setDetails(editProject.details || "");
       setAchievements(editProject.achievements || "");
       setIndustry(editProject.industry || "");
       setStatus(editProject.status || "");
@@ -37,40 +34,37 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
   }, [editProject]);
 
   const resetForm = () => {
-    setName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
-    setTechnologies(""); setProjectUrl(""); setTeamSize(""); setAchievements(""); setIndustry(""); setStatus(""); setFiles([]); setId(null);
-    if (fileRef.current) fileRef.current.value = "";
+    setProjectName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
+    setSkills(""); setTeamSize(""); setDetails(""); setAchievements(""); setIndustry(""); setStatus(""); setId(null);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!name.trim()) return alert("Project Name is required");
+    if (!projectName.trim()) return alert("Project Name is required");
     if (!role.trim()) return alert("Role is required");
     if (!startDate) return alert("Start Date is required");
     if (!teamSize || isNaN(teamSize) || parseInt(teamSize) <= 0) return alert("Team Size must be positive");
     if (!status) return alert("Please select a project status");
 
-    const formData = new FormData();
-    formData.append("id", id || `proj${Date.now()}`);
-    formData.append("name", name.trim());
-    formData.append("description", description.trim());
-    formData.append("role", role.trim());
-    formData.append("start_date", startDate);
-    if (!noEndDate && endDate) formData.append("end_date", endDate);
-    formData.append("technologies", technologies.trim());
-    formData.append("project_url", projectUrl.trim());
-    formData.append("team_size", parseInt(teamSize));
-    formData.append("achievements", achievements.trim());
-    formData.append("industry", industry.trim());
-    formData.append("status", status);
-
-    files.forEach(f => formData.append("media_files", f));
+    const projectData = {
+      project_name: projectName.trim(),
+      description: description.trim(),
+      role: role.trim(),
+      start_date: startDate,
+      end_date: noEndDate ? null : endDate || null,
+      skills: skills.trim() ? skills.split(",").map(s => s.trim()) : [],
+      team_size: parseInt(teamSize),
+      details: details.trim(),
+      achievements: achievements.trim(),
+      industry: industry.trim(),
+      status: status
+    };
 
     if (editProject) {
-      editProject.submit(formData);
+      editProject.submit(projectData);
     } else {
-      addProject(formData);
+      addProject(projectData);
     }
 
     resetForm();
@@ -125,8 +119,8 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
           <input
             style={inputStyle}
             placeholder="e.g., E-Commerce Platform Redesign"
-            value={name}
-            onChange={e => setName(e.target.value)}
+            value={projectName}
+            onChange={e => setProjectName(e.target.value)}
             required
           />
 
@@ -173,7 +167,7 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
               resize: "vertical", 
               fontFamily: "inherit" 
             }}
-            placeholder="Describe the project, its goals, and your contributions..."
+            placeholder="Describe the project and its goals..."
             value={description}
             onChange={e => setDescription(e.target.value)}
           />
@@ -245,21 +239,25 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             💻 Technical Details
           </h3>
 
-          <label style={labelStyle}>Technologies / Skills</label>
+          <label style={labelStyle}>Skills / Technologies (comma-separated)</label>
           <input
             style={inputStyle}
             placeholder="e.g., React, Python, AWS, Docker"
-            value={technologies}
-            onChange={e => setTechnologies(e.target.value)}
+            value={skills}
+            onChange={e => setSkills(e.target.value)}
           />
 
-          <label style={labelStyle}>Project URL</label>
-          <input
-            style={inputStyle}
-            type="url"
-            placeholder="https://github.com/yourusername/project"
-            value={projectUrl}
-            onChange={e => setProjectUrl(e.target.value)}
+          <label style={labelStyle}>Project Details</label>
+          <textarea
+            style={{ 
+              ...inputStyle, 
+              minHeight: "100px", 
+              resize: "vertical", 
+              fontFamily: "inherit" 
+            }}
+            placeholder="Additional details about your contributions, technologies used, etc..."
+            value={details}
+            onChange={e => setDetails(e.target.value)}
           />
 
           <label style={labelStyle}>Achievements / Outcomes</label>
@@ -274,31 +272,6 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             value={achievements}
             onChange={e => setAchievements(e.target.value)}
           />
-        </div>
-
-        {/* Media Files */}
-        <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
-            📸 Media Files (Optional)
-          </h3>
-
-          <label style={labelStyle}>Upload Screenshots, Diagrams, or Documents</label>
-          <input
-            ref={fileRef}
-            type="file"
-            multiple
-            onChange={e => setFiles([...e.target.files])}
-            style={{
-              ...inputStyle,
-              padding: "8px",
-              cursor: "pointer"
-            }}
-          />
-          {files.length > 0 && (
-            <div style={{ fontSize: "13px", color: "#666", marginTop: "4px" }}>
-              {files.length} file(s) selected
-            </div>
-          )}
         </div>
 
         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
