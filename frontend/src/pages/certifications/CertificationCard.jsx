@@ -108,14 +108,12 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
             <strong style={{ color: "#333" }}>Earned:</strong>{" "}
             {new Date(cert.date_earned).toLocaleDateString()}
           </div>
-          <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
-            <strong style={{ color: "#333" }}>Expires:</strong>{" "}
-            {cert.does_not_expire
-              ? "Does not expire"
-              : expDate
-              ? new Date(cert.expiration_date).toLocaleDateString()
-              : "-"}
-          </div>
+{!cert.does_not_expire && (
+  <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
+    <strong style={{ color: "#333" }}>Expires:</strong>{" "}
+    {expDate ? new Date(cert.expiration_date).toLocaleDateString() : "-"}
+  </div>
+)}
           {cert.cert_id && (
             <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
               <strong style={{ color: "#333" }}>Cert #:</strong> {cert.cert_id}

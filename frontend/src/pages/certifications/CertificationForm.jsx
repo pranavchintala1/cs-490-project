@@ -24,7 +24,7 @@ export default function CertificationForm({ addCert, editCert, cancelEdit }) {
       setName(editCert.name || "");
       setIssuer(editCert.issuer || "");
       setDateEarned(editCert.date_earned || "");
-      setDoesNotExpire(editCert.does_not_expire || false);
+      setDoesNotExpire(!editCert.expiration_date || editCert.does_not_expire);
       setExpirationDate(editCert.expiration_date || "");
       setCertNumber(editCert.cert_id || "");
       setCategory(editCert.category || "");
