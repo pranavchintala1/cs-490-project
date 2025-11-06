@@ -1,8 +1,24 @@
 import React from "react";
 
 export default function CertificationCard({ cert, onDelete, onEdit }) {
+  // Helper function to parse date string as local date without timezone issues
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  // Helper function to format date for display
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const date = parseLocalDate(dateStr);
+    return date.toLocaleDateString();
+  };
+
   const today = new Date();
-  const expDate = cert.expiration_date ? new Date(cert.expiration_date) : null;
+  today.setHours(0, 0, 0, 0); // Normalize to start of day for accurate comparison
+  
+  const expDate = cert.expiration_date ? parseLocalDate(cert.expiration_date) : null;
   const expiringSoon = expDate && (expDate - today <= 1000 * 60 * 60 * 24 * 90); 
   const expired = expDate && expDate < today;
 
@@ -106,14 +122,14 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
           </div>
           <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
             <strong style={{ color: "#333" }}>Earned:</strong>{" "}
-            {new Date(cert.date_earned).toLocaleDateString()}
+            {formatDate(cert.date_earned)}
           </div>
-{!cert.does_not_expire && (
-  <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
-    <strong style={{ color: "#333" }}>Expires:</strong>{" "}
-    {expDate ? new Date(cert.expiration_date).toLocaleDateString() : "-"}
-  </div>
-)}
+          {!cert.does_not_expire && (
+            <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
+              <strong style={{ color: "#333" }}>Expires:</strong>{" "}
+              {formatDate(cert.expiration_date)}
+            </div>
+          )}
           {cert.cert_id && (
             <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
               <strong style={{ color: "#333" }}>Cert #:</strong> {cert.cert_id}

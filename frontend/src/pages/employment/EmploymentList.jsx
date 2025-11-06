@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import EmploymentForm from "./EmploymentForm";
 import { apiRequest } from "../../api";
 
+// Helper to parse date without timezone issues
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 export default function EmploymentList() {
   const [items, setItems] = useState([]);
   const [editEntry, setEditEntry] = useState(null);
@@ -94,17 +101,20 @@ export default function EmploymentList() {
   const sortedItems = [...items].sort((a, b) => {
     if (!a.end_date && b.end_date) return -1; // Current positions first
     if (a.end_date && !b.end_date) return 1;
-    return new Date(b.start_date) - new Date(a.start_date);
+    const dateA = parseLocalDate(a.start_date);
+    const dateB = parseLocalDate(b.start_date);
+    return dateB - dateA;
   });
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "Present";
-    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    const date = parseLocalDate(dateStr);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
   };
 
   const calculateDuration = (start, end) => {
-    const startDate = new Date(start);
-    const endDate = end ? new Date(end) : new Date();
+    const startDate = parseLocalDate(start);
+    const endDate = end ? parseLocalDate(end) : new Date();
     const months = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24 * 30));
     const years = Math.floor(months / 12);
     const remainingMonths = months % 12;
