@@ -77,33 +77,267 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
     cancelEdit && cancelEdit();
   };
 
+  const inputStyle = {
+    width: "100%",
+    padding: "10px",
+    marginBottom: "12px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    fontSize: "14px",
+    boxSizing: "border-box"
+  };
+
+  const labelStyle = {
+    display: "block",
+    marginBottom: "6px",
+    fontWeight: "600",
+    fontSize: "14px",
+    color: "#333"
+  };
+
+  const sectionStyle = {
+    marginBottom: "20px",
+    padding: "16px",
+    background: "#f9f9f9",
+    borderRadius: "6px"
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="project-form">
-      <h3>{editProject ? "Edit Project" : "Add Project"}</h3>
-      <input placeholder="Project Name" value={name} onChange={e => setName(e.target.value)} required />
-      <textarea placeholder="Description (optional)" value={description} onChange={e => setDescription(e.target.value)} />
-      <input placeholder="Role" value={role} onChange={e => setRole(e.target.value)} required />
-      Start: <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
-      {!noEndDate && <> End: <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></>}
-      <label>
-        <input type="checkbox" checked={noEndDate} onChange={e => setNoEndDate(e.target.checked)} /> Ongoing / Continuous
-      </label>
-      <input placeholder="Technologies/Skills" value={technologies} onChange={e => setTechnologies(e.target.value)} />
-      <input placeholder="Project URL" value={projectUrl} onChange={e => setProjectUrl(e.target.value)} />
-      <input placeholder="Team Size" type="number" value={teamSize} onChange={e => setTeamSize(e.target.value)} min="1" required />
-      <textarea placeholder="Achievements / Outcomes" value={achievements} onChange={e => setAchievements(e.target.value)} />
-      <input placeholder="Industry / Project Type" value={industry} onChange={e => setIndustry(e.target.value)} />
-      <select value={status} onChange={e => setStatus(e.target.value)} required>
-        <option value="" disabled>Select Status</option>
-        <option>Planned</option>
-        <option>Ongoing</option>
-        <option>Completed</option>
-      </select>
-      <input type="file" multiple ref={fileRef} onChange={e => setFiles([...e.target.files])} />
-      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-        <button type="submit">{editProject ? "Save" : "Add Project"}</button>
-        <button type="button" onClick={() => { resetForm(); cancelEdit && cancelEdit(); }}>Cancel</button>
-      </div>
-    </form>
+    <div style={{
+      background: "white",
+      padding: "20px",
+      borderRadius: "8px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      marginBottom: "24px"
+    }}>
+      <h2 style={{ marginTop: 0, color: "#333" }}>
+        {editProject ? "✏️ Edit Project" : "🚀 Add Project"}
+      </h2>
+
+      <form onSubmit={handleSubmit}>
+        {/* Basic Information */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📋 Basic Information
+          </h3>
+          
+          <label style={labelStyle}>Project Name *</label>
+          <input
+            style={inputStyle}
+            placeholder="e.g., E-Commerce Platform Redesign"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            required
+          />
+
+          <label style={labelStyle}>Your Role *</label>
+          <input
+            style={inputStyle}
+            placeholder="e.g., Lead Developer, Project Manager"
+            value={role}
+            onChange={e => setRole(e.target.value)}
+            required
+          />
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <label style={labelStyle}>Industry / Type</label>
+              <input
+                style={inputStyle}
+                placeholder="e.g., Healthcare, FinTech"
+                value={industry}
+                onChange={e => setIndustry(e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Status *</label>
+              <select
+                style={inputStyle}
+                value={status}
+                onChange={e => setStatus(e.target.value)}
+                required
+              >
+                <option value="" disabled>Select Status</option>
+                <option value="Planned">📅 Planned</option>
+                <option value="Ongoing">🔄 Ongoing</option>
+                <option value="Completed">✅ Completed</option>
+              </select>
+            </div>
+          </div>
+
+          <label style={labelStyle}>Description</label>
+          <textarea
+            style={{ 
+              ...inputStyle, 
+              minHeight: "100px", 
+              resize: "vertical", 
+              fontFamily: "inherit" 
+            }}
+            placeholder="Describe the project, its goals, and your contributions..."
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+          />
+        </div>
+
+        {/* Timeline & Team */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📅 Timeline & Team
+          </h3>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <label style={labelStyle}>Start Date *</label>
+              <input
+                style={inputStyle}
+                type="date"
+                value={startDate}
+                onChange={e => setStartDate(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>End Date</label>
+              <input
+                style={inputStyle}
+                type="date"
+                value={endDate}
+                onChange={e => setEndDate(e.target.value)}
+                disabled={noEndDate}
+              />
+            </div>
+          </div>
+
+          <label style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            marginBottom: "12px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#333"
+          }}>
+            <input
+              type="checkbox"
+              checked={noEndDate}
+              onChange={e => setNoEndDate(e.target.checked)}
+              style={{ width: "18px", height: "18px", cursor: "pointer" }}
+            />
+            Ongoing / Continuous Project
+          </label>
+
+          <label style={labelStyle}>Team Size *</label>
+          <input
+            style={inputStyle}
+            type="number"
+            placeholder="e.g., 5"
+            value={teamSize}
+            onChange={e => setTeamSize(e.target.value)}
+            min="1"
+            required
+          />
+        </div>
+
+        {/* Technical Details */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            💻 Technical Details
+          </h3>
+
+          <label style={labelStyle}>Technologies / Skills</label>
+          <input
+            style={inputStyle}
+            placeholder="e.g., React, Python, AWS, Docker"
+            value={technologies}
+            onChange={e => setTechnologies(e.target.value)}
+          />
+
+          <label style={labelStyle}>Project URL</label>
+          <input
+            style={inputStyle}
+            type="url"
+            placeholder="https://github.com/yourusername/project"
+            value={projectUrl}
+            onChange={e => setProjectUrl(e.target.value)}
+          />
+
+          <label style={labelStyle}>Achievements / Outcomes</label>
+          <textarea
+            style={{ 
+              ...inputStyle, 
+              minHeight: "80px", 
+              resize: "vertical", 
+              fontFamily: "inherit" 
+            }}
+            placeholder="e.g., Increased performance by 40%, Reduced costs by $50k..."
+            value={achievements}
+            onChange={e => setAchievements(e.target.value)}
+          />
+        </div>
+
+        {/* Media Files */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📸 Media Files (Optional)
+          </h3>
+
+          <label style={labelStyle}>Upload Screenshots, Diagrams, or Documents</label>
+          <input
+            ref={fileRef}
+            type="file"
+            multiple
+            onChange={e => setFiles([...e.target.files])}
+            style={{
+              ...inputStyle,
+              padding: "8px",
+              cursor: "pointer"
+            }}
+          />
+          {files.length > 0 && (
+            <div style={{ fontSize: "13px", color: "#666", marginTop: "4px" }}>
+              {files.length} file(s) selected
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <button
+            type="button"
+            onClick={() => {
+              resetForm();
+              cancelEdit && cancelEdit();
+            }}
+            style={{
+              padding: "12px 24px",
+              background: "#999",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600"
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            style={{
+              padding: "12px 24px",
+              background: "#4f8ef7",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: "600"
+            }}
+          >
+            {editProject ? "💾 Save Changes" : "➕ Add Project"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
