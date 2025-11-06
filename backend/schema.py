@@ -59,6 +59,7 @@ class Project(BaseModel):
     skills: Optional[list[str]] = None
     team_size: Optional[int] = None
     details: Optional[str] = None
+    project_url: Optional[str] = None
     achievements: Optional[str] = None
     industry: Optional[str] = None
     status: Optional[str] = None
