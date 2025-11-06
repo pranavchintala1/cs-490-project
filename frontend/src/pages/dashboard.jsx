@@ -51,45 +51,31 @@ const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual a
   // //   ],
   // //   'api/projects/me': []
   };
-  
+
   return mockData[endpoint] || [];
 
-
-
-  ///////COMMENT BREAK COMMENT BREAK
-
-  const apidata = await apiRequest(endpoint);
-
-  function transformData(data, titleKey = "title") {
-  return data.map(obj => {
-    // Remove key-value pairs where the value is null or undefined
-    const cleaned = Object.fromEntries(
-      Object.entries(obj).filter(([_, value]) => value != null)
-    );
-
-    // If the cleaned object has no keys, return an empty list
-    if (Object.keys(cleaned).length === 0) {
-      return [];
-    }
-
-    const title = cleaned[titleKey] ?? "(no title)";
-    const otherValues = Object.entries(cleaned)
-      .filter(([key]) => key !== titleKey)
-      .map(([_, value]) => value);
-
-    // If no other values remain, return an empty list
-    if (otherValues.length === 0 && !cleaned[titleKey]) {
-      return [];
-    }
-
-    return [title, otherValues];
-  }).filter(item => item.length > 0); // Remove any empty results
-}
-
-  const formatted=transformData(apidata,name)
-  
-  return formatted;
-
+  // TODO: Integrate with real API when backend is ready
+  // const apidata = await apiRequest(endpoint);
+  // function transformData(data, titleKey = "title") {
+  //   return data.map(obj => {
+  //     const cleaned = Object.fromEntries(
+  //       Object.entries(obj).filter(([_, value]) => value != null)
+  //     );
+  //     if (Object.keys(cleaned).length === 0) {
+  //       return [];
+  //     }
+  //     const title = cleaned[titleKey] ?? "(no title)";
+  //     const otherValues = Object.entries(cleaned)
+  //       .filter(([key]) => key !== titleKey)
+  //       .map(([_, value]) => value);
+  //     if (otherValues.length === 0 && !cleaned[titleKey]) {
+  //       return [];
+  //     }
+  //     return [title, otherValues];
+  //   }).filter(item => item.length > 0);
+  // }
+  // const formatted = transformData(apidata, name);
+  // return formatted;
 };
 
 // Dashboard component
@@ -360,8 +346,8 @@ const Dashboard = () => {
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <a 
-              href="/projects" 
+            <a
+              href="/projects"
               style={{
                 fontSize: '18px', // Slightly reduced from 20px
                 fontWeight: '600',
@@ -378,6 +364,42 @@ const Dashboard = () => {
               Projects
             </a>
             <CategoryCard data={data.projects} />
+          </div>
+
+          <div style={{
+            backgroundColor: '#F9FAFC', // Background Light for section containers
+            padding: '18px', // Slightly increased padding to give cards breathing room
+            borderRadius: '12px',
+            border: '1px solid #D1D5DB',
+            flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
+            minWidth: '300px'
+          }}>
+            <a
+              href="/resumes"
+              style={{
+                fontSize: '18px', // Slightly reduced from 20px
+                fontWeight: '600',
+                color: '#003366', // Primary Blue
+                marginBottom: '12px', // Increased margin for better spacing
+                textAlign: 'center',
+                textDecoration: 'none',
+                display: 'block',
+                cursor: 'pointer'
+              }}
+              onMouseOver={(e) => e.target.style.color = '#00A67A'} // Teal Green on hover
+              onMouseOut={(e) => e.target.style.color = '#003366'} // Back to Primary Blue
+            >
+              📄 Resumes
+            </a>
+            <div style={{
+              padding: '12px',
+              backgroundColor: '#F3F4F6',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: '#666'
+            }}>
+              <p style={{ margin: '0', fontSize: '14px' }}>Create and manage your resumes</p>
+            </div>
           </div>
         </div>
         

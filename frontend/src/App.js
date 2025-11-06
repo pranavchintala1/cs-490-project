@@ -19,6 +19,14 @@ import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
 import JobsList from "./pages/jobs/JobList";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
+// Resume Feature Imports
+import ResumeList from "./pages/resumes/ResumeList";
+import ResumeCreate from "./pages/resumes/ResumeCreate";
+import ResumeEditor from "./pages/resumes/ResumeEditor";
+import ResumePreviewPage from "./pages/resumes/ResumePreviewPage";
+import VersionManagementPage from "./pages/resumes/VersionManagementPage";
+import ExportResumePage from "./pages/resumes/ExportResumePage";
+import SharingAndFeedbackPage from "./pages/resumes/SharingAndFeedbackPage";
 
 
 export function App() {
@@ -40,13 +48,24 @@ export function App() {
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path = "/resetPassword/:URL" element = {<ResetPassword />}/>
-                <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
 
               <Route path="/skills" element={<SkillsList />} />
               <Route path="/education" element={<EducationList />} />
               <Route path="/certifications" element={<CertificationList />} />
               <Route path="/projects" element={<ProjectsList />} />
               <Route path="/jobs" element={<JobsList />} />
+
+              {/* Resume Feature Routes - UC-046, UC-047, UC-048, UC-049, UC-050, UC-051, UC-052, UC-053, UC-054 */}
+              <Route path="/resumes" element={<ResumeList />} />
+              <Route path="/resumes/create" element={<ResumeCreate />} />
+              <Route path="/resumes/edit/:id" element={<ResumeEditor />} />
+              <Route path="/resumes/preview/:id" element={<ResumePreviewPage />} />
+              <Route path="/resumes/versions/:id" element={<VersionManagementPage />} />
+              <Route path="/resumes/export/:id" element={<ExportResumePage />} />
+              <Route path="/resumes/share/:id" element={<SharingAndFeedbackPage />} />
+
+              {/* Catch-all 404 route - must be last */}
+              <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
              </Routes>
             </FlashProvider>
           </>
