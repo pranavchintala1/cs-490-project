@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from pymongo.errors import DuplicateKeyError
 
 from mongo.employment_dao import employment_dao
