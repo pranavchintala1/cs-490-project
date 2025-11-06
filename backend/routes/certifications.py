@@ -47,7 +47,7 @@ async def get_certification(certification_id: str, uuid: str = Depends(authorize
 async def get_all_certifications(uuid: str = Depends(authorize)):
     try:
         results = await certifications_dao.get_all_certifications(uuid)
-        # NOTE: do not return http exception for empty skills, as it can lead to inconsistent behavior on the frontend
+        # NOTE: do not raise http exception for empty skills, as it can lead to inconsistent behavior on the frontend
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     

@@ -46,7 +46,7 @@ async def get_project(project_id: str, uuid: str = Depends(authorize)):
 async def get_all_projects(uuid: str = Depends(authorize)):
     try:
         results = await projects_dao.get_all_projects(uuid)
-        # NOTE: do not return http exception for empty projects, as it can lead to inconsistent behavior on the frontend
+        # NOTE: do not raise http exception for empty projects, as it can lead to inconsistent behavior on the frontend
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     
