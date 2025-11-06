@@ -1,6 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
-export default function ProjectForm({ addProject }) {
+export default function ProjectForm({ addProject, editProject, cancelEdit }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [role, setRole] = useState("");
@@ -12,10 +12,35 @@ export default function ProjectForm({ addProject }) {
   const [teamSize, setTeamSize] = useState("");
   const [achievements, setAchievements] = useState("");
   const [industry, setIndustry] = useState("");
-  const [status, setStatus] = useState(""); // empty by default
+  const [status, setStatus] = useState("");
   const [files, setFiles] = useState([]);
+  const [id, setId] = useState(null);
 
   const fileRef = useRef(null);
+
+  useEffect(() => {
+    if (editProject) {
+      setName(editProject.name || "");
+      setDescription(editProject.description || "");
+      setRole(editProject.role || "");
+      setStartDate(editProject.start_date || "");
+      setEndDate(editProject.end_date || "");
+      setNoEndDate(!editProject.end_date);
+      setTechnologies(editProject.technologies || "");
+      setProjectUrl(editProject.project_url || "");
+      setTeamSize(editProject.team_size || "");
+      setAchievements(editProject.achievements || "");
+      setIndustry(editProject.industry || "");
+      setStatus(editProject.status || "");
+      setId(editProject.id);
+    }
+  }, [editProject]);
+
+  const resetForm = () => {
+    setName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
+    setTechnologies(""); setProjectUrl(""); setTeamSize(""); setAchievements(""); setIndustry(""); setStatus(""); setFiles([]); setId(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -23,69 +48,62 @@ export default function ProjectForm({ addProject }) {
     if (!name.trim()) return alert("Project Name is required");
     if (!role.trim()) return alert("Role is required");
     if (!startDate) return alert("Start Date is required");
-    if (!teamSize || isNaN(teamSize) || parseInt(teamSize) <= 0) return alert("Team Size must be a positive number");
+    if (!teamSize || isNaN(teamSize) || parseInt(teamSize) <= 0) return alert("Team Size must be positive");
     if (!status) return alert("Please select a project status");
 
     const formData = new FormData();
+    formData.append("id", id || `proj${Date.now()}`);
     formData.append("name", name.trim());
-    formData.append("description", description.trim() || "");
+    formData.append("description", description.trim());
     formData.append("role", role.trim());
     formData.append("start_date", startDate);
     if (!noEndDate && endDate) formData.append("end_date", endDate);
-    formData.append("technologies", technologies.trim() || "");
-    if (projectUrl) formData.append("project_url", projectUrl.trim());
+    formData.append("technologies", technologies.trim());
+    formData.append("project_url", projectUrl.trim());
     formData.append("team_size", parseInt(teamSize));
-    formData.append("achievements", achievements.trim() || "");
-    if (industry.trim()) formData.append("industry", industry.trim());
+    formData.append("achievements", achievements.trim());
+    formData.append("industry", industry.trim());
     formData.append("status", status);
 
     files.forEach(f => formData.append("media_files", f));
 
-    addProject(formData);
+    if (editProject) {
+      editProject.submit(formData);
+    } else {
+      addProject(formData);
+    }
 
-    // Reset form
-    setName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
-    setTechnologies(""); setProjectUrl(""); setTeamSize(""); setAchievements(""); setIndustry(""); setStatus(""); setFiles([]);
-    if (fileRef.current) fileRef.current.value = "";
+    resetForm();
+    cancelEdit && cancelEdit();
   };
 
   return (
     <form onSubmit={handleSubmit} className="project-form">
-      <div><input placeholder="Project Name" value={name} onChange={e => setName(e.target.value)} required /></div>
-      <div><textarea placeholder="Description (optional)" value={description} onChange={e => setDescription(e.target.value)} /></div>
-      <div><input placeholder="Role" value={role} onChange={e => setRole(e.target.value)} required /></div>
-      <div>
-        Start: <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
-        {!noEndDate && <span> End: <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></span>}
-        <label style={{ marginLeft: "10px" }}>
-          <input type="checkbox" checked={noEndDate} onChange={e => setNoEndDate(e.target.checked)} /> Ongoing / Continuous
-        </label>
+      <h3>{editProject ? "Edit Project" : "Add Project"}</h3>
+      <input placeholder="Project Name" value={name} onChange={e => setName(e.target.value)} required />
+      <textarea placeholder="Description (optional)" value={description} onChange={e => setDescription(e.target.value)} />
+      <input placeholder="Role" value={role} onChange={e => setRole(e.target.value)} required />
+      Start: <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
+      {!noEndDate && <> End: <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></>}
+      <label>
+        <input type="checkbox" checked={noEndDate} onChange={e => setNoEndDate(e.target.checked)} /> Ongoing / Continuous
+      </label>
+      <input placeholder="Technologies/Skills" value={technologies} onChange={e => setTechnologies(e.target.value)} />
+      <input placeholder="Project URL" value={projectUrl} onChange={e => setProjectUrl(e.target.value)} />
+      <input placeholder="Team Size" type="number" value={teamSize} onChange={e => setTeamSize(e.target.value)} min="1" required />
+      <textarea placeholder="Achievements / Outcomes" value={achievements} onChange={e => setAchievements(e.target.value)} />
+      <input placeholder="Industry / Project Type" value={industry} onChange={e => setIndustry(e.target.value)} />
+      <select value={status} onChange={e => setStatus(e.target.value)} required>
+        <option value="" disabled>Select Status</option>
+        <option>Planned</option>
+        <option>Ongoing</option>
+        <option>Completed</option>
+      </select>
+      <input type="file" multiple ref={fileRef} onChange={e => setFiles([...e.target.files])} />
+      <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+        <button type="submit">{editProject ? "Save" : "Add Project"}</button>
+        <button type="button" onClick={() => { resetForm(); cancelEdit && cancelEdit(); }}>Cancel</button>
       </div>
-      <div><input placeholder="Technologies/Skills (optional, comma separated)" value={technologies} onChange={e => setTechnologies(e.target.value)} /></div>
-      <div><input placeholder="Project URL (optional)" value={projectUrl} onChange={e => setProjectUrl(e.target.value)} /></div>
-      <div><input placeholder="Team Size" type="number" value={teamSize} onChange={e => setTeamSize(e.target.value)} required min="1" /></div>
-      <div>
-  <textarea
-    placeholder="Achievements / Outcomes (optional)"
-    value={achievements}
-    onChange={e => setAchievements(e.target.value)}
-  />
-</div>
-      <div><input placeholder="Industry / Project Type (optional)" value={industry} onChange={e => setIndustry(e.target.value)} /></div>
-      <div>
-        Status:
-        <select value={status} onChange={e => setStatus(e.target.value)} required>
-          <option value="" disabled>Select Status</option> {/* disabled placeholder */}
-          <option>Planned</option>
-          <option>Ongoing</option>
-          <option>Completed</option>
-        </select>
-      </div>
-      <div>
-        Media Upload (optional):
-        <input type="file" multiple ref={fileRef} onChange={e => setFiles([...e.target.files])} />
-      </div>
-      <div><button type="submit">Add Project</button></div>
     </form>
   );
 }
