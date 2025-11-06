@@ -1,7 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi.responses import StreamingResponse
 from pymongo.errors import DuplicateKeyError
+from io import BytesIO
 
 from mongo.certification_dao import certifications_dao
+from mongo.media_dao import media_dao
 from sessions.session_authorizer import authorize
 from schema import Certification
 
@@ -51,7 +54,7 @@ async def get_all_certifications(uuid: str = Depends(authorize)):
     return results
 
 @certifications_router.put("", tags = ["certifications"])
-async def update_skill(certification_id: str, certification: Certification, uuid: str = Depends(authorize)):    
+async def update_certification(certification_id: str, certification: Certification, uuid: str = Depends(authorize)):    
     try:
         model = certification.model_dump(exclude_unset = True)
         updated = await certifications_dao.update_certification(certification_id, model)
@@ -64,7 +67,7 @@ async def update_skill(certification_id: str, certification: Certification, uuid
         return {"detail": "Successfully updated certification"}
     
 @certifications_router.delete("", tags = ["certifications"])
-async def delete_skill(certification_id: str, uuid: str = Depends(authorize)):
+async def delete_certification(certification_id: str, uuid: str = Depends(authorize)):
     try:
         deleted = await certifications_dao.delete_certification(certification_id)
     except Exception as e:
@@ -75,3 +78,56 @@ async def delete_skill(certification_id: str, uuid: str = Depends(authorize)):
     else:
         return {"detail": "Successfully deleted certification"}
     
+@certifications_router.post("/media", tags = ["certifications"])
+async def upload_media(parent_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
+    try:
+        media_id = await media_dao.add_media(parent_id, media.filename, await media.read(), media.content_type)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not media_id:
+        raise HTTPException(500, "Unable to upload media")
+    
+    return {"detail": "Sucessfully uploaded file", "media_id": media_id}
+
+@certifications_router.get('/media', tags = "certifications")
+async def download_media(media_id, uuid: str = Depends(authorize)):
+    try:
+        media = await media_dao.get_media(media_id)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not media:
+        raise HTTPException(400, "Could not find requested media")
+    media = media[0]
+    return StreamingResponse(
+        BytesIO(media["contents"]),
+        media_type = media["content_type"],
+        headers = {
+            "Content-Disposition": f"inline; filename=\"{media['filename']}\""
+        }
+    )
+
+@certifications_router.put("/media", tags = ["certifications"])
+async def update_media(parent_id: str, media_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
+    try:
+        updated = await media_dao.update_media(media_id, media.filename, await media.read(), parent_id, media.content_type)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not updated:
+        raise HTTPException(500, "Unable to update media")
+    
+    return {"detail": "Sucessfully updated file"}
+
+@certifications_router.delete("/media", tags = ["certifications"])
+async def delete_media(media_id: str, uuid: str = Depends(authorize)):
+    try:
+        deleted = await media_dao.delete_media(media_id)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not deleted:
+        raise HTTPException(500, "Unable to delete media")
+    
+    return {"detail": "Sucessfully deleted file"}
