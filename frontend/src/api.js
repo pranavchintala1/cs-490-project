@@ -2,7 +2,6 @@
 export async function apiRequest(endpoint, id  = "", options = {}) {
   const baseURL = "http://localhost:8000"; // TODO replace with actual url
   const token = localStorage.getItem("session");
-  const uuid = localStorage.getItem("uuid");
 
 
   // attach default headers
@@ -15,20 +14,17 @@ export async function apiRequest(endpoint, id  = "", options = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`; //TODO replace with actual structure
 
 
-  const url = `${baseURL}${endpoint}?uuid=${uuid}`;
+  const url = `${baseURL}${endpoint}${id}`;
   const config = { ...options, headers };
-console.log("testtest")
-console.log(url)
-console.log(config)
 
   try {
     const response = await fetch(url, config);
 
 
     // Redirect if unauthorized
-    if (response.status === 401 || response.status === 403 || response.status === 422) {
+    if (response.status === 401 || response.status === 403) {
       localStorage.clear();
-      // window.location.href = "/login?error=unauthorized";
+      window.location.href = "/login?error=unauthorized";
       return;
     }
 
