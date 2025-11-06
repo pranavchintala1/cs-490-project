@@ -3,7 +3,7 @@ from gridfs.errors import NoFile
 from bson import ObjectId
 from datetime import datetime, timezone
 
-from dao_setup import db_client
+from mongo.dao_setup import db_client
 
 class MediaDAO:
     def __init__(self):
