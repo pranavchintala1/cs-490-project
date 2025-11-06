@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getMe, updateMe, profileImageDataUrl } from "../tools/api";
+import DeleteAccount from "../components/DeleteAccount";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -21,6 +22,7 @@ export default function Profile() {
 
   const fileRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -56,6 +58,17 @@ export default function Profile() {
   const onPick = (e) => {
     const f = e.target.files?.[0];
     setSelectedFile(f || null);
+
+    // Create local preview using FileReader
+    if (f) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setPreviewUrl(event.target.result);
+      };
+      reader.readAsDataURL(f);
+    } else {
+      setPreviewUrl(null);
+    }
   };
 
   const onSave = async (e) => {
@@ -83,6 +96,7 @@ export default function Profile() {
       setProfile(updated);
       setMsg("Profile updated.");
       setSelectedFile(null);
+      setPreviewUrl(null);
       if (fileRef.current) fileRef.current.value = "";
     } catch (e) {
       setErr(e.message || "Failed to save.");
@@ -111,7 +125,13 @@ export default function Profile() {
         }}
       >
         <div>
-          {imgSrc ? (
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt="preview"
+              style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
+            />
+          ) : imgSrc ? (
             <img
               src={imgSrc}
               alt="pfp"
@@ -199,6 +219,8 @@ export default function Profile() {
           {saving ? "Saving…" : "Save Profile"}
         </button>
       </form>
+
+      <DeleteAccount />
     </div>
   );
 }
