@@ -47,29 +47,23 @@ export const updateMe = async (profileObj, file /* File | null */) => {
   const { uuid, token } = auth();
   if (!uuid || !token) throw new Error("Not authenticated");
 
-  const fd = new FormData();  
-  fd.append("username", profileObj["username"])
-  fd.append("email", profileObj["email"])
-  fd.append("full_name", profileObj["full_name"])
-  fd.append("phone_number", profileObj["phone_number"])
-  fd.append("title", profileObj["title"])
-  fd.append("address", profileObj["address"])
-  fd.append("biography", profileObj["biography"])
-  fd.append("industry", profileObj["industry"])
-  fd.append("experience_level", profileObj["experience_level"])
-  if (file) fd.append("pfp", file);                   
-
+  // Backend only accepts JSON, not FormData
+  // Profile picture upload is not yet implemented
   return http("PUT", "/api/users/me", {
     params: { uuid },
-    headers: { Authorization: `Bearer ${token}` },   
-    body: fd,
+    headers: { Authorization: `Bearer ${token}` },
+    body: profileObj,
   });
 };
 
 
 export const profileImageDataUrl = (profile) => {
-  const b64 = profile?.profile_picture;
-  return b64 ? `data:image/*;base64,${b64}` : null;
+  const b64 = profile?.profile_picture ?? profile?.profile_image;
+  if (!b64) return null;
+
+  
+  const mimeType = profile?.image_type || "image/jpeg";
+  return `data:${mimeType};base64,${b64}`;
 };
 
 export const listEmployment = async () => {
@@ -99,8 +93,8 @@ export const updateEmployment = async (id, payload) => {
    const { uuid, token } = auth();
   if (!uuid || !token) throw new Error("Not authenticated");
 
-  return http("PUT", `/api/employment/${encodeURIComponent(id)}`, {
-    params: { uuid },
+  return http("PUT", "/api/employment", {
+    params: { uuid, employment_id: id },
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -113,8 +107,8 @@ export const deleteEmployment = async (id) => {
   const { uuid, token } = auth();
   if (!uuid || !token) throw new Error("Not authenticated");
 
-  return http("DELETE", `/api/employment/${encodeURIComponent(id)}`, {
-    params: { uuid },
+  return http("DELETE", "/api/employment", {
+    params: { uuid, employment_id: id },
     headers: { Authorization: `Bearer ${token}` },
   });
 };
