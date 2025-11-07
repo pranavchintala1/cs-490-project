@@ -9,7 +9,7 @@ import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import Profile from "./pages/profile";
-import EmploymentPage from "./pages/employment/EmploymentPage";
+import EmploymentList from "./pages/employment/EmploymentList";
 import ForgotPassword from "./pages/forgotPassword";
 import ResetPassword from "./pages/resetPassword";
 import Dashboard from "./pages/dashboard";
@@ -24,7 +24,7 @@ import { FlashProvider, FlashMessage } from "./context/flashContext";
 export function App() {
   return (
     <div className="App">
-      <header className="App-header">
+      <header>
         
         <>
     
@@ -36,10 +36,10 @@ export function App() {
                 <Route path = "/register" element = {<Register />} />
                 <Route path = "/login" element = {<Login />} />
                 <Route path = "/profile" element = {<Profile />} />
-                <Route path="/employment" element={<EmploymentPage />} />
+                <Route path="/employment-history" element={<EmploymentList />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
-                <Route path = "/resetPassword/:URL" element = {<ResetPassword />}/>
+                <Route path = "/resetPassword/:token" element = {<ResetPassword />}/>
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
 
               <Route path="/skills" element={<SkillsList />} />

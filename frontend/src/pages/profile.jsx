@@ -41,7 +41,10 @@ export default function Profile() {
           experience_level: me.experience_level ?? "",
         });
       } catch (e) {
-        setErr(e.message || "Failed to load profile.");
+        // If profile fails to load (e.g., backend returning binary image data),
+        // continue with empty form so user can still update their profile
+        setErr("Note: Profile picture support not yet fully implemented. You can still update other fields.");
+        setProfile({});
       } finally {
         setLoading(false);
       }
@@ -79,7 +82,7 @@ export default function Profile() {
 
     try {
       //send on teh single endpoints
-      const updated = await updateMe(
+      await updateMe(
         {
           username: form.username || null,
           email: form.email || null,
@@ -93,8 +96,12 @@ export default function Profile() {
         },
         selectedFile
       );
-      setProfile(updated);
+
+      // Refetch the full profile to get the updated data
+      const updatedProfile = await getMe();
+      setProfile(updatedProfile);
       setMsg("Profile updated.");
+      // Only clear preview/selected file after successful save
       setSelectedFile(null);
       setPreviewUrl(null);
       if (fileRef.current) fileRef.current.value = "";

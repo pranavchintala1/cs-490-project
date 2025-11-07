@@ -3,6 +3,8 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Nav as BootstrapNav, Container, Button, NavDropdown } from "react-bootstrap";
 import { useFlash } from "../context/flashContext";
 import { sendData } from "../tools/db_commands";
+import { apiRequest } from "../api";
+
 
 const Nav = () => {
   const navigate = useNavigate();
@@ -10,21 +12,32 @@ const Nav = () => {
   const { showFlash } = useFlash();
   const token = localStorage.getItem("session");
 
-  const logout = async () => {
-    const res = await sendData(
-      { uuid: localStorage.getItem("uuid") },
-      "/api/auth/logout",
-      token
+const logout = async () => {
+  const uuid = localStorage.getItem("uuid");
+  
+
+  try {
+    apiRequest("/api/auth/logout?uuid=", "", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+
     );
+
+    showFlash("Successfully Logged out", "success");
+
+  } catch (error) {
+    showFlash(error.detail,"error");
+    console.error("Logout failed:", error);
+
+  };
+
     localStorage.removeItem("session");
     localStorage.removeItem("uuid");
 
-    if (!res || res.status !== 200) {
-      showFlash("Error logging out", "error");
-      return;
-    }
-
-    showFlash("Successfully Logged out", "success");
     navigate("/");
   };
 
@@ -74,7 +87,7 @@ const Nav = () => {
                   onMouseEnter={() => setShowDropdown(true)}
                   onMouseLeave={() => setShowDropdown(false)}
                 >
-                  <NavDropdown.Item as={NavLink} to="/employment">
+                  <NavDropdown.Item as={NavLink} to="/employment-history">
                     Employment
                   </NavDropdown.Item>
                   <NavDropdown.Item as={NavLink} to="/skills">
