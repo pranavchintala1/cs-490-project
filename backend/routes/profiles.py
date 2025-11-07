@@ -84,3 +84,27 @@ async def download_pfp(uuid: str = Depends(authorize)):
             "Content-Disposition": f"inline; filename=\"{media['filename']}\""
         }
     )
+
+@profiles_router.put("/me/avatar", tags = ["profiles"])
+async def update_pfp(media_id: str, media: UploadFile = File(...), uuid: str = Depends(authorize)):
+    try:
+        updated = media_dao.update_media(media_id, media.filename, await media.read(), uuid, media.content_type)
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal server error")
+    
+    if not updated:
+        raise HTTPException(400, "Could not update profile picture")
+    
+    return {"detail": "Sucessfully updated profile picture"}
+    
+@profiles_router.delete("/me/avatar", tags = ["projects"])
+async def delete_media(media_id: str, uuid: str = Depends(authorize)):
+    try:
+        deleted = await media_dao.delete_media(media_id)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not deleted:
+        raise HTTPException(500, "Unable to delete profile picture")
+    
+    return {"detail": "Sucessfully deleted profile picture"}
