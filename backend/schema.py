@@ -59,6 +59,7 @@ class Project(BaseModel):
     skills: Optional[list[str]] = None
     team_size: Optional[int] = None
     details: Optional[str] = None
+    project_url: Optional[str] = None
     achievements: Optional[str] = None
     industry: Optional[str] = None
     status: Optional[str] = None
@@ -92,6 +93,9 @@ class Job(BaseModel):
     salary_notes: Optional[str] = None
     interview_notes: Optional[str] = None
     status_history: Optional[list[tuple[str, str]]] = None
+    archived: Optional[bool] = False
+    archive_reason: Optional[str] = None
+    archive_date: Optional[str] = None
 
 class CoverLetter(BaseModel):
     category: str
