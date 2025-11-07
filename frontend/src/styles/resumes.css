@@ -202,6 +202,7 @@
   background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  color: #333;
 }
 
 .resume-card:hover {
@@ -219,15 +220,18 @@
 .resume-card-header h3 {
   margin: 0;
   font-size: 1.2rem;
+  color: #1a1a1a;
 }
 
 .resume-card-body {
   margin-bottom: 1rem;
   font-size: 0.9rem;
+  color: #333;
 }
 
 .resume-card-body p {
   margin: 0.5rem 0;
+  color: #333;
 }
 
 .resume-card-actions {
@@ -433,9 +437,9 @@
 }
 
 .preview-layout {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 1.5rem;
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
 }
 
 .preview-main {
@@ -443,6 +447,15 @@
   border-radius: 8px;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.preview-main-resizable {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
 .preview-validation {
@@ -450,6 +463,19 @@
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  max-height: 80vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.preview-size-info {
+  font-size: 0.85rem;
+  color: #666;
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  background: #f0f0f0;
+  border-radius: 4px;
 }
 
 /* Resume Preview (actual resume rendering) */
@@ -1316,7 +1342,27 @@
   }
 
   .preview-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .preview-validation {
+    min-width: auto;
+  }
+
+  .preview-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .preview-actions {
+    flex-wrap: wrap;
+    flex-direction: column;
+  }
+
+  .preview-size-info {
+    width: 100%;
+    text-align: center;
   }
 
   .version-management-layout {

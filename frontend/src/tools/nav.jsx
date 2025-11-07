@@ -56,6 +56,10 @@ const Nav = () => {
                   Profile
                 </BootstrapNav.Link>
 
+                <BootstrapNav.Link as={NavLink} to="/resumes" className="mx-3">
+                  Resumes
+                </BootstrapNav.Link>
+
                 <NavDropdown
                   title={
                     <span
