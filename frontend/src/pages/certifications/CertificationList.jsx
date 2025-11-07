@@ -18,7 +18,7 @@ export default function CertificationList() {
     try {
       setLoading(true);
       const data = await apiRequest("/api/certifications/me?uuid=", "");
-      
+
       // Transform backend data to frontend format
       const transformedCerts = (data || []).map(cert => ({
         id: cert._id,
@@ -33,7 +33,7 @@ export default function CertificationList() {
         document_name: cert.document_name,
         cert_id: cert.cert_number
       }));
-      
+
       setCerts(sortCerts(transformedCerts));
     } catch (error) {
       console.error("Failed to load certifications:", error);
@@ -68,7 +68,7 @@ export default function CertificationList() {
   const addCert = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
-      
+
       // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
@@ -79,7 +79,7 @@ export default function CertificationList() {
         category: certData.category,
         verified: certData.verified === 'true'
       };
-      
+
       await apiRequest("/api/certifications?uuid=", "", {
         method: "POST",
         body: JSON.stringify(backendData)
@@ -97,7 +97,7 @@ export default function CertificationList() {
   const submitEdit = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
-      
+
       // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
@@ -108,7 +108,7 @@ export default function CertificationList() {
         category: certData.category,
         verified: certData.verified === 'true'
       };
-      
+
       await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
         method: "PUT",
         body: JSON.stringify(backendData)
@@ -126,7 +126,7 @@ export default function CertificationList() {
 
   const deleteCert = async (id) => {
     if (!window.confirm("Delete this certification?")) return;
-    
+
     try {
       await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, "", {
         method: "DELETE"
@@ -196,7 +196,6 @@ export default function CertificationList() {
         />
       )}
 
-      {/* Only show the certification list if we're not showing the form */}
       {!showForm && (
         <>
           <div style={{ marginBottom: "20px" }}>
@@ -228,7 +227,12 @@ export default function CertificationList() {
               </p>
             </div>
           ) : (
-            <div>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "20px",
+              paddingTop: "20px"
+            }}>
               {filteredCerts.map((c) => (
                 <CertificationCard
                   key={c.id}
