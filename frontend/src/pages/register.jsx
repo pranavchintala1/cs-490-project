@@ -7,7 +7,6 @@ import { jwtDecode } from "jwt-decode";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
-import { sendData } from "../tools/db_commands";
 import { apiRequest } from "../api";
 
 
@@ -29,26 +28,22 @@ function Register() {
 
     const onSubmit = async (data) => {
 
-
-        
-        const res = await sendData(data,"/api/auth/register");
-
-
-        if (!res){
-            showFlash("Something went wrong when registering","error");
-            return;
-
-        }
-
-        const json = await res.json()
-        console.log(json)
-
-        if (res.status != 200){
-            showFlash(json.detail,"error");
-        }
-        else{
+        const payload = {
+        username: data.username,
+        password: data.password,
+        email: data.email,
+        full_name: `${data.firstName} ${data.lastName}`
+    };
 
 
+
+        try{
+                const res = await apiRequest("/api/auth/register", "", {
+        method: "POST",
+        body: JSON.stringify(payload)
+        });
+
+       
             showFlash("Successfully Registered!","Success");
 
             localStorage.setItem("session",res.session_token);
@@ -56,39 +51,42 @@ function Register() {
                 
             
             navigate(`/profile`);
+            return;
+        }
+        catch(error){
+            showFlash(error,"error");
+            return;
 
         }
-            return;
+
             
         };
 
         const OAuthSubmit = async (data) => {
 
         
+            try{
+            const res = await apiRequest("/api/auth/verify-google-token"," ",{
+        method: "POST",
+        body: JSON.stringify(data)
+        }); // Link this account with local non-google account later.
 
-            const res = await sendData(data,"/api/auth/verify-google-token"); // Link this account with local non-google account later.
+            
 
-            if (!res){
-                 
-            showFlash("Something went wrong when registering","error");
-            return;
-
-            }
-
-            const json = await res.json();
-            if (res.status != 200){
-                
-                showFlash(json.detail,"error");
-                return;
-                
-            }
-
-            localStorage.setItem("session",json.session_token)
-            localStorage.setItem("uuid",json.uuid)
+            localStorage.setItem("session",res.session_token)
+            localStorage.setItem("uuid",res.uuid)
                 
 
             navigate(`/profile`);
             return;
+            }
+            catch (error){
+
+            showFlash(error,"error");
+            return;
+
+
+            }
 
         };
 
@@ -115,7 +113,7 @@ async function handleMicrosoftLogin() {
       return;
     }
 
-    const res = await apiRequest("/api/login/microsoft", " ", {
+    const res = await apiRequest("/api/auth/login/microsoft", " ", {
       method: "PUT",
       headers: {"Content-Type": "application/json",},
       body: JSON.stringify({ token: tokenResponse.idToken }),
