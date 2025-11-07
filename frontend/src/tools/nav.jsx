@@ -39,10 +39,12 @@ const logout = async () => {
 
   const [showDropdown, setShowDropdown] = React.useState(false);
 
-  React.useEffect(() => {
-    // Automatically show dropdown when on dashboard
-    setShowDropdown(location.pathname.startsWith("/dashboard"));
-  }, [location.pathname]);
+
+  // Why would we want this
+  // React.useEffect(() => {
+  //   // Automatically show dropdown when on dashboard
+  //   setShowDropdown(location.pathname.startsWith("/dashboard"));
+  // }, [location.pathname]);
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
@@ -69,6 +71,7 @@ const logout = async () => {
                   title={
                     <span
                       onClick={(e) => {
+                        e.preventDefault(); // <-- add this line
                         e.stopPropagation(); // prevents dropdown toggle from hijacking the click
                         navigate("/dashboard");
                       }}

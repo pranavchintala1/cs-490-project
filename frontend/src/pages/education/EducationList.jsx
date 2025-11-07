@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
 import { apiRequest } from "../../api";
+import { useLocation } from "react-router-dom";
 
 const degreeEmojis = {
   "High School": "🏫",
@@ -32,6 +33,14 @@ export default function EducationList() {
   const [editEntry, setEditEntry] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const location = useLocation();
+  // 👇 Check for navigation state (if user came from a special link)
+  useEffect(() => {
+    if (location.state?.showForm) {
+      setShowForm(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     loadEducation();
