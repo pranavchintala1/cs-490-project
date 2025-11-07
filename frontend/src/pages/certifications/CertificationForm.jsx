@@ -52,6 +52,11 @@ export default function CertificationForm({ addCert, editCert, cancelEdit }) {
     if (!certNumber.trim()) return alert("Please enter certification number/ID");
     if (!category) return alert("Please select a certification category");
 
+    // Validate expiration date if set
+    if (expirationDate && new Date(expirationDate) < new Date(dateEarned)) {
+      return alert("Expiration date cannot be earlier than the date earned.");
+    }
+
     const formData = new FormData();
     formData.append("id", id || `cert${Date.now()}`);
     formData.append("name", name.trim());
