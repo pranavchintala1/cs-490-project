@@ -1,73 +1,52 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
-
-// Simulate mock API fetch
-const fetchDataFromAPI = async () => {
-  // Simulate random network delay
-  await new Promise((resolve) => setTimeout(resolve, Math.random() * 1500 + 500));
-
-  // Mock data
-  const mockCerts = [
-    {
-      id: "1",
-      name: "AWS Certified Developer",
-      category: "Cloud Computing",
-      issuer: "Amazon Web Services",
-      date_earned: "2023-03-10",
-      expiration_date: "2026-03-10",
-      does_not_expire: false,
-      verified: true,
-      has_document: true,
-      document_name: "aws_cert.pdf",
-      cert_id: "AWS-12345"
-    },
-    {
-      id: "2",
-      name: "React Developer Certification",
-      category: "Frontend Development",
-      issuer: "Meta",
-      date_earned: "2022-06-20",
-      expiration_date: "2025-11-15", // ✅ within 90 days (Expiring Soon)
-      does_not_expire: false,
-      verified: false,
-      has_document: false
-    },
-    {
-      id: "3",
-      name: "Python Fundamentals",
-      category: "Programming",
-      issuer: "Coursera",
-      date_earned: "2021-09-15",
-      does_not_expire: true,
-      verified: true,
-      has_document: true,
-      document_name: "python_cert.pdf"
-    },
-    {
-      id: "4",
-      name: "Agile Project Management",
-      category: "Project Management",
-      issuer: "PMI",
-      date_earned: "2021-02-01",
-      expiration_date: "2024-02-01", // ✅ already expired
-      does_not_expire: false,
-      verified: true,
-      has_document: false
-    }
-  ];
-
-  return mockCerts;
-};
+import { apiRequest } from "../../api";
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
   const [search, setSearch] = useState("");
+  const [editCert, setEditCert] = useState(null);
+  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCertifications();
+  }, []);
+
+  const loadCertifications = async () => {
+    try {
+      setLoading(true);
+      const data = await apiRequest("/api/certifications/me?uuid=", "");
+      
+      // Transform backend data to frontend format
+      const transformedCerts = (data || []).map(cert => ({
+        id: cert._id,
+        name: cert.name,
+        category: cert.category,
+        issuer: cert.issuer,
+        date_earned: cert.date_earned,
+        expiration_date: cert.date_expiry,
+        does_not_expire: !cert.date_expiry,
+        verified: cert.verified || false,
+        has_document: cert.has_document || false,
+        document_name: cert.document_name,
+        cert_id: cert.cert_number
+      }));
+      
+      setCerts(sortCerts(transformedCerts));
+    } catch (error) {
+      console.error("Failed to load certifications:", error);
+      setCerts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const sortCerts = (certArray) => {
     const today = new Date();
     return certArray
+      .map((c) => ({ ...c }))
       .sort((a, b) => {
         const aExp = a.expiration_date ? new Date(a.expiration_date) : null;
         const bExp = b.expiration_date ? new Date(b.expiration_date) : null;
@@ -83,69 +62,188 @@ export default function CertificationList() {
         if (aExpSoon && !bExpSoon) return -1;
         if (!aExpSoon && bExpSoon) return 1;
         return 0;
-      })
-      .map((c, i) => ({ ...c, position: i }));
+      });
   };
 
-  useEffect(() => {
-    const loadCerts = async () => {
-      try {
-        const data = await fetchDataFromAPI(); // simulated API
-        setCerts(sortCerts(data));
-      } catch (err) {
-        console.error("Error loading mock certs:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const addCert = async (formData) => {
+    try {
+      const certData = Object.fromEntries(formData.entries());
+      
+      // Transform frontend data to match backend schema exactly
+      const backendData = {
+        name: certData.name,
+        issuer: certData.issuer,
+        date_earned: certData.date_earned,
+        date_expiry: certData.does_not_expire === 'true' ? null : certData.expiration_date,
+        cert_number: certData.cert_number,
+        category: certData.category,
+        verified: certData.verified === 'true'
+      };
+      
+      await apiRequest("/api/certifications?uuid=", "", {
+        method: "POST",
+        body: JSON.stringify(backendData)
+      });
 
-    loadCerts();
-  }, []);
-
-  const addCert = (formData) => {
-    const newCert = {
-      id: String(Date.now()),
-      ...Object.fromEntries(formData.entries())
-    };
-    setCerts(sortCerts([...certs, newCert]));
+      // Reload certifications from server to get the actual data
+      await loadCertifications();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Failed to add certification:", error);
+      alert("Failed to add certification. Please try again.");
+    }
   };
 
-  const deleteCert = (id) => {
+  const submitEdit = async (formData) => {
+    try {
+      const certData = Object.fromEntries(formData.entries());
+      
+      // Transform frontend data to match backend schema exactly
+      const backendData = {
+        name: certData.name,
+        issuer: certData.issuer,
+        date_earned: certData.date_earned,
+        date_expiry: certData.does_not_expire === 'true' ? null : certData.expiration_date,
+        cert_number: certData.cert_number,
+        category: certData.category,
+        verified: certData.verified === 'true'
+      };
+      
+      await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify(backendData)
+      });
+
+      // Reload certifications from server to get the actual updated data
+      await loadCertifications();
+      setEditCert(null);
+      setShowForm(false);
+    } catch (error) {
+      console.error("Failed to update certification:", error);
+      alert("Failed to update certification. Please try again.");
+    }
+  };
+
+  const deleteCert = async (id) => {
     if (!window.confirm("Delete this certification?")) return;
-    setCerts(sortCerts(certs.filter((c) => c.id !== id)));
+    
+    try {
+      await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, "", {
+        method: "DELETE"
+      });
+
+      setCerts(sortCerts(certs.filter((c) => c.id !== id)));
+    } catch (error) {
+      console.error("Failed to delete certification:", error);
+      alert("Failed to delete certification. Please try again.");
+    }
   };
 
-  const filteredCerts = certs.filter((c) =>
-    c.issuer?.toLowerCase().includes(search.toLowerCase())
+  const filteredCerts = sortCerts(
+    certs.filter((c) =>
+      c.name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.issuer?.toLowerCase().includes(search.toLowerCase()) ||
+      c.category?.toLowerCase().includes(search.toLowerCase())
+    )
   );
 
   if (loading) {
     return (
-      <div style={{ color: "#003366", textAlign: "center", marginTop: "40px" }}>
-        ⏳ Loading certifications...
+      <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
+        <h1 style={{ margin: 0, color: "#333" }}>📜 Certifications</h1>
+        <p>Loading certifications...</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <h2 style={{ color: "#003366" }}>Certifications</h2>
-      <CertificationForm addCert={addCert} />
-      <input
-        placeholder="Search by issuer..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          margin: "8px 0",
-          padding: "6px 8px",
-          borderRadius: "4px",
-          border: "1px solid #D1D5DB"
-        }}
-      />
-      {filteredCerts.length === 0 && <p>No certifications found</p>}
-      {filteredCerts.map((c) => (
-        <CertificationCard key={c.id} cert={c} onDelete={deleteCert} />
-      ))}
+    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "20px"
+      }}>
+        <h1 style={{ margin: 0, color: "#333" }}>📜 Certifications</h1>
+        <button
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditCert(null);
+          }}
+          style={{
+            padding: "12px 24px",
+            background: "#4f8ef7",
+            color: "white",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "14px"
+          }}
+        >
+          {showForm ? "← Cancel" : "+ Add Certification"}
+        </button>
+      </div>
+
+      {showForm && (
+        <CertificationForm
+          addCert={addCert}
+          editCert={editCert ? { ...editCert, submit: submitEdit } : null}
+          cancelEdit={() => {
+            setEditCert(null);
+            setShowForm(false);
+          }}
+        />
+      )}
+
+      {/* Only show the certification list if we're not showing the form */}
+      {!showForm && (
+        <>
+          <div style={{ marginBottom: "20px" }}>
+            <input
+              placeholder="🔍 Search certifications by name, issuer, or category..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                fontSize: "14px",
+                border: "1px solid #ccc",
+                borderRadius: "6px",
+                boxSizing: "border-box"
+              }}
+            />
+          </div>
+
+          {filteredCerts.length === 0 ? (
+            <div style={{
+              background: "#f9f9f9",
+              padding: "40px",
+              borderRadius: "8px",
+              textAlign: "center",
+              color: "#999"
+            }}>
+              <p style={{ fontSize: "16px" }}>
+                {search ? "No certifications match your search" : "No certifications yet. Add your first one!"}
+              </p>
+            </div>
+          ) : (
+            <div>
+              {filteredCerts.map((c) => (
+                <CertificationCard
+                  key={c.id}
+                  cert={c}
+                  onDelete={deleteCert}
+                  onEdit={(cert) => {
+                    setEditCert(cert);
+                    setShowForm(true);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
