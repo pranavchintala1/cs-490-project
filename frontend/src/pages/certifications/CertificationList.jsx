@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
-import { apiRequest } from "../../api";
+import CertificationsAPI from "../../api/certificationsAPI";
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
@@ -17,10 +17,10 @@ export default function CertificationList() {
   const loadCertifications = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/certifications/me?uuid=", "");
+      const data = await CertificationsAPI.getAll();
       
       // Transform backend data to frontend format
-      const transformedCerts = (data || []).map(cert => ({
+      const transformedCerts = (data.data || []).map(cert => ({
         id: cert._id,
         name: cert.name,
         category: cert.category,
@@ -80,10 +80,7 @@ export default function CertificationList() {
         verified: certData.verified === 'true'
       };
       
-      await apiRequest("/api/certifications?uuid=", "", {
-        method: "POST",
-        body: JSON.stringify(backendData)
-      });
+      await CertificationsAPI.add(backendData); // me when the
 
       // Reload certifications from server to get the actual data
       await loadCertifications();
@@ -109,10 +106,7 @@ export default function CertificationList() {
         verified: certData.verified === 'true'
       };
       
-      await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify(backendData)
-      });
+      await CertificationsAPI.update(editCert.id, backendData); // I AM GOING INSANE
 
       // Reload certifications from server to get the actual updated data
       await loadCertifications();
@@ -128,9 +122,7 @@ export default function CertificationList() {
     if (!window.confirm("Delete this certification?")) return;
     
     try {
-      await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, "", {
-        method: "DELETE"
-      });
+      await CertificationsAPI.delete(id); // :(
 
       setCerts(sortCerts(certs.filter((c) => c.id !== id)));
     } catch (error) {
