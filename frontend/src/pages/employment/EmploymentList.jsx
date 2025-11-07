@@ -15,14 +15,15 @@ const parseLocalDate = (dateStr) => {
 
 
 export default function EmploymentList() {
-  const location = useLocation();
+  
 
 
   const [items, setItems] = useState([]);
   const [editEntry, setEditEntry] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  
+  const location = useLocation();
   // 👇 Check for navigation state (if user came from a special link)
   useEffect(() => {
     if (location.state?.showForm) {
