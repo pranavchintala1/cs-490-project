@@ -3,7 +3,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import JobCard from "./JobCard";
 
-export default function JobPipeline({ stage, jobs, onView, onEdit, onDelete, activeId }) {
+export default function JobPipeline({ stage, jobs, onView, onEdit, onDelete, onArchive, activeId }) {
   const stageColors = {
     "Interested": "#9e9e9e",
     "Applied": "#2196f3",
@@ -22,74 +22,53 @@ export default function JobPipeline({ stage, jobs, onView, onEdit, onDelete, act
     "Rejected": "❌"
   };
 
-  const { setNodeRef: droppableRef, isOver } = useDroppable({ 
-    id: `droppable-${stage}` 
-  });
+  const { setNodeRef: droppableRef, isOver } = useDroppable({ id: `droppable-${stage}` });
 
   const color = stageColors[stage] || "#666";
   const emoji = stageEmojis[stage] || "📋";
 
   return (
-    <div style={{
-      padding: "12px",
-      border: "2px solid #ddd",
-      borderRadius: "8px",
-      minHeight: "300px",
-      display: "flex",
-      flexDirection: "column",
-      background: "#f9f9f9"
-    }}>
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center",
-        marginBottom: "12px",
-        paddingBottom: "8px",
-        borderBottom: `3px solid ${color}`
-      }}>
-        <h3 style={{ 
-          margin: 0, 
-          fontSize: "16px", 
-          color: color,
+    <div
+      ref={droppableRef}
+      style={{
+        background: isOver ? "#e3f2fd" : "#f5f5f5",
+        borderRadius: "8px",
+        padding: "16px",
+        minHeight: "500px",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        transition: "background 0.2s",
+      }}
+    >
+      <div
+        style={{
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
-          gap: "8px"
-        }}>
-          <span style={{ fontSize: "20px" }}>{emoji}</span>
-          {stage}
-        </h3>
-        <span style={{
+          marginBottom: "16px",
+          padding: "12px",
           background: color,
           color: "white",
-          padding: "4px 10px",
-          borderRadius: "12px",
-          fontSize: "14px",
-          fontWeight: "bold"
-        }}>
+          borderRadius: "6px",
+          fontWeight: "bold",
+        }}
+      >
+        <span style={{ fontSize: "16px" }}>
+          {emoji} {stage}
+        </span>
+        <span
+          style={{
+            background: "rgba(255,255,255,0.3)",
+            padding: "4px 12px",
+            borderRadius: "12px",
+            fontSize: "14px",
+          }}
+        >
           {jobs.length}
         </span>
       </div>
 
-      <SortableContext 
-        items={jobs.map(j => j.id)} 
-        strategy={verticalListSortingStrategy}
-      >
-        <ul
-          ref={droppableRef}
-          style={{ 
-            padding: "8px", 
-            margin: 0,
-            listStyle: "none", 
-            minHeight: "200px",
-            backgroundColor: isOver ? "#e8f4f8" : (jobs.length === 0 ? "#f8f8f8" : "transparent"),
-            borderRadius: "4px",
-            transition: "background-color 0.2s",
-            border: isOver ? "2px dashed #4f8ef7" : "2px dashed transparent",
-            flexGrow: 1,
-            boxSizing: "border-box",
-            overflow: "auto",
-          }}
-        >
+      <SortableContext items={jobs.map((j) => j.id)} strategy={verticalListSortingStrategy}>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {jobs.length > 0 ? (
             jobs.map((job) => (
               <JobCard
@@ -98,19 +77,22 @@ export default function JobPipeline({ stage, jobs, onView, onEdit, onDelete, act
                 onView={onView}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onArchive={onArchive}
               />
             ))
           ) : (
-            <li style={{ 
-              padding: "40px 20px", 
-              color: "#999", 
-              textAlign: "center",
-              pointerEvents: "none",
-              listStyle: "none",
-              fontSize: "14px"
-            }}>
+            <div
+              style={{
+                padding: "40px 20px",
+                textAlign: "center",
+                color: "#999",
+                fontSize: "14px",
+                border: "2px dashed #ddd",
+                borderRadius: "6px",
+              }}
+            >
               {isOver ? "Drop here to move job" : "No jobs in this stage"}
-            </li>
+            </div>
           )}
         </ul>
       </SortableContext>

@@ -12,6 +12,7 @@ export default function ProjectsList() {
   const [showForm, setShowForm] = useState(false);
   const [editProject, setEditProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expandedCardId, setExpandedCardId] = useState(null);
 
   useEffect(() => {
     loadProjects();
@@ -34,7 +35,9 @@ export default function ProjectsList() {
         details: project.details,
         achievements: project.achievements,
         industry: project.industry,
-        status: project.status
+        status: project.status,
+        project_url: project.project_url,
+        media_files: project.media_files || []
       }));
       
       setProjects(transformedProjects);
@@ -50,12 +53,14 @@ export default function ProjectsList() {
     try {
       const response = await apiRequest("/api/projects?uuid=", "", {
         method: "POST",
-        body: JSON.stringify(projectData)
+        body: JSON.stringify(projectData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response && response.project_id) {
-        const newProject = { ...projectData, id: response.project_id };
-        setProjects([...projects, newProject]);
+        await loadProjects();
       }
       setShowForm(false);
     } catch (error) {
@@ -68,11 +73,13 @@ export default function ProjectsList() {
     try {
       await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
         method: "PUT",
-        body: JSON.stringify(projectData)
+        body: JSON.stringify(projectData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      const updatedProject = { ...editProject, ...projectData };
-      setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+      await loadProjects();
       setEditProject(null);
       setShowForm(false);
     } catch (error) {
@@ -90,10 +97,17 @@ export default function ProjectsList() {
       });
 
       setProjects(projects.filter((p) => p.id !== id));
+      if (expandedCardId === id) {
+        setExpandedCardId(null);
+      }
     } catch (error) {
       console.error("Failed to delete project:", error);
       alert("Failed to delete project. Please try again.");
     }
+  };
+
+  const handleCardToggle = (projectId) => {
+    setExpandedCardId(expandedCardId === projectId ? null : projectId);
   };
 
   const filteredProjects = projects
@@ -168,7 +182,6 @@ export default function ProjectsList() {
         />
       )}
 
-      {/* Only show filters and projects if form is not shown */}
       {!showForm && (
         <>
           <div style={{
@@ -270,7 +283,8 @@ export default function ProjectsList() {
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: "16px"
+              gap: "16px",
+              alignItems: "start"
             }}>
               {filteredProjects.map((p) => (
                 <ProjectCard
@@ -282,6 +296,8 @@ export default function ProjectsList() {
                     setEditProject(proj);
                     setShowForm(true);
                   }}
+                  expanded={expandedCardId === p.id}
+                  onToggle={handleCardToggle}
                 />
               ))}
             </div>

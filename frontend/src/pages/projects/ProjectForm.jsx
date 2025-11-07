@@ -13,6 +13,7 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
   const [achievements, setAchievements] = useState("");
   const [industry, setIndustry] = useState("");
   const [status, setStatus] = useState("");
+  const [projectUrl, setProjectUrl] = useState("");
   const [id, setId] = useState(null);
 
   useEffect(() => {
@@ -29,13 +30,15 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
       setAchievements(editProject.achievements || "");
       setIndustry(editProject.industry || "");
       setStatus(editProject.status || "");
+      setProjectUrl(editProject.project_url || "");
       setId(editProject.id);
     }
   }, [editProject]);
 
   const resetForm = () => {
     setProjectName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
-    setSkills(""); setTeamSize(""); setDetails(""); setAchievements(""); setIndustry(""); setStatus(""); setId(null);
+    setSkills(""); setTeamSize(""); setDetails(""); setAchievements(""); setIndustry(""); setStatus(""); 
+    setProjectUrl(""); setId(null);
   };
 
   const handleSubmit = (e) => {
@@ -47,18 +50,25 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
     if (!teamSize || isNaN(teamSize) || parseInt(teamSize) <= 0) return alert("Team Size must be positive");
     if (!status) return alert("Please select a project status");
 
+    // End Date Validation: Ensure end date is not earlier than start date
+    if (endDate && new Date(endDate) < new Date(startDate)) {
+      return alert("End date cannot be earlier than start date.");
+    }
+
+    // Send as JSON object instead of FormData
     const projectData = {
       project_name: projectName.trim(),
-      description: description.trim(),
+      description: description.trim() || undefined,
       role: role.trim(),
       start_date: startDate,
-      end_date: noEndDate ? null : endDate || null,
-      skills: skills.trim() ? skills.split(",").map(s => s.trim()) : [],
+      end_date: noEndDate ? undefined : (endDate || undefined),
+      skills: skills.trim() ? skills.split(",").map(s => s.trim()) : undefined,
       team_size: parseInt(teamSize),
-      details: details.trim(),
-      achievements: achievements.trim(),
-      industry: industry.trim(),
-      status: status
+      details: details.trim() || undefined,
+      achievements: achievements.trim() || undefined,
+      industry: industry.trim() || undefined,
+      status: status,
+      project_url: projectUrl.trim() || undefined
     };
 
     if (editProject) {
@@ -179,28 +189,26 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             📅 Timeline & Team
           </h3>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={labelStyle}>Start Date *</label>
-              <input
-                style={inputStyle}
-                type="date"
-                value={startDate}
-                onChange={e => setStartDate(e.target.value)}
-                required
-              />
-            </div>
-            <div>
+          <label style={labelStyle}>Start Date *</label>
+          <input
+            style={inputStyle}
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            required
+          />
+
+          {!noEndDate && (
+            <>
               <label style={labelStyle}>End Date</label>
               <input
                 style={inputStyle}
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
-                disabled={noEndDate}
               />
-            </div>
-          </div>
+            </>
+          )}
 
           <label style={{
             display: "flex",
@@ -215,7 +223,12 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             <input
               type="checkbox"
               checked={noEndDate}
-              onChange={e => setNoEndDate(e.target.checked)}
+              onChange={e => {
+                setNoEndDate(e.target.checked);
+                if (e.target.checked) {
+                  setEndDate("");
+                }
+              }}
               style={{ width: "18px", height: "18px", cursor: "pointer" }}
             />
             Ongoing / Continuous Project
@@ -247,6 +260,15 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             onChange={e => setSkills(e.target.value)}
           />
 
+          <label style={labelStyle}>Project URL / Repository</label>
+          <input
+            style={inputStyle}
+            type="url"
+            placeholder="e.g., https://github.com/username/project"
+            value={projectUrl}
+            onChange={e => setProjectUrl(e.target.value)}
+          />
+
           <label style={labelStyle}>Project Details</label>
           <textarea
             style={{ 
@@ -271,6 +293,23 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             placeholder="e.g., Increased performance by 40%, Reduced costs by $50k..."
             value={achievements}
             onChange={e => setAchievements(e.target.value)}
+          />
+        </div>
+
+        {/* Media Upload*/}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📸 Media Files
+          </h3>
+
+          <label style={labelStyle}>Upload Screenshots / Documents</label>
+          <input
+            type="file"
+            multiple
+            style={{
+              ...inputStyle,
+              padding: "8px",
+            }}
           />
         </div>
 

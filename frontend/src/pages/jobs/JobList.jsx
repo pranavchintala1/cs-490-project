@@ -11,6 +11,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import JobForm from "./JobForm";
 import JobPipeline from "./JobPipeline";
 import JobCard from "./JobCard";
+import { DeadlineWidget, DeadlineCalendar, DeadlineReminderModal } from "./DeadlineComponents";
 import { apiRequest } from "../../api";
 
 export default function JobList() {
@@ -20,6 +21,9 @@ export default function JobList() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [reminderJob, setReminderJob] = useState(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +46,7 @@ export default function JobList() {
       setLoading(true);
       const data = await apiRequest("/api/jobs/me?uuid=", "");
       
+      // Transform backend snake_case to frontend camelCase
       const transformedJobs = (data || []).map(job => ({
         id: job._id,
         title: job.title,
@@ -51,16 +56,25 @@ export default function JobList() {
         url: job.url,
         deadline: job.deadline,
         industry: job.industry,
-        jobType: job.jobType,
+        job_type: job.job_type,
+        jobType: job.job_type,
         description: job.description,
         status: job.status,
-        createdAt: job.createdAt,
-        updatedAt: job.updatedAt,
-        statusHistory: job.statusHistory || [],
+        createdAt: job.date_created || job.createdAt,
+        updatedAt: job.date_updated || job.updatedAt,
+        status_history: job.status_history || [],
+        statusHistory: (job.status_history || []).map(([status, timestamp]) => ({ 
+          status, 
+          timestamp 
+        })),
         notes: job.notes,
         contacts: job.contacts,
-        salaryNotes: job.salaryNotes,
-        interviewNotes: job.interviewNotes
+        salary_notes: job.salary_notes,
+        salaryNotes: job.salary_notes,
+        interview_notes: job.interview_notes,
+        interviewNotes: job.interview_notes,
+        archived: job.archived || false,
+        archiveReason: job.archive_reason
       }));
       
       setJobs(transformedJobs);
@@ -76,14 +90,28 @@ export default function JobList() {
     try {
       const response = await apiRequest("/api/jobs?uuid=", "", {
         method: "POST",
-        body: JSON.stringify(jobData)
+        body: JSON.stringify(jobData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response && response.job_id) {
-        const newJob = { ...jobData, id: response.job_id };
-        setJobs([...jobs, newJob]);
+        // Optimistically add the job with the returned ID instead of reloading
+        const newJob = {
+          id: response.job_id,
+          ...jobData,
+          jobType: jobData.job_type,
+          salaryNotes: jobData.salary_notes,
+          interviewNotes: jobData.interview_notes,
+          statusHistory: (jobData.status_history || []).map(([status, timestamp]) => ({ status, timestamp })),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        setJobs(prev => [...prev, newJob]);
+        setView("pipeline");
       }
-      setView("pipeline");
     } catch (error) {
       console.error("Failed to add job:", error);
       alert("Failed to add job. Please try again.");
@@ -92,25 +120,36 @@ export default function JobList() {
 
   const updateJob = async (jobData) => {
     try {
-      const oldJob = jobs.find((j) => j.id === jobData.id);
-      const statusChanged = oldJob.status !== jobData.status;
-
-      const updatedStatusHistory = statusChanged
-        ? [...(jobData.statusHistory || []), { status: jobData.status, timestamp: new Date().toISOString() }]
-        : jobData.statusHistory;
-
-      await apiRequest(`/api/jobs?job_id=${jobData.id}&uuid=`, "", {
+      const { id, createdAt, updatedAt, statusHistory, jobType, salaryNotes, interviewNotes, ...backendData } = jobData;
+      
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
         method: "PUT",
-        body: JSON.stringify({ ...jobData, statusHistory: updatedStatusHistory })
+        body: JSON.stringify(backendData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      setJobs(jobs.map((j) => (j.id === jobData.id ? { ...jobData, statusHistory: updatedStatusHistory } : j)));
+      // Optimistically update the job in state
+      setJobs(prev => prev.map(job => {
+        if (job.id === id) {
+          return {
+            ...job,
+            ...jobData,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return job;
+      }));
+
       setView("pipeline");
       setEditingJob(null);
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to update job:", error);
       alert("Failed to update job. Please try again.");
+      // Reload on error to ensure consistency
+      loadJobs();
     }
   };
 
@@ -127,6 +166,56 @@ export default function JobList() {
     } catch (error) {
       console.error("Failed to delete job:", error);
       alert("Failed to delete job. Please try again.");
+    }
+  };
+
+  const archiveJob = async (id, reason = "") => {
+    try {
+      const job = jobs.find(j => j.id === id);
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify({
+          archived: true,
+          archive_reason: reason
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setJobs(jobs.map(j => j.id === id ? { ...j, archived: true, archiveReason: reason } : j));
+      setSelectedJob(null);
+    } catch (error) {
+      console.error("Failed to archive job:", error);
+      alert("Failed to archive job. Please try again.");
+    }
+  };
+
+  const restoreJob = async (id) => {
+    try {
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify({
+          archived: false,
+          archive_reason: null
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      setJobs(jobs.map(j => j.id === id ? { ...j, archived: false, archiveReason: null } : j));
+    } catch (error) {
+      console.error("Failed to restore job:", error);
+      alert("Failed to restore job. Please try again.");
+    }
+  };
+
+  const bulkArchive = async (jobIds, reason = "") => {
+    if (!window.confirm(`Archive ${jobIds.length} jobs?`)) return;
+
+    for (const id of jobIds) {
+      await archiveJob(id, reason);
     }
   };
 
@@ -153,11 +242,15 @@ export default function JobList() {
     }
 
     if (activeJob.status !== newStatus) {
+      const now = new Date().toISOString();
+      const updatedStatusHistory = [...activeJob.status_history, [newStatus, now]];
+      
       const updatedJob = {
         ...activeJob,
         status: newStatus,
-        updatedAt: new Date().toISOString(),
-        statusHistory: [...activeJob.statusHistory, { status: newStatus, timestamp: new Date().toISOString() }],
+        updatedAt: now,
+        status_history: updatedStatusHistory,
+        statusHistory: updatedStatusHistory.map(([status, timestamp]) => ({ status, timestamp }))
       };
       
       setJobs(jobs.map((j) => (j.id === activeJob.id ? updatedJob : j)));
@@ -168,19 +261,24 @@ export default function JobList() {
           method: "PUT",
           body: JSON.stringify({
             status: newStatus,
-            statusHistory: updatedJob.statusHistory,
-            updatedAt: updatedJob.updatedAt
-          })
+            status_history: updatedStatusHistory
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
       } catch (error) {
         console.error("Failed to update job status:", error);
-        // Reload jobs to ensure consistency
         loadJobs();
       }
     }
   };
 
   const filteredJobs = jobs.filter((job) => {
+    // Filter archived/active jobs based on view
+    if (showArchived && !job.archived) return false;
+    if (!showArchived && job.archived) return false;
+
     const matchesSearch =
       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -256,27 +354,71 @@ export default function JobList() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
         <h1 style={{ margin: 0, color: "#333" }}>Job Opportunities Tracker</h1>
-        <button
-          onClick={() => {
-            setView(view === "pipeline" ? "form" : "pipeline");
-            setEditingJob(null);
-          }}
-          style={{
-            padding: "12px 24px",
-            background: "#4f8ef7",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px"
-          }}
-        >
-          {view === "pipeline" ? "+ Add New Job" : "← Back to Pipeline"}
-        </button>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          {view === "pipeline" && !showArchived && (
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              style={{
+                padding: "12px 24px",
+                background: showCalendar ? "#ff9800" : "#9c27b0",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: "14px"
+              }}
+            >
+              {showCalendar ? "📋 Hide Calendar" : "📅 Show Calendar"}
+            </button>
+          )}
+          {view === "pipeline" && (
+            <button
+              onClick={() => setShowArchived(!showArchived)}
+              style={{
+                padding: "12px 24px",
+                background: showArchived ? "#ff5722" : "#607d8b",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                fontSize: "14px"
+              }}
+            >
+              {showArchived ? "📂 Show Active" : "🗄️ Show Archived"}
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setView(view === "pipeline" ? "form" : "pipeline");
+              setEditingJob(null);
+            }}
+            style={{
+              padding: "12px 24px",
+              background: "#4f8ef7",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              fontSize: "14px"
+            }}
+          >
+            {view === "pipeline" ? "+ Add New Job" : "← Back to Pipeline"}
+          </button>
+        </div>
       </div>
+
+      {/* Deadline Widget and Calendar - show only in pipeline view for active jobs */}
+      {view === "pipeline" && !showArchived && (
+        <>
+          <DeadlineWidget jobs={jobs.filter(j => !j.archived)} onJobClick={(job) => setSelectedJob(job)} />
+          {showCalendar && <DeadlineCalendar jobs={jobs.filter(j => !j.archived)} />}
+        </>
+      )}
 
       {view === "pipeline" && (
         <div style={{ background: "#f9f9f9", padding: "16px", borderRadius: "8px", marginBottom: "20px" }}>
@@ -399,6 +541,7 @@ export default function JobList() {
                         setView("form");
                       }}
                       onDelete={deleteJob}
+                      onArchive={archiveJob}
                       activeId={activeId}
                     />
                   </div>
@@ -460,9 +603,239 @@ export default function JobList() {
                 ×
               </button>
             </div>
-            {/* Add more detail content as needed */}
+            
+            <div style={{ marginBottom: "16px", color: "#000" }}>
+              <strong>Company:</strong> {selectedJob.company}
+            </div>
+            
+            <div style={{ marginBottom: "16px", color: "#000" }}>
+              <strong>Status:</strong> <span style={{ 
+                padding: "4px 12px", 
+                borderRadius: "12px", 
+                background: "#e3f2fd",
+                fontSize: "14px",
+                color: "#000"
+              }}>{selectedJob.status}</span>
+            </div>
+            
+            {selectedJob.location && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Location:</strong> {selectedJob.location}
+              </div>
+            )}
+            
+            {selectedJob.salary && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Salary:</strong> {selectedJob.salary}
+              </div>
+            )}
+            
+            {selectedJob.jobType && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Job Type:</strong> {selectedJob.jobType}
+              </div>
+            )}
+            
+            {selectedJob.industry && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Industry:</strong> {selectedJob.industry}
+              </div>
+            )}
+            
+            {selectedJob.deadline && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Deadline:</strong> {new Date(selectedJob.deadline).toLocaleDateString()}
+                <button
+                  onClick={() => setReminderJob(selectedJob)}
+                  style={{
+                    marginLeft: "12px",
+                    padding: "6px 12px",
+                    background: "#ff9800",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                  }}
+                >
+                  ⏰ Set Reminder
+                </button>
+              </div>
+            )}
+            
+            {selectedJob.url && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Link:</strong> <a 
+                  href={selectedJob.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: "#4f8ef7", textDecoration: "underline" }}
+                >
+                  View Job Posting →
+                </a>
+              </div>
+            )}
+            
+            {selectedJob.description && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Description:</strong>
+                <div style={{ whiteSpace: "pre-wrap", marginTop: "8px", color: "#000", background: "#f9f9f9", padding: "12px", borderRadius: "4px" }}>
+                  {selectedJob.description}
+                </div>
+              </div>
+            )}
+            
+            {selectedJob.contacts && (
+              <div style={{ marginBottom: "16px", background: "#e3f2fd", padding: "12px", borderRadius: "4px", color: "#000" }}>
+                <strong>Contacts:</strong>
+                <div style={{ whiteSpace: "pre-wrap", marginTop: "8px" }}>
+                  {selectedJob.contacts}
+                </div>
+              </div>
+            )}
+            
+            {selectedJob.salaryNotes && (
+              <div style={{ marginBottom: "16px", background: "#f3e5f5", padding: "12px", borderRadius: "4px", color: "#000" }}>
+                <strong>Salary Notes:</strong>
+                <div style={{ whiteSpace: "pre-wrap", marginTop: "8px" }}>
+                  {selectedJob.salaryNotes}
+                </div>
+              </div>
+            )}
+            
+            {selectedJob.interviewNotes && (
+              <div style={{ marginBottom: "16px", background: "#e8f5e9", padding: "12px", borderRadius: "4px", color: "#000" }}>
+                <strong>Interview Notes:</strong>
+                <div style={{ whiteSpace: "pre-wrap", marginTop: "8px" }}>
+                  {selectedJob.interviewNotes}
+                </div>
+              </div>
+            )}
+            
+            {selectedJob.notes && (
+              <div style={{ marginBottom: "16px", background: "#fffbea", padding: "12px", borderRadius: "4px", color: "#000" }}>
+                <strong>Notes:</strong>
+                <div style={{ whiteSpace: "pre-wrap", marginTop: "8px" }}>
+                  {selectedJob.notes}
+                </div>
+              </div>
+            )}
+            
+            {selectedJob.statusHistory && selectedJob.statusHistory.length > 0 && (
+              <div style={{ marginBottom: "16px", color: "#000" }}>
+                <strong>Status History:</strong>
+                <div style={{ marginTop: "8px" }}>
+                  {selectedJob.statusHistory.map((history, idx) => (
+                    <div key={idx} style={{ fontSize: "13px", color: "#000", marginBottom: "4px" }}>
+                      • {history.status} - {new Date(history.timestamp).toLocaleDateString()}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {selectedJob.archived && (
+              <div style={{ marginBottom: "16px", background: "#ffebee", padding: "12px", borderRadius: "4px", color: "#000" }}>
+                <strong>Archived</strong>
+                {selectedJob.archiveReason && <div style={{ marginTop: "4px", fontSize: "13px" }}>Reason: {selectedJob.archiveReason}</div>}
+              </div>
+            )}
+            
+            <div style={{ display: "flex", gap: "10px", marginTop: "24px", flexWrap: "wrap" }}>
+              <button
+                onClick={() => {
+                  setEditingJob(selectedJob);
+                  setView("form");
+                  setSelectedJob(null);
+                }}
+                style={{
+                  padding: "10px 20px",
+                  background: "#34c759",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600"
+                }}
+              >
+                ✏️ Edit Job
+              </button>
+              
+              {selectedJob.archived ? (
+                <button
+                  onClick={() => {
+                    restoreJob(selectedJob.id);
+                    setSelectedJob(null);
+                  }}
+                  style={{
+                    padding: "10px 20px",
+                    background: "#4caf50",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "600"
+                  }}
+                >
+                  ♻️ Restore Job
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    const reason = prompt("Reason for archiving (optional):");
+                    if (reason !== null) {
+                      archiveJob(selectedJob.id, reason);
+                    }
+                  }}
+                  style={{
+                    padding: "10px 20px",
+                    background: "#607d8b",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: "600"
+                  }}
+                >
+                  🗄️ Archive Job
+                </button>
+              )}
+              
+              <button
+                onClick={() => {
+                  deleteJob(selectedJob.id);
+                }}
+                style={{
+                  padding: "10px 20px",
+                  background: "#ff3b30",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600"
+                }}
+              >
+                🗑️ Delete Job
+              </button>
+            </div>
           </div>
         </div>
+      )}
+      
+      {reminderJob && (
+        <DeadlineReminderModal
+          job={reminderJob}
+          onClose={() => setReminderJob(null)}
+          onSave={(updatedJob) => {
+            updateJob(updatedJob);
+            setReminderJob(null);
+          }}
+        />
       )}
     </div>
   );

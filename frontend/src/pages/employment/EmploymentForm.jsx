@@ -50,6 +50,11 @@ export default function EmploymentForm({ onAdded, editEntry, cancelEdit }) {
     setErr("");
     if (!f.title.trim()) return setErr("Title is required.");
     if (!f.start_date) return setErr("Start date is required.");
+    
+    // Check if end date is before start date
+    if (f.end_date && new Date(f.end_date) < new Date(f.start_date)) {
+      return setErr("End date cannot be before start date.");
+    }
 
     setSaving(true);
     
@@ -154,19 +159,18 @@ export default function EmploymentForm({ onAdded, editEntry, cancelEdit }) {
             📅 Employment Timeline
           </h3>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div>
-              <label style={labelStyle}>Start Date *</label>
-              <input
-                style={inputStyle}
-                type="date"
-                name="start_date"
-                value={f.start_date}
-                onChange={onChange}
-                required
-              />
-            </div>
-            <div>
+          <label style={labelStyle}>Start Date *</label>
+          <input
+            style={inputStyle}
+            type="date"
+            name="start_date"
+            value={f.start_date}
+            onChange={onChange}
+            required
+          />
+
+          {!ongoing && (
+            <>
               <label style={labelStyle}>End Date</label>
               <input
                 style={inputStyle}
@@ -174,10 +178,9 @@ export default function EmploymentForm({ onAdded, editEntry, cancelEdit }) {
                 name="end_date"
                 value={f.end_date}
                 onChange={onChange}
-                disabled={ongoing}
               />
-            </div>
-          </div>
+            </>
+          )}
 
           <label style={{
             display: "flex",
@@ -192,7 +195,12 @@ export default function EmploymentForm({ onAdded, editEntry, cancelEdit }) {
             <input
               type="checkbox"
               checked={ongoing}
-              onChange={(e) => setOngoing(e.target.checked)}
+              onChange={(e) => {
+                setOngoing(e.target.checked);
+                if (e.target.checked) {
+                  setF(prev => ({ ...prev, end_date: "" }));
+                }
+              }}
               style={{ width: "18px", height: "18px", cursor: "pointer" }}
             />
             Currently Working Here
