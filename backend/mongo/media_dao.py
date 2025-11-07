@@ -39,7 +39,7 @@ class MediaDAO:
             "size": media.length
         }
 
-    async def get_all_associated_media_ids(self, parent_id: str) -> list[dict]:
+    async def get_all_associated_media_ids(self, parent_id: str) -> list[str]:
         try:
             cursor = self.grid.find({"metadata.parent_id": parent_id})
         except:

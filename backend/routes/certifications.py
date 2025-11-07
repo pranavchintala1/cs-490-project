@@ -108,6 +108,15 @@ async def download_media(media_id, uuid: str = Depends(authorize)):
         }
     )
 
+@certifications_router.get("/media/ids", tags = ["certifications"])
+async def get_all_media_ids(parent_id:str, uuid: str = Depends(authorize)):
+    try:
+        media_ids = await media_dao.get_all_associated_media_ids(parent_id)
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal service error")
+    
+    return {"detail": "Sucessfully gotten media ids", "media_id_list": media_ids}
+
 @certifications_router.put("/media", tags = ["certifications"])
 async def update_media(parent_id: str, media_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
     try:

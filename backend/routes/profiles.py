@@ -73,7 +73,7 @@ async def download_pfp(uuid: str = Depends(authorize)):
         raise HTTPException(400, "Could not find profile picture for user")
     
     try:
-        media = await media_dao.get_media(media_ids[0])
+        media = await media_dao.get_media(media_ids[-1])
     except:
         raise HTTPException(500, "Encountered internal server error")
 
