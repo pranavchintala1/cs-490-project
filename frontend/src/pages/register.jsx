@@ -113,7 +113,7 @@ async function handleMicrosoftLogin() {
       return;
     }
 
-    const res = await apiRequest("/api/login/microsoft", " ", {
+    const res = await apiRequest("/api/auth/login/microsoft", " ", {
       method: "PUT",
       headers: {"Content-Type": "application/json",},
       body: JSON.stringify({ token: tokenResponse.idToken }),
