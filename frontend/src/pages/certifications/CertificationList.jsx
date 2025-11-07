@@ -18,7 +18,7 @@ export default function CertificationList() {
     try {
       setLoading(true);
       const data = await apiRequest("/api/certifications/me?uuid=", "");
-      
+
       // Transform backend data to frontend format
       const transformedCerts = (data || []).map(cert => ({
         id: cert._id,
@@ -26,14 +26,14 @@ export default function CertificationList() {
         category: cert.category,
         issuer: cert.issuer,
         date_earned: cert.date_earned,
-        expiration_date: cert.expiration_date,
-        does_not_expire: cert.does_not_expire || false,
+        expiration_date: cert.date_expiry,
+        does_not_expire: !cert.date_expiry,
         verified: cert.verified || false,
         has_document: cert.has_document || false,
         document_name: cert.document_name,
-        cert_id: cert.cert_id
+        cert_id: cert.cert_number
       }));
-      
+
       setCerts(sortCerts(transformedCerts));
     } catch (error) {
       console.error("Failed to load certifications:", error);
@@ -68,16 +68,25 @@ export default function CertificationList() {
   const addCert = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
-      
-      const response = await apiRequest("/api/certifications?uuid=", "", {
+
+      // Transform frontend data to match backend schema exactly
+      const backendData = {
+        name: certData.name,
+        issuer: certData.issuer,
+        date_earned: certData.date_earned,
+        date_expiry: certData.does_not_expire === 'true' ? null : certData.expiration_date,
+        cert_number: certData.cert_number,
+        category: certData.category,
+        verified: certData.verified === 'true'
+      };
+
+      await apiRequest("/api/certifications?uuid=", "", {
         method: "POST",
-        body: JSON.stringify(certData)
+        body: JSON.stringify(backendData)
       });
 
-      if (response && response.cert_id) {
-        const newCert = { ...certData, id: response.cert_id };
-        setCerts(sortCerts([...certs, newCert]));
-      }
+      // Reload certifications from server to get the actual data
+      await loadCertifications();
       setShowForm(false);
     } catch (error) {
       console.error("Failed to add certification:", error);
@@ -88,14 +97,25 @@ export default function CertificationList() {
   const submitEdit = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
-      
-      await apiRequest(`/api/certifications?cert_id=${editCert.id}&uuid=`, "", {
+
+      // Transform frontend data to match backend schema exactly
+      const backendData = {
+        name: certData.name,
+        issuer: certData.issuer,
+        date_earned: certData.date_earned,
+        date_expiry: certData.does_not_expire === 'true' ? null : certData.expiration_date,
+        cert_number: certData.cert_number,
+        category: certData.category,
+        verified: certData.verified === 'true'
+      };
+
+      await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
         method: "PUT",
-        body: JSON.stringify(certData)
+        body: JSON.stringify(backendData)
       });
 
-      const updatedCert = { ...editCert, ...certData };
-      setCerts(sortCerts(certs.map(c => c.id === updatedCert.id ? updatedCert : c)));
+      // Reload certifications from server to get the actual updated data
+      await loadCertifications();
       setEditCert(null);
       setShowForm(false);
     } catch (error) {
@@ -106,9 +126,9 @@ export default function CertificationList() {
 
   const deleteCert = async (id) => {
     if (!window.confirm("Delete this certification?")) return;
-    
+
     try {
-      await apiRequest(`/api/certifications?cert_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, "", {
         method: "DELETE"
       });
 
@@ -176,7 +196,6 @@ export default function CertificationList() {
         />
       )}
 
-      {/* Only show the certification list if we're not showing the form */}
       {!showForm && (
         <>
           <div style={{ marginBottom: "20px" }}>
@@ -208,7 +227,12 @@ export default function CertificationList() {
               </p>
             </div>
           ) : (
-            <div>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "20px",
+              paddingTop: "20px"
+            }}>
               {filteredCerts.map((c) => (
                 <CertificationCard
                   key={c.id}

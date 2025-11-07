@@ -24,9 +24,9 @@ export default function CertificationForm({ addCert, editCert, cancelEdit }) {
       setName(editCert.name || "");
       setIssuer(editCert.issuer || "");
       setDateEarned(editCert.date_earned || "");
-      setDoesNotExpire(!editCert.expiration_date || editCert.does_not_expire);
+      setDoesNotExpire(editCert.does_not_expire || false);
       setExpirationDate(editCert.expiration_date || "");
-      setCertNumber(editCert.cert_id || "");
+      setCertNumber(editCert.cert_id || editCert.cert_number || "");
       setCategory(editCert.category || "");
       setVerified(editCert.verified || false);
       setId(editCert.id);
@@ -52,16 +52,21 @@ export default function CertificationForm({ addCert, editCert, cancelEdit }) {
     if (!certNumber.trim()) return alert("Please enter certification number/ID");
     if (!category) return alert("Please select a certification category");
 
+    // Validate expiration date if set
+    if (expirationDate && new Date(expirationDate) < new Date(dateEarned)) {
+      return alert("Expiration date cannot be earlier than the date earned.");
+    }
+
     const formData = new FormData();
     formData.append("id", id || `cert${Date.now()}`);
     formData.append("name", name.trim());
     formData.append("issuer", issuer.trim());
     formData.append("date_earned", dateEarned);
-    formData.append("does_not_expire", doesNotExpire);
+    formData.append("does_not_expire", doesNotExpire.toString());
     formData.append("expiration_date", doesNotExpire ? "" : expirationDate);
-    formData.append("cert_id", certNumber.trim());
+    formData.append("cert_number", certNumber.trim());
     formData.append("category", category);
-    formData.append("verified", verified);
+    formData.append("verified", verified.toString());
     if (documentFile) formData.append("document", documentFile);
 
     if (editCert) {
@@ -174,6 +179,19 @@ export default function CertificationForm({ addCert, editCert, cancelEdit }) {
             required
           />
 
+          {!doesNotExpire && (
+            <>
+              <label style={labelStyle}>Expiration Date *</label>
+              <input
+                style={inputStyle}
+                type="date"
+                value={expirationDate}
+                onChange={e => setExpirationDate(e.target.value)}
+                required={!doesNotExpire}
+              />
+            </>
+          )}
+
           <label style={{
             display: "flex",
             alignItems: "center",
@@ -187,24 +205,16 @@ export default function CertificationForm({ addCert, editCert, cancelEdit }) {
             <input
               type="checkbox"
               checked={doesNotExpire}
-              onChange={e => setDoesNotExpire(e.target.checked)}
+              onChange={e => {
+                setDoesNotExpire(e.target.checked);
+                if (e.target.checked) {
+                  setExpirationDate("");
+                }
+              }}
               style={{ width: "18px", height: "18px", cursor: "pointer" }}
             />
             Does Not Expire
           </label>
-
-          {!doesNotExpire && (
-            <>
-              <label style={labelStyle}>Expiration Date *</label>
-              <input
-                style={inputStyle}
-                type="date"
-                value={expirationDate}
-                onChange={e => setExpirationDate(e.target.value)}
-                required={!doesNotExpire}
-              />
-            </>
-          )}
         </div>
 
         {/* Verification & Document */}

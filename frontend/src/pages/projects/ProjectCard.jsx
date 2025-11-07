@@ -12,13 +12,43 @@ const statusEmojis = {
   Completed: "✅"
 };
 
-export default function ProjectCard({ project, deleteProject, onEdit }) {
-  const [expanded, setExpanded] = useState(false);
+// Helper to parse date without timezone issues
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+// Helper to format date for display
+const formatDate = (dateStr) => {
+  if (!dateStr) return null;
+  const date = parseLocalDate(dateStr);
+  return date.toLocaleDateString();
+};
+
+export default function ProjectCard({ project, deleteProject, onEdit, expanded, onToggle }) {
   const [zoomedImage, setZoomedImage] = useState(null);
+  
+  const handleCardClick = (e) => {
+    // Only toggle if clicking the card itself, not buttons or interactive elements
+    if (e.target === e.currentTarget || e.target.closest('[data-card-content]')) {
+      onToggle(project.id);
+    }
+  };
   
   const isImage = (filename) => /\.(png|jpe?g|gif|webp)$/i.test(filename);
   const statusColor = statusColors[project.status] || "#666";
   const statusEmoji = statusEmojis[project.status] || "📋";
+
+  // Helper to get image source (handles both URL and base64)
+  const getImageSrc = (file) => {
+    if (file.url) {
+      return file.url;
+    } else if (file.data && file.content_type) {
+      return `data:${file.content_type};base64,${file.data}`;
+    }
+    return null;
+  };
 
   return (
     <>
@@ -28,12 +58,15 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
           borderRadius: "8px",
           padding: "16px",
           backgroundColor: "white",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          transition: "all 0.2s",
+          boxShadow: expanded ? "0 4px 12px rgba(0,0,0,0.15)" : "0 2px 8px rgba(0,0,0,0.1)",
+          transition: "box-shadow 0.2s",
           cursor: "pointer",
-          position: "relative"
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: expanded ? "auto" : "150px"
         }}
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleCardClick}
       >
         <div style={{
           position: "absolute",
@@ -53,13 +86,13 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
           {project.status}
         </div>
 
-        <div style={{ paddingRight: "100px" }}>
+        <div style={{ paddingRight: "100px" }} data-card-content>
           <h3 style={{
             margin: "0 0 8px 0",
             fontSize: "18px",
             color: "#333"
           }}>
-            {project.name}
+            {project.project_name || project.name}
           </h3>
 
           {project.industry && (
@@ -83,8 +116,8 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
 
           <div style={{ fontSize: "14px", color: "#666" }}>
             <strong style={{ color: "#333" }}>Timeline:</strong>{" "}
-            {new Date(project.start_date).toLocaleDateString()} -{" "}
-            {project.end_date ? new Date(project.end_date).toLocaleDateString() : "Present"}
+            {formatDate(project.start_date)} -{" "}
+            {project.end_date ? formatDate(project.end_date) : "Present"}
           </div>
         </div>
 
@@ -102,14 +135,16 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
               </div>
             )}
 
-            {project.technologies && (
+            {(project.skills || project.technologies) && (
               <div style={{ marginBottom: "12px" }}>
-                <strong style={{ color: "#333", fontSize: "14px" }}>Technologies:</strong>
+                <strong style={{ color: "#333", fontSize: "14px" }}>Technologies / Skills:</strong>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
-                  {(Array.isArray(project.technologies) 
-                    ? project.technologies 
-                    : project.technologies.split(',').map(t => t.trim())
-                  ).map((tech, idx) => (
+                  {(Array.isArray(project.skills) 
+                    ? project.skills 
+                    : Array.isArray(project.technologies)
+                    ? project.technologies
+                    : (project.skills || project.technologies || "").split(',').map(t => t.trim())
+                  ).filter(Boolean).map((tech, idx) => (
                     <span
                       key={idx}
                       style={{
@@ -148,6 +183,15 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
               </div>
             )}
 
+            {project.details && (
+              <div style={{ marginBottom: "12px" }}>
+                <strong style={{ color: "#333", fontSize: "14px" }}>Project Details:</strong>
+                <p style={{ margin: "6px 0", color: "#555", fontSize: "13px", lineHeight: "1.6" }}>
+                  {project.details}
+                </p>
+              </div>
+            )}
+
             {project.achievements && (
               <div style={{
                 marginBottom: "12px",
@@ -169,11 +213,12 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
                   📸 Media Files:
                 </strong>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {project.media_files.map((file, idx) =>
-                    isImage(file.filename) ? (
+                  {project.media_files.map((file, idx) => {
+                    const imageSrc = getImageSrc(file);
+                    return isImage(file.filename) && imageSrc ? (
                       <img
                         key={idx}
-                        src={file.url}
+                        src={imageSrc}
                         alt={file.filename}
                         style={{
                           width: "100px",
@@ -185,7 +230,7 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          setZoomedImage(file.url);
+                          setZoomedImage(imageSrc);
                         }}
                       />
                     ) : (
@@ -203,8 +248,8 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
                       >
                         📎 {file.filename}
                       </div>
-                    )
-                  )}
+                    );
+                  })}
                 </div>
               </div>
             )}
