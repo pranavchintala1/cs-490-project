@@ -35,69 +35,53 @@ function Login() {
 
 
     const onSubmit = async (data) => {
-
-        const res = await sendData(data,"/api/auth/login"); // TODO Change localstorage to whatever database is being used later
+      try{
         
-        if (!res){
-            showFlash("Something went wrong when registering","error");
-            return;
+        const res = await apiRequest("/api/auth/login", " ", {
+                method: "POST",
+                body: JSON.stringify(data)
+                });
+       
 
-        }
-
-        const json =  await res.json();
-
-
-        if (res.status != 200) { //If the entered password does NOT match the stored password.
-  
-               showFlash(json.detail,"error");
-                reset();  
-    
-               return;     
-            
-        } 
-        else {
-
-
-                localStorage.setItem("session",json.session_token)
-                localStorage.setItem("uuid",json.uuid)
+                localStorage.setItem("session",res.session_token)
+                localStorage.setItem("uuid",res.uuid)
                 
                 navigate(`/profile`); // make profile later lmao. 
 
-            }
 
             return;
+      }
+      catch(error){
+
+        showFlash(error);
+        reset();
+        return;
+      }
         };
 
     const OAuthSubmit = async (data) => {
-
-
-        const res = await sendData(data,"/api/auth/verify-google-token"); // Link this account with local non-google account later.
-        
-        if (!res){
-                         
-            showFlash("Something went wrong when registering","error");
-            return;
-        
-            }
-        
-        const json = await res.json();
-        if (res.status != 200){
-
-                showFlash(json.detail,"error");
-                return;
-                        
-            }
-        
-        localStorage.setItem("session",json.session_token)
-        localStorage.setItem("uuid",json.uuid)
-                        
-        
-        navigate(`/profile`);
-        return;
-
-
-
-    };
+                
+               try{
+                           const res = await apiRequest("/api/auth/verify-google-token"," ",{
+                       method: "POST",
+                       body: JSON.stringify(data)
+                       }); // Link this account with local non-google account later.
+               
+                           
+               
+                           localStorage.setItem("session",res.session_token)
+                           localStorage.setItem("uuid",res.uuid)
+                               
+               
+                           navigate(`/profile`);
+                           return;
+                           }
+                           catch (error){
+               
+                           showFlash(error,"error");
+                           return;
+    
+            }};
 
 async function handleMicrosoftLogin() {
   try {
@@ -122,7 +106,7 @@ async function handleMicrosoftLogin() {
       return;
     }
 
-    const res = await apiRequest("/api/login/microsoft", " ", {
+    const res = await apiRequest("/api/auth/login/microsoft", " ", {
       method: "PUT",
       headers: {"Content-Type": "application/json",},
       body: JSON.stringify({ token: tokenResponse.idToken }),
