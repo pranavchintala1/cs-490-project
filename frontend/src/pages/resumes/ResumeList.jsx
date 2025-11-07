@@ -11,6 +11,9 @@ export default function ResumeList() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editingName, setEditingName] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   // TODO: Replace with actual API call when backend is ready
   useEffect(() => {
@@ -54,7 +57,13 @@ export default function ResumeList() {
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this resume?')) {
-      setResumes(resumes.filter((resume) => resume.id !== id));
+      // Start deletion animation
+      setDeletingId(id);
+      // Wait for animation to complete (300ms) before removing from state
+      setTimeout(() => {
+        setResumes(resumes.filter((resume) => resume.id !== id));
+        setDeletingId(null);
+      }, 300);
     }
   };
 
@@ -65,6 +74,30 @@ export default function ResumeList() {
         isDefault: resume.id === id,
       }))
     );
+  };
+
+  const handleRenameStart = (resume) => {
+    setEditingId(resume.id);
+    setEditingName(resume.name);
+  };
+
+  const handleRenameSave = () => {
+    if (!editingName.trim()) {
+      alert('Resume name cannot be empty');
+      return;
+    }
+    setResumes(
+      resumes.map((resume) =>
+        resume.id === editingId ? { ...resume, name: editingName.trim() } : resume
+      )
+    );
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const handleRenameCancel = () => {
+    setEditingId(null);
+    setEditingName('');
   };
 
   if (loading) {
@@ -97,10 +130,42 @@ export default function ResumeList() {
       ) : (
         <div className="resume-cards-grid">
           {filteredResumes.map((resume) => (
-            <div key={resume.id} className="resume-card">
+            <div
+              key={resume.id}
+              className={`resume-card ${deletingId === resume.id ? 'deleting' : ''}`}
+            >
               <div className="resume-card-header">
-                <h3>{resume.name}</h3>
-                {resume.isDefault && <span className="badge bg-success">Default</span>}
+                {editingId === resume.id ? (
+                  <div className="resume-name-edit">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      autoFocus
+                      onKeyPress={(e) => e.key === 'Enter' && handleRenameSave()}
+                    />
+                    <button
+                      onClick={handleRenameSave}
+                      className="btn btn-sm btn-success ms-2"
+                      title="Save new name"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleRenameCancel}
+                      className="btn btn-sm btn-secondary ms-1"
+                      title="Cancel rename"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h3>{resume.name}</h3>
+                    {resume.isDefault && <span className="badge bg-success">Default</span>}
+                  </>
+                )}
               </div>
               <div className="resume-card-body">
                 <p><strong>Template:</strong> {resume.template}</p>
@@ -122,6 +187,14 @@ export default function ResumeList() {
                   className={`btn btn-sm ${resume.isDefault ? 'btn-success' : 'btn-outline-success'}`}
                 >
                   {resume.isDefault ? 'Default' : 'Set Default'}
+                </button>
+                <button
+                  onClick={() => handleRenameStart(resume)}
+                  disabled={editingId !== null}
+                  className="btn btn-sm btn-primary"
+                  title="Rename this resume"
+                >
+                  Rename
                 </button>
                 <button
                   onClick={() => handleDelete(resume.id)}
