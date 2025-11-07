@@ -12,6 +12,7 @@ export default function ProjectsList() {
   const [showForm, setShowForm] = useState(false);
   const [editProject, setEditProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expandedCardId, setExpandedCardId] = useState(null);
 
   useEffect(() => {
     loadProjects();
@@ -50,7 +51,6 @@ export default function ProjectsList() {
 
   const addProject = async (projectData) => {
     try {
-      // Send as JSON instead of FormData
       const response = await apiRequest("/api/projects?uuid=", "", {
         method: "POST",
         body: JSON.stringify(projectData),
@@ -60,7 +60,6 @@ export default function ProjectsList() {
       });
 
       if (response && response.project_id) {
-        // Reload projects to get the full data
         await loadProjects();
       }
       setShowForm(false);
@@ -72,7 +71,6 @@ export default function ProjectsList() {
 
   const submitEdit = async (projectData) => {
     try {
-      // Send as JSON instead of FormData
       await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
         method: "PUT",
         body: JSON.stringify(projectData),
@@ -81,7 +79,6 @@ export default function ProjectsList() {
         }
       });
 
-      // Reload projects to get updated data
       await loadProjects();
       setEditProject(null);
       setShowForm(false);
@@ -100,10 +97,17 @@ export default function ProjectsList() {
       });
 
       setProjects(projects.filter((p) => p.id !== id));
+      if (expandedCardId === id) {
+        setExpandedCardId(null);
+      }
     } catch (error) {
       console.error("Failed to delete project:", error);
       alert("Failed to delete project. Please try again.");
     }
+  };
+
+  const handleCardToggle = (projectId) => {
+    setExpandedCardId(expandedCardId === projectId ? null : projectId);
   };
 
   const filteredProjects = projects
@@ -178,7 +182,6 @@ export default function ProjectsList() {
         />
       )}
 
-      {/* Only show filters and projects if form is not shown */}
       {!showForm && (
         <>
           <div style={{
@@ -280,7 +283,8 @@ export default function ProjectsList() {
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: "16px"
+              gap: "16px",
+              alignItems: "start"
             }}>
               {filteredProjects.map((p) => (
                 <ProjectCard
@@ -292,6 +296,8 @@ export default function ProjectsList() {
                     setEditProject(proj);
                     setShowForm(true);
                   }}
+                  expanded={expandedCardId === p.id}
+                  onToggle={handleCardToggle}
                 />
               ))}
             </div>
