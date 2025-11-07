@@ -26,9 +26,15 @@ const formatDate = (dateStr) => {
   return date.toLocaleDateString();
 };
 
-export default function ProjectCard({ project, deleteProject, onEdit }) {
-  const [expanded, setExpanded] = useState(false);
+export default function ProjectCard({ project, deleteProject, onEdit, expanded, onToggle }) {
   const [zoomedImage, setZoomedImage] = useState(null);
+  
+  const handleCardClick = (e) => {
+    // Only toggle if clicking the card itself, not buttons or interactive elements
+    if (e.target === e.currentTarget || e.target.closest('[data-card-content]')) {
+      onToggle(project.id);
+    }
+  };
   
   const isImage = (filename) => /\.(png|jpe?g|gif|webp)$/i.test(filename);
   const statusColor = statusColors[project.status] || "#666";
@@ -52,12 +58,15 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
           borderRadius: "8px",
           padding: "16px",
           backgroundColor: "white",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          transition: "all 0.2s",
+          boxShadow: expanded ? "0 4px 12px rgba(0,0,0,0.15)" : "0 2px 8px rgba(0,0,0,0.1)",
+          transition: "box-shadow 0.2s",
           cursor: "pointer",
-          position: "relative"
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: expanded ? "auto" : "150px"
         }}
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleCardClick}
       >
         <div style={{
           position: "absolute",
@@ -77,7 +86,7 @@ export default function ProjectCard({ project, deleteProject, onEdit }) {
           {project.status}
         </div>
 
-        <div style={{ paddingRight: "100px" }}>
+        <div style={{ paddingRight: "100px" }} data-card-content>
           <h3 style={{
             margin: "0 0 8px 0",
             fontSize: "18px",
