@@ -1,145 +1,137 @@
-import React from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+  import React from "react";
+  import { useSortable } from "@dnd-kit/sortable";
+  import { CSS } from "@dnd-kit/utilities";
 
-// Category color + emoji mapping
-const categoryMeta = {
-  Technical: { color: "#4f8ef7", emoji: "💻" },
-  "Soft Skills": { color: "#34c759", emoji: "🗣️" },
-  Languages: { color: "#ff9500", emoji: "🈯" },
-  "Industry-Specific": { color: "#af52de", emoji: "🏭" }
-};
-
-export default function SkillItem({ skill, updateSkill, removeSkill }) {
-  const { 
-    attributes, 
-    listeners, 
-    setNodeRef, 
-    transform, 
-    transition, 
-    isDragging 
-  } = useSortable({ id: skill.id });
-
-  const meta = categoryMeta[skill.category] || { color: "#ccc", emoji: "" };
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    listStyle: "none",
-    marginBottom: "6px",
-    width: "100%",
+  const categoryMeta = {
+    Technical: { color: "#4f8ef7", emoji: "💻" },
+    "Soft Skills": { color: "#34c759", emoji: "🗣️" },
+    Languages: { color: "#ff9500", emoji: "🌐" },
+    "Industry-Specific": { color: "#af52de", emoji: "🏭" }
   };
 
-  const itemStyle = {
-    display: "flex",
-    gap: "6px",
-    alignItems: "center",
-    padding: "6px 8px",
-    borderRadius: "6px",
-    backgroundColor: meta.color + "33",
-    border: isDragging ? `2px solid ${meta.color}` : "2px solid transparent",
-    boxShadow: isDragging ? "0 4px 12px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.1)",
-    opacity: isDragging ? 0.5 : 1,
-    transition: "box-shadow 0.2s, border 0.2s",
-    boxSizing: "border-box",
-  };
+  export default function SkillItem({ skill, updateSkill, removeSkill, isOverlay }) {
+    const { 
+      attributes, 
+      listeners, 
+      setNodeRef, 
+      transform, 
+      transition, 
+      isDragging 
+    } = useSortable({ 
+      id: skill.id,
+      disabled: isOverlay
+    });
 
-  const dragHandleStyle = {
-    cursor: "grab",
-    fontSize: "14px",
-    color: "#666",
-    userSelect: "none",
-    padding: "0 2px",
-    flexShrink: 0,
-  };
+    const meta = categoryMeta[skill.category] || { color: "#ccc", emoji: "📋" };
 
-  const nameStyle = {
-    flexGrow: 1,
-    display: "flex",
-    alignItems: "center",
-    gap: "4px",
-    userSelect: "none",
-    cursor: "grab",
-    minWidth: 0,
-    fontSize: "13px",
-    wordBreak: "break-word",
-  };
+    const style = isOverlay ? {} : {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
 
-  const selectStyle = {
-    padding: "3px 6px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-    backgroundColor: "white",
-    cursor: "pointer",
-    fontSize: "11px",
-    flexShrink: 0,
-  };
+    const itemStyle = {
+      display: "flex",
+      gap: "8px",
+      alignItems: "center",
+      padding: "10px 12px",
+      borderRadius: "6px",
+      backgroundColor: "white",
+      border: isDragging ? `2px solid ${meta.color}` : "1px solid #ddd",
+      boxShadow: isDragging ? "0 4px 12px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.1)",
+      transition: "all 0.2s",
+      boxSizing: "border-box",
+      marginBottom: "8px",
+      cursor: "grab"
+    };
 
-  const buttonStyle = {
-    padding: "2px 6px",
-    border: "none",
-    borderRadius: "4px",
-    backgroundColor: "#ff3b30",
-    color: "white",
-    cursor: "pointer",
-    fontSize: "14px",
-    transition: "background-color 0.2s",
-    flexShrink: 0,
-    lineHeight: 1,
-  };
+    /*
+    const proficiencyColors = {
+      Beginner: "#9e9e9e",
+      Intermediate: "#2196f3",
+      Advanced: "#ff9800",
+      Expert: "#4caf50"
+    };
+    */
 
-  const handleSelectChange = (e) => {
-    e.stopPropagation();
-    updateSkill(skill.id, { ...skill, proficiency: e.target.value });
-  };
+    const selectStyle = {
+      padding: "4px 8px",
+      borderRadius: "4px",
+      border: "1px solid #ccc",
+      backgroundColor: "white",
+      cursor: "pointer",
+      fontSize: "12px",
+      fontWeight: "600",
+      color: "#444", //|| proficiencyColors[skill.proficiency],
+      flexShrink: 0,
+    };
 
-  const handleRemove = (e) => {
-    e.stopPropagation();
-    removeSkill(skill.id);
-  };
+    const buttonStyle = {
+      padding: "4px 8px",
+      border: "none",
+      borderRadius: "4px",
+      backgroundColor: "#ff3b30",
+      color: "white",
+      cursor: "pointer",
+      fontSize: "12px",
+      transition: "background-color 0.2s",
+      flexShrink: 0,
+      fontWeight: "600"
+    };
 
-  return (
-    <li ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div style={itemStyle}>
-        {/* Drag handle visual indicator */}
-        <span style={dragHandleStyle}>
-          ⋮⋮
-        </span>
-        
-        {/* Skill name - also draggable */}
-        <span style={nameStyle}>
-          <span style={{ flexShrink: 0, fontSize: "14px" }}>{meta.emoji}</span>
-          <strong style={{ lineHeight: "1.3" }}>
+    return (
+      <li ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        <div style={itemStyle}>
+          <span style={{ 
+            fontSize: "18px", 
+            flexShrink: 0,
+            userSelect: "none"
+          }}>
+            {meta.emoji}
+          </span>
+          
+          <span style={{ 
+            flexGrow: 1, 
+            fontSize: "14px", 
+            fontWeight: "600",
+            color: "#333",
+            userSelect: "none",
+            minWidth: 0,
+            wordBreak: "break-word"
+          }}>
             {skill.name}
-          </strong>
-        </span>
-        
-        {/* Proficiency selector - stops propagation to prevent drag */}
-        <select
-          value={skill.proficiency}
-          onChange={handleSelectChange}
-          onPointerDown={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          style={selectStyle}
-        >
-          <option>Beginner</option>
-          <option>Intermediate</option>
-          <option>Advanced</option>
-          <option>Expert</option>
-        </select>
-        
-        {/* Delete button - stops propagation to prevent drag */}
-        <button
-          onClick={handleRemove}
-          onPointerDown={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-          style={buttonStyle}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#ff1f1f"}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ff3b30"}
-        >
-          🗑
-        </button>
-      </div>
-    </li>
-  );
-}
+          </span>
+          
+          <select
+            value={skill.proficiency}
+            onChange={(e) => {
+              e.stopPropagation();
+              updateSkill(skill.id, { proficiency: e.target.value });
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={selectStyle}
+          >
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+            <option>Expert</option>
+          </select>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              removeSkill(skill.id);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={buttonStyle}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#ff1f1f"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ff3b30"}
+          >
+            🗑
+          </button>
+        </div>
+      </li>
+    );
+  }
