@@ -91,7 +91,9 @@ const CategoryCard = ({ data }) => {
                   wordWrap: 'break-word', // Break long words
                   overflowWrap: 'break-word', // Additional word breaking
                   maxWidth: 'calc(100% - 10px)', // Account for margin
-                  whiteSpace: 'normal' // Allow text wrapping
+                  whiteSpace: 'normal', // Allow text wrapping
+                  textAlign: 'left',
+                  paddingLeft: '5%'
                 }}>
                   • {item}
                 </li>

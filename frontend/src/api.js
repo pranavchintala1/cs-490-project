@@ -26,9 +26,9 @@ console.log(config)
 
 
     // Redirect if unauthorized
-    if (response.status === 401 || response.status === 403) {
+    if (response.status === 401 || response.status === 403 || response.status === 422) {
       localStorage.clear();
-      // window.location.href = "/login?error=unauthorized";
+      window.location.href = "/login?error=unauthorized";
       return;
     }
 

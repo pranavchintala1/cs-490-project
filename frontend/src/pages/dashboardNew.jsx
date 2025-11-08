@@ -8,40 +8,324 @@ import { apiRequest } from "../api";
 import CareerTimeline from '../components/Timeline';
 import './Dashboard.css';
 import { Link } from "react-router-dom";
+import RecentChanges from '../components/RecentChanges';
 
+// Helper function to format ISO date to readable format
+function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${month}-${day}-${year}, ${hours}:${minutes}`;
+}
 
-const fetchDataFromAPI = async (endpoint, headerKey) => {
-  console.log("tag:", `?uuid=${localStorage.getItem("uuid")}`);
+// Helper function to create an update entry
+function createUpdateEntry(isoDate, schemaType, name) {
+    if (!isoDate) return null;
+    
+    const formattedDate = formatDate(isoDate);
+    const label = `${schemaType}: ${name}`;
+    
+    return {
+        isoDate: isoDate,
+        formatted: formattedDate,
+        label: label
+    };
+}
+
+// Helper function to merge and sort recent updates, keeping top 10
+function mergeRecentUpdates(existingUpdates, newUpdates) {
+    const allUpdates = [...existingUpdates];
+    
+    newUpdates.forEach(newUpdate => {
+        if (!newUpdate) return;
+        allUpdates.push(newUpdate);
+    });
+    
+    // Sort by ISO date string (most recent first) and keep top 10
+    allUpdates.sort((a, b) => b.isoDate.localeCompare(a.isoDate));
+    return allUpdates.slice(0, 10);
+}
+
+// Helper function to merge skill category counts
+function mergeSkillCategoryCounts(existingCounts, newCounts) {
+    const merged = { ...existingCounts };
+    
+    Object.entries(newCounts).forEach(([category, count]) => {
+        if (category && category !== '') {
+            merged[category] = (merged[category] || 0) + count;
+        }
+    });
+    
+    return merged;
+}
+
+function profileFilter(profiles) {
+    const updates = [];
+    
+    const filtered = profiles.map(profile => {
+        const details = [];
+        
+        // Track this update
+        updates.push(createUpdateEntry(profile.date_updated, 'Profile', profile.username || 'Unknown'));
+        
+        if (profile.email !== null && profile.email !== undefined && profile.email !== '') {
+            details.push(`Email: ${profile.email}`);
+        }
+        if (profile.full_name !== null && profile.full_name !== undefined && profile.full_name !== '') {
+            details.push(`Full Name: ${profile.full_name}`);
+        }
+        if (profile.phone_number !== null && profile.phone_number !== undefined && profile.phone_number !== '') {
+            details.push(`Phone: ${profile.phone_number}`);
+        }
+        if (profile.address !== null && profile.address !== undefined && profile.address !== '') {
+            details.push(`Address: ${profile.address}`);
+        }
+        if (profile.title !== null && profile.title !== undefined && profile.title !== '') {
+            details.push(`Title: ${profile.title}`);
+        }
+        if (profile.biography !== null && profile.biography !== undefined && profile.biography !== '') {
+            details.push(`Biography: ${profile.biography}`);
+        }
+        if (profile.industry !== null && profile.industry !== undefined && profile.industry !== '') {
+            details.push(`Industry: ${profile.industry}`);
+        }
+        if (profile.experience_level !== null && profile.experience_level !== undefined && profile.experience_level !== '') {
+            details.push(`Experience Level: ${profile.experience_level}`);
+        }
+        
+        return [profile.username, details];
+    });
+    
+    return { filtered, updates, categoryCounts: {} };
+}
+
+function skillFilter(skills) {
+    const updates = [];
+    const categoryCounts = {};
+    
+    const filtered = skills.map(skill => {
+        const details = [];
+        
+        // Track this update
+        updates.push(createUpdateEntry(skill.date_updated, 'Skill', skill.name || 'Unknown'));
+        
+        // Track skill category
+        if (skill.category && skill.category !== '') {
+            categoryCounts[skill.category] = (categoryCounts[skill.category] || 0) + 1;
+        }
+        
+        if (skill.proficiency !== null && skill.proficiency !== undefined && skill.proficiency !== '') {
+            details.push(`Proficiency: ${skill.proficiency}`);
+        }
+        if (skill.category !== null && skill.category !== undefined && skill.category !== '') {
+            details.push(`Skill Category: ${skill.category}`);
+        }
+        if (skill.position !== null && skill.position !== undefined && skill.position !== '') {
+            details.push(`Position: ${skill.position}`);
+        }
+        
+        return [skill.name, details];
+    });
+    
+    return { filtered, updates, categoryCounts };
+}
+
+function employmentFilter(employments) {
+    const updates = [];
+    
+    const filtered = employments.map(employment => {
+        const details = [];
+        
+        // Track this update
+        updates.push(createUpdateEntry(employment.date_updated, 'Employment', employment.title || 'Unknown'));
+        
+        if (employment.company !== null && employment.company !== undefined && employment.company !== '') {
+            details.push(`Company: ${employment.company}`);
+        }
+        if (employment.location !== null && employment.location !== undefined && employment.location !== '') {
+            details.push(`Location: ${employment.location}`);
+        }
+        if (employment.start_date !== null && employment.start_date !== undefined && employment.start_date !== '') {
+            details.push(`Start Date: ${employment.start_date}`);
+        }
+        if (employment.end_date !== null && employment.end_date !== undefined && employment.end_date !== '') {
+            details.push(`End Date: ${employment.end_date}`);
+        }
+        if (employment.description !== null && employment.description !== undefined && employment.description !== '') {
+            details.push(`Description: ${employment.description}`);
+        }
+        
+        return [employment.title, details];
+    });
+    
+    return { filtered, updates, categoryCounts: {} };
+}
+
+function educationFilter(educations) {
+    const updates = [];
+    
+    const filtered = educations.map(education => {
+        const details = [];
+        
+        // Track this update
+        updates.push(createUpdateEntry(education.date_updated, 'Education', education.institution_name || 'Unknown'));
+        
+        if (education.degree !== null && education.degree !== undefined && education.degree !== '') {
+            details.push(`Degree: ${education.degree}`);
+        }
+        if (education.field_of_study !== null && education.field_of_study !== undefined && education.field_of_study !== '') {
+            details.push(`Field of Study: ${education.field_of_study}`);
+        }
+        if (education.graduation_date !== null && education.graduation_date !== undefined && education.graduation_date !== '') {
+            details.push(`Graduation Date: ${education.graduation_date}`);
+        }
+        if (education.gpa !== null && education.gpa !== undefined) {
+            details.push(`GPA: ${education.gpa}`);
+        }
+        if (education.gpa_private !== null && education.gpa_private !== undefined) {
+            details.push(`GPA Private: ${education.gpa_private}`);
+        }
+        if (education.education_level !== null && education.education_level !== undefined && education.education_level !== '') {
+            details.push(`Education Level: ${education.education_level}`);
+        }
+        if (education.achievements !== null && education.achievements !== undefined && education.achievements !== '') {
+            details.push(`Achievements: ${education.achievements}`);
+        }
+        if (education.position !== null && education.position !== undefined && education.position !== '') {
+            details.push(`Position: ${education.position}`);
+        }
+        
+        return [education.institution_name, details];
+    });
+    
+    return { filtered, updates, categoryCounts: {} };
+}
+
+function projectFilter(projects) {
+    const updates = [];
+    
+    const filtered = projects.map(project => {
+        const details = [];
+        
+        // Track this update
+        updates.push(createUpdateEntry(project.date_updated, 'Project', project.project_name || 'Unknown'));
+        
+        if (project.description !== null && project.description !== undefined && project.description !== '') {
+            details.push(`Description: ${project.description}`);
+        }
+        if (project.role !== null && project.role !== undefined && project.role !== '') {
+            details.push(`Role: ${project.role}`);
+        }
+        if (project.start_date !== null && project.start_date !== undefined && project.start_date !== '') {
+            details.push(`Start Date: ${project.start_date}`);
+        }
+        if (project.end_date !== null && project.end_date !== undefined && project.end_date !== '') {
+            details.push(`End Date: ${project.end_date}`);
+        }
+        if (project.skills !== null && project.skills !== undefined && project.skills.length > 0) {
+            details.push(`Skills: ${project.skills.join(', ')}`);
+        }
+        if (project.team_size !== null && project.team_size !== undefined) {
+            details.push(`Team Size: ${project.team_size}`);
+        }
+        if (project.details !== null && project.details !== undefined && project.details !== '') {
+            details.push(`Details: ${project.details}`);
+        }
+        if (project.project_url !== null && project.project_url !== undefined && project.project_url !== '') {
+            details.push(`Project URL: ${project.project_url}`);
+        }
+        if (project.achievements !== null && project.achievements !== undefined && project.achievements !== '') {
+            details.push(`Achievements: ${project.achievements}`);
+        }
+        if (project.industry !== null && project.industry !== undefined && project.industry !== '') {
+            details.push(`Industry: ${project.industry}`);
+        }
+        if (project.status !== null && project.status !== undefined && project.status !== '') {
+            details.push(`Status: ${project.status}`);
+        }
+        
+        return [project.project_name, details];
+    });
+    
+    return { filtered, updates, categoryCounts: {} };
+}
+
+function certificationFilter(certifications) {
+    const updates = [];
+    
+    const filtered = certifications.map(certification => {
+        const details = [];
+        
+        // Track this update
+        updates.push(createUpdateEntry(certification.date_updated, 'Certification', certification.name || 'Unknown'));
+        
+        if (certification.issuer !== null && certification.issuer !== undefined && certification.issuer !== '') {
+            details.push(`Issuer: ${certification.issuer}`);
+        }
+        if (certification.date_earned !== null && certification.date_earned !== undefined && certification.date_earned !== '') {
+            details.push(`Date Earned: ${certification.date_earned}`);
+        }
+        if (certification.date_expiry !== null && certification.date_expiry !== undefined && certification.date_expiry !== '') {
+            details.push(`Expiry Date: ${certification.date_expiry}`);
+        }
+        if (certification.cert_number !== null && certification.cert_number !== undefined && certification.cert_number !== '') {
+            details.push(`Certificate Number: ${certification.cert_number}`);
+        }
+        if (certification.category !== null && certification.category !== undefined && certification.category !== '') {
+            details.push(`Category: ${certification.category}`);
+        }
+        if (certification.position !== null && certification.position !== undefined && certification.position !== '') {
+            details.push(`Position: ${certification.position}`);
+        }
+        if (certification.verified !== null && certification.verified !== undefined) {
+            details.push(`Verified: ${certification.verified}`);
+        }
+        if (certification.document_name !== null && certification.document_name !== undefined && certification.document_name !== '') {
+            details.push(`Document: ${certification.document_name}`);
+        }
+        
+        return [certification.name, details];
+    });
+    
+    return { filtered, updates, categoryCounts: {} };
+}
+
+function filterBySchema(data, schemaName) {
+    switch(schemaName) {
+        case 'Profile':
+            return profileFilter(data);
+        case 'Skill':
+            return skillFilter(data);
+        case 'Employment':
+            return employmentFilter(data);
+        case 'Education':
+            return educationFilter(data);
+        case 'Project':
+            return projectFilter(data);
+        case 'Certification':
+            return certificationFilter(data);
+        default:
+            throw new Error(`Unknown schema: ${schemaName}`);
+    }
+}
+
+const fetchDataFromAPI = async (endpoint, schemaName) => {
   const apidata = await apiRequest(`${endpoint}?uuid=`);
-  console.log("APIIIII response data:", apidata);
 
-  function transformData(data, titleKey = "title") {
+  function transformData(data) {
     const arr = Array.isArray(data)
     ? data
     : (data && typeof data === "object")
       ? [data]
       : [];
-
-    console.log("ARR response data:", arr);
-    return arr.map(obj => {
-      const cleaned = Object.fromEntries(
-        Object.entries(obj).filter(([_, value]) => value != null)
-      );
-      if (Object.keys(cleaned).length === 0) return [];
-
-      const title = cleaned[titleKey] ?? "(no title)";
-      const otherValues = Object.entries(cleaned)
-        .filter(([key]) => key !== titleKey)
-        .map(([_, value]) => value);
-
-      if (otherValues.length === 0 && !cleaned[titleKey]) return [];
-      return [title, otherValues];
-    }).filter(item => item.length > 0);
+    
+    return filterBySchema(arr, schemaName);
   }
-
-  const formatted = transformData(apidata, headerKey);
-  console.log("Formatted response data:", formatted);
-  return formatted;
+  
+  return transformData(apidata);
 };
 
 const Dashboard = () => {
@@ -50,33 +334,58 @@ const Dashboard = () => {
     employmentHistory: null,
     skills: null,
     education: null,
-    projects: null
+    projects: null,
+    certifications: null
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [recentUpdates, setRecentUpdates] = useState([]);
+  const [skillCategoryCounts, setSkillCategoryCounts] = useState({});
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
         
-        const [profileData, employmentData, skillsData, educationData, projectsData, certData] = await Promise.all([
-          fetchDataFromAPI('/api/users/me',"username"),
-          fetchDataFromAPI('/api/employment/me',"title"),
-          fetchDataFromAPI('/api/skills/me',"name"),
-          fetchDataFromAPI('/api/education/me',"institution_name"),
-          fetchDataFromAPI('/api/projects/me',"project_name"),
-          fetchDataFromAPI('/api/certifications/me',"name")
+        const [profileResult, employmentResult, skillsResult, educationResult, projectsResult, certResult] = await Promise.all([
+          fetchDataFromAPI('/api/users/me',"Profile"),
+          fetchDataFromAPI('/api/employment/me',"Employment"),
+          fetchDataFromAPI('/api/skills/me',"Skill"),
+          fetchDataFromAPI('/api/education/me',"Education"),
+          fetchDataFromAPI('/api/projects/me',"Project"),
+          fetchDataFromAPI('/api/certifications/me',"Certification")
         ]);
 
+        // Set the filtered data
         setData({
-          profile: profileData,
-          employmentHistory: employmentData,
-          skills: skillsData,
-          education: educationData,
-          projects: projectsData,
-          certifcations: certData
+          profile: profileResult.filtered,
+          employmentHistory: employmentResult.filtered,
+          skills: skillsResult.filtered,
+          education: educationResult.filtered,
+          projects: projectsResult.filtered,
+          certifications: certResult.filtered
         });
+
+        // Merge all updates
+        let allUpdates = [];
+        allUpdates = mergeRecentUpdates(allUpdates, profileResult.updates);
+        allUpdates = mergeRecentUpdates(allUpdates, employmentResult.updates);
+        allUpdates = mergeRecentUpdates(allUpdates, skillsResult.updates);
+        allUpdates = mergeRecentUpdates(allUpdates, educationResult.updates);
+        allUpdates = mergeRecentUpdates(allUpdates, projectsResult.updates);
+        allUpdates = mergeRecentUpdates(allUpdates, certResult.updates);
+        setRecentUpdates(allUpdates);
+
+        // Merge all skill category counts
+        let allCategoryCounts = {};
+        allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, profileResult.categoryCounts);
+        allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, employmentResult.categoryCounts);
+        allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, skillsResult.categoryCounts);
+        allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, educationResult.categoryCounts);
+        allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, projectsResult.categoryCounts);
+        allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, certResult.categoryCounts);
+        setSkillCategoryCounts(allCategoryCounts);
+
       } catch (err) {
         setError('Failed to fetch data');
         console.error('API Error:', err);
@@ -148,7 +457,7 @@ const Dashboard = () => {
     { title: 'Skills', data: data.skills },
     { title: 'Education', data: data.education },
     { title: 'Projects', data: data.projects },
-    { title: 'Certifications', data: data.certifcations }
+    { title: 'Certifications', data: data.certifications }
   ];
 
   const statusColors = {
@@ -156,6 +465,9 @@ const Dashboard = () => {
     'partial': 'warning',
     'incomplete': 'danger'
   };
+
+  // Format recent updates for display
+  const formattedRecentUpdates = recentUpdates.map(update => [update.formatted, update.label]);
 
   return (
     <div className="dashboard-bg min-vh-100 py-4">
@@ -218,7 +530,7 @@ const Dashboard = () => {
                             state={{ showForm: true }}
                           >
                             <Button 
-                            variant="primary" 
+                              variant="primary" 
                               size="sm"
                               className="dashboard-btn"
                             >
@@ -253,22 +565,7 @@ const Dashboard = () => {
                   </Card.Link>
                   <div className="flex-grow-1 overflow-hidden">
                     <BarChart 
-                      data={{
-                        "JavaScript": 85,
-                        "Python": 70,
-                        "React": 90,
-                        "Node.js": 65,
-                        "CSS": 80,
-                        "HTML": 95,
-                        "TypeScript": 60,
-                        "Docker": 45,
-                        "Docker2": 45,
-                        "Docker3": 45,
-                        "Docker4": 45,
-                        "Docker5": 45,
-                        "AWS": 55,
-                        "MongoDB": 50
-                      }}
+                      data={skillCategoryCounts}
                       title="Skills Proficiency"
                     />
                   </div>
@@ -279,15 +576,12 @@ const Dashboard = () => {
               <Card className="sidebar-card-bottom">
                 <Card.Body className="d-flex flex-column h-100">
                   <Card.Link 
-                    href="/quick-actions" 
                     className="text-decoration-none fw-semibold fs-5 text-primary text-center mb-3 d-block flex-shrink-0 card-title-link"
                   >
-                    Quick Actions
+                    Recent Changes
                   </Card.Link>
-                  <div className="bg-light p-3 rounded flex-grow-1 d-flex align-items-center justify-content-center border">
-                    <span className="text-primary fw-semibold">
-                      Action Menu
-                    </span>
+                  <div className="flex-grow-1 overflow-hidden">
+                    <RecentChanges changes={formattedRecentUpdates} />
                   </div>
                 </Card.Body>
               </Card>
