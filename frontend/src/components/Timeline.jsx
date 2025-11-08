@@ -1,15 +1,39 @@
 import React, { useEffect } from 'react';
 
-const CareerTimeline = ({ careerData, title = "Career Timeline" }) => {
-  // Default data if none provided
-  const defaultData = {
-    "TechCorp": ["2022-01", "Present"],
-    "StartupXYZ": ["2020-03", "2021-12"],
-    "WebAgency": ["2019-06", "2020-02"],
-    "InternCorp": ["2018-09", "2019-05"]
+const CareerTimeline = ({ employmentData, title = "Career Timeline" }) => {
+  // Process employment data into timeline format
+  const processEmploymentData = (employment) => {
+    if (!employment || employment.length === 0) {
+      return null;
+    }
+
+    // Convert employment array to timeline format
+    // Each entry should be: company name or title as key, [start_date, end_date] as value
+    const timelineData = {};
+    
+    employment.forEach(job => {
+      // Use company name if available, otherwise use title
+      const displayName = job.company || job.title || 'Unknown Position';
+      const startDate = job.start_date || null;
+      const endDate = job.end_date || 'Present';
+      
+      if (startDate) {
+        // Create a unique key in case of duplicate companies
+        let key = displayName;
+        let counter = 1;
+        while (timelineData[key]) {
+          key = `${displayName} (${counter})`;
+          counter++;
+        }
+        
+        timelineData[key] = [startDate, endDate];
+      }
+    });
+
+    return Object.keys(timelineData).length > 0 ? timelineData : null;
   };
 
-  const timelineData = careerData || defaultData;
+  const timelineData = processEmploymentData(employmentData);
 
   // Add CSS styles for custom scrollbar
   useEffect(() => {
@@ -68,19 +92,23 @@ const CareerTimeline = ({ careerData, title = "Career Timeline" }) => {
 
   // Function to parse date strings and calculate duration
   const parseDate = (dateStr) => {
-    if (dateStr === "Present" || dateStr === "Current") {
+    if (!dateStr || dateStr === "Present" || dateStr === "Current" || dateStr === "") {
       return new Date();
     }
     // Handle different date formats
     if (dateStr.includes('-')) {
-      const [year, month] = dateStr.split('-');
-      return new Date(parseInt(year), parseInt(month) - 1);
+      const parts = dateStr.split('-');
+      if (parts.length >= 2) {
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]) - 1;
+        return new Date(year, month);
+      }
     }
     return new Date(dateStr);
   };
 
   const formatDate = (dateStr) => {
-    if (dateStr === "Present" || dateStr === "Current") {
+    if (!dateStr || dateStr === "Present" || dateStr === "Current" || dateStr === "") {
       return "Present";
     }
     const date = parseDate(dateStr);
@@ -103,6 +131,19 @@ const CareerTimeline = ({ careerData, title = "Career Timeline" }) => {
         return `${years} year${years !== 1 ? 's' : ''}, ${months} month${months !== 1 ? 's' : ''}`;
       }
     }
+  };
+
+  // Function to check if a job ended recently (within last 185 days)
+  const isRecentJob = (endDate) => {
+    if (!endDate || endDate === "Present" || endDate === "Current" || endDate === "") {
+      return false; // Current jobs are not "recent past" jobs
+    }
+    
+    const end = parseDate(endDate);
+    const now = new Date();
+    const daysDifference = Math.floor((now - end) / (1000 * 60 * 60 * 24));
+    
+    return daysDifference <= 185;
   };
 
   // Check if data is empty
@@ -129,7 +170,7 @@ const CareerTimeline = ({ careerData, title = "Career Timeline" }) => {
           fontSize: '12px',
           textAlign: 'center'
         }}>
-          No Career Data Available
+          No Employment History Available - Add your work experience to see your career timeline!
         </p>
       </div>
     );
@@ -206,11 +247,12 @@ const CareerTimeline = ({ careerData, title = "Career Timeline" }) => {
           zIndex: 2,
         }}>
           {sortedEntries.map(([company, [startDate, endDate]], index) => {
-            const isPresent = endDate === "Present" || endDate === "Current";
+            const isPresent = !endDate || endDate === "Present" || endDate === "Current" || endDate === "";
+            const isRecent = isRecentJob(endDate);
             const duration = calculateDuration(startDate, endDate);
 
             return (
-              <div key={company} style={{
+              <div key={`${company}-${index}`} style={{
                 display: 'flex',
                 alignItems: 'flex-start',
                 position: 'relative',
@@ -226,7 +268,7 @@ const CareerTimeline = ({ careerData, title = "Career Timeline" }) => {
                   height: '18px',
                   borderRadius: '50%',
                   backgroundColor: isPresent ? '#00A67A' : // Teal for current job
-                                   index === 0 ? '#003366' : // Navy for most recent past job
+                                   isRecent ? '#003366' : // Navy for recent past job (within 185 days)
                                    '#6366F1', // Purple for older jobs
                   border: '3px solid #E5E9EC',
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -314,7 +356,7 @@ const CareerTimeline = ({ careerData, title = "Career Timeline" }) => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
           <div style={{ width: '8px', height: '8px', backgroundColor: '#003366', borderRadius: '50%' }} />
-          <span>Recent</span>
+          <span>Recent (within 6 months)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <div style={{ width: '8px', height: '8px', backgroundColor: '#6366F1', borderRadius: '50%' }} />

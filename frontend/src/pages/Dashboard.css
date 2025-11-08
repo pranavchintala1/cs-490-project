@@ -88,11 +88,40 @@
   stroke-width: 1;
 }
 
-/* Sticky sidebar - FULL HEIGHT */
+/* Header section with centered title and positioned export button */
+.dashboard-header-container {
+  position: relative;
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.dashboard-export-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Responsive adjustments for header */
+@media (max-width: 768px) {
+  .dashboard-header-container {
+    text-align: left;
+  }
+  
+  .dashboard-export-btn {
+    position: static;
+    transform: none;
+    margin-top: 1rem;
+    width: 100%;
+  }
+}
+
+/* Sticky sidebar - FULL HEIGHT below navbar with proper top spacing */
 .sidebar-sticky {
   position: sticky;
-  top: 20px;
-  height: calc(100vh - 40px);
+  top: 96px; /* Navbar height (56px) + more spacing (40px) */
+  height: calc(100vh - 116px); /* Full viewport minus navbar and spacing */
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -107,6 +136,27 @@
   border-radius: 12px;
   min-height: 0; /* Allow flex children to shrink */
   overflow: hidden; /* Prevent content overflow */
+}
+
+/* Responsive spacing for narrower screens */
+@media (max-width: 991px) {
+  .sidebar-sticky {
+    position: static;
+    height: auto;
+    margin-top: 2rem;
+  }
+  
+  .sidebar-card-top,
+  .sidebar-card-bottom {
+    min-height: 400px;
+  }
+}
+
+/* Add spacing between cards on smaller screens */
+@media (max-width: 767px) {
+  .dashboard-card {
+    margin-bottom: 1.5rem;
+  }
 }
 
 /* Bootstrap customization for primary color */

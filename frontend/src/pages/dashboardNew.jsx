@@ -322,7 +322,8 @@ const fetchDataFromAPI = async (endpoint, schemaName) => {
       ? [data]
       : [];
     
-    return filterBySchema(arr, schemaName);
+    const filtered = filterBySchema(arr, schemaName);
+    return { ...filtered, rawData: arr };
   }
   
   return transformData(apidata);
@@ -337,10 +338,20 @@ const Dashboard = () => {
     projects: null,
     certifications: null
   });
+  const [rawData, setRawData] = useState({
+    profile: [],
+    employment: [],
+    skills: [],
+    education: [],
+    projects: [],
+    certifications: []
+  });
+  const [rawEmploymentData, setRawEmploymentData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recentUpdates, setRecentUpdates] = useState([]);
   const [skillCategoryCounts, setSkillCategoryCounts] = useState({});
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -365,6 +376,19 @@ const Dashboard = () => {
           projects: projectsResult.filtered,
           certifications: certResult.filtered
         });
+
+        // Store raw data for export
+        setRawData({
+          profile: profileResult.rawData || [],
+          employment: employmentResult.rawData || [],
+          skills: skillsResult.rawData || [],
+          education: educationResult.rawData || [],
+          projects: projectsResult.rawData || [],
+          certifications: certResult.rawData || []
+        });
+
+        // Store raw employment data for timeline
+        setRawEmploymentData(employmentResult.rawData || []);
 
         // Merge all updates
         let allUpdates = [];
@@ -396,6 +420,156 @@ const Dashboard = () => {
 
     fetchAllData();
   }, []);
+
+  const handleExportSummary = () => {
+    setExporting(true);
+    
+    // Create a formatted text summary
+    const today = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    let summary = `PROFESSIONAL DASHBOARD SUMMARY\nGenerated: ${today}\n\n`;
+    summary += '='.repeat(60) + '\n\n';
+
+    // Profile Section
+    summary += 'PROFILE INFORMATION\n';
+    summary += '-'.repeat(60) + '\n';
+    if (rawData.profile && rawData.profile.length > 0) {
+      const profile = rawData.profile[0];
+      if (profile.full_name) summary += `Name: ${profile.full_name}\n`;
+      if (profile.title) summary += `Title: ${profile.title}\n`;
+      if (profile.email) summary += `Email: ${profile.email}\n`;
+      if (profile.phone_number) summary += `Phone: ${profile.phone_number}\n`;
+      if (profile.address) summary += `Address: ${profile.address}\n`;
+      if (profile.industry) summary += `Industry: ${profile.industry}\n`;
+      if (profile.experience_level) summary += `Experience Level: ${profile.experience_level}\n`;
+      if (profile.biography) summary += `\nBiography:\n${profile.biography}\n`;
+    } else {
+      summary += 'No profile information available.\n';
+    }
+    summary += '\n';
+
+    // Employment History Section
+    summary += 'EMPLOYMENT HISTORY\n';
+    summary += '-'.repeat(60) + '\n';
+    if (rawData.employment && rawData.employment.length > 0) {
+      rawData.employment.forEach((job, index) => {
+        summary += `${index + 1}. ${job.title || 'Unknown Position'}`;
+        if (job.company) summary += ` at ${job.company}`;
+        summary += '\n';
+        if (job.location) summary += `   Location: ${job.location}\n`;
+        if (job.start_date || job.end_date) {
+          summary += `   Duration: ${job.start_date || 'Unknown'} - ${job.end_date || 'Present'}\n`;
+        }
+        if (job.description) summary += `   Description: ${job.description}\n`;
+        summary += '\n';
+      });
+    } else {
+      summary += 'No employment history available.\n\n';
+    }
+
+    // Skills Section
+    summary += 'SKILLS\n';
+    summary += '-'.repeat(60) + '\n';
+    if (rawData.skills && rawData.skills.length > 0) {
+      // Group skills by category
+      const skillsByCategory = {};
+      rawData.skills.forEach(skill => {
+        const category = skill.category || 'Uncategorized';
+        if (!skillsByCategory[category]) {
+          skillsByCategory[category] = [];
+        }
+        skillsByCategory[category].push(skill);
+      });
+
+      Object.entries(skillsByCategory).forEach(([category, skills]) => {
+        summary += `\n${category}:\n`;
+        skills.forEach(skill => {
+          summary += `  • ${skill.name}`;
+          if (skill.proficiency) summary += ` (${skill.proficiency})`;
+          summary += '\n';
+        });
+      });
+      summary += '\n';
+    } else {
+      summary += 'No skills listed.\n\n';
+    }
+
+    // Education Section
+    summary += 'EDUCATION\n';
+    summary += '-'.repeat(60) + '\n';
+    if (rawData.education && rawData.education.length > 0) {
+      rawData.education.forEach((edu, index) => {
+        summary += `${index + 1}. ${edu.institution_name || 'Unknown Institution'}\n`;
+        if (edu.degree) summary += `   Degree: ${edu.degree}`;
+        if (edu.field_of_study) summary += ` in ${edu.field_of_study}`;
+        if (edu.degree || edu.field_of_study) summary += '\n';
+        if (edu.graduation_date) summary += `   Graduation: ${edu.graduation_date}\n`;
+        if (edu.gpa) summary += `   GPA: ${edu.gpa}\n`;
+        if (edu.achievements) summary += `   Achievements: ${edu.achievements}\n`;
+        summary += '\n';
+      });
+    } else {
+      summary += 'No education history available.\n\n';
+    }
+
+    // Projects Section
+    summary += 'PROJECTS\n';
+    summary += '-'.repeat(60) + '\n';
+    if (rawData.projects && rawData.projects.length > 0) {
+      rawData.projects.forEach((project, index) => {
+        summary += `${index + 1}. ${project.project_name || 'Unknown Project'}\n`;
+        if (project.role) summary += `   Role: ${project.role}\n`;
+        if (project.start_date || project.end_date) {
+          summary += `   Duration: ${project.start_date || 'Unknown'} - ${project.end_date || 'Ongoing'}\n`;
+        }
+        if (project.description) summary += `   Description: ${project.description}\n`;
+        if (project.skills && project.skills.length > 0) {
+          summary += `   Technologies: ${project.skills.join(', ')}\n`;
+        }
+        if (project.project_url) summary += `   URL: ${project.project_url}\n`;
+        if (project.achievements) summary += `   Achievements: ${project.achievements}\n`;
+        summary += '\n';
+      });
+    } else {
+      summary += 'No projects listed.\n\n';
+    }
+
+    // Certifications Section
+    summary += 'CERTIFICATIONS\n';
+    summary += '-'.repeat(60) + '\n';
+    if (rawData.certifications && rawData.certifications.length > 0) {
+      rawData.certifications.forEach((cert, index) => {
+        summary += `${index + 1}. ${cert.name || 'Unknown Certification'}\n`;
+        if (cert.issuer) summary += `   Issuer: ${cert.issuer}\n`;
+        if (cert.date_earned) summary += `   Date Earned: ${cert.date_earned}\n`;
+        if (cert.date_expiry) summary += `   Expiry Date: ${cert.date_expiry}\n`;
+        if (cert.cert_number) summary += `   Certificate Number: ${cert.cert_number}\n`;
+        summary += '\n';
+      });
+    } else {
+      summary += 'No certifications listed.\n\n';
+    }
+
+    summary += '='.repeat(60) + '\n';
+    summary += 'End of Summary\n';
+
+    // Create and download the file
+    const blob = new Blob([summary], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Dashboard_Summary_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    setExporting(false);
+  };
 
   if (loading) {
     return (
@@ -507,9 +681,37 @@ const Dashboard = () => {
   return (
     <div className="dashboard-bg min-vh-100 py-4">
       <Container fluid>
-        <h1 className="text-center text-white fw-bold mb-5 display-4">
-          Dashboard
-        </h1>
+        <div className="dashboard-header-container">
+  <h1 className="text-white fw-bold display-4">
+    Dashboard
+  </h1>
+  <Button 
+    variant="light" 
+    onClick={handleExportSummary}
+    disabled={exporting}
+    className="dashboard-export-btn d-flex align-items-center gap-2"
+    style={{ 
+      fontWeight: '600',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    }}
+  >
+    {exporting ? (
+      <>
+        <Spinner animation="border" size="sm" />
+        <span>Exporting...</span>
+      </>
+    ) : (
+      <>
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+          <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+        </svg>
+        <span>Export Summary</span>
+      </>
+    )}
+  </Button>
+</div>
+        
         <ProgressTracker data={data} />
         <Row>
           {/* Left side: 3x2 grid */}
@@ -628,7 +830,10 @@ const Dashboard = () => {
         {/* Career Timeline */}
         <Row className="mt-4">
           <Col>
-            <CareerTimeline title="My Career Journey" />
+            <CareerTimeline 
+              title="My Career Journey" 
+              employmentData={rawEmploymentData}
+            />
           </Col>
         </Row>
       </Container>
