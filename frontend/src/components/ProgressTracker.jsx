@@ -10,8 +10,8 @@ const ProgressTracker = ({ data }) => {
     const threshData = {
       'profile': 7,
       'employmentHistory': 3,
-      'skills': 2,
-      'education': 4,
+      'skills': 1,
+      'education': 3,
       'projects': 5,
       'certifications': 4
     };
@@ -34,7 +34,7 @@ const ProgressTracker = ({ data }) => {
     
     if (completenessRatio >= 0.8 && totalItems >= threshCount[schema]) {
       return 'complete';
-    } else if (completenessRatio >= 0.4 && totalItems > 0) {
+    } else if (totalItems > 0) {
       return 'partial';
     } else {
       return 'incomplete';
