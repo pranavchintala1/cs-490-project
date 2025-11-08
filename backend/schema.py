@@ -11,7 +11,7 @@ class RegistInfo(BaseModel):
     email: str
     full_name: str
 
-# TODO: anything noted as required for creation should be validated in the endpoints
+# NOTE: anything noted as required for creation should be validated in the endpoints
 
 class Profile(BaseModel):
     username: Optional[str] = None # NOTE: required for creation
@@ -23,7 +23,7 @@ class Profile(BaseModel):
     biography: Optional[str] = None
     industry: Optional[str] = None
     experience_level: Optional[str] = None
-    # TODO: requires image-media
+    # IMAGE MEDIA
     
 class Skill(BaseModel):
     name: Optional[str] = None # NOTE: required for creation
@@ -63,8 +63,7 @@ class Project(BaseModel):
     achievements: Optional[str] = None
     industry: Optional[str] = None
     status: Optional[str] = None
-    thumbnail_id: Optional[str] = None
-    # TODO: requires multi-media
+    # MUTLIMEDIA
 
 class Certification(BaseModel): 
     name: Optional[str] = None # NOTE: required for creation
@@ -76,7 +75,7 @@ class Certification(BaseModel):
     position: Optional[str] = None
     verified: Optional[bool] = False
     document_name: Optional[str] = None
-    # TODO: requires docu-media
+    # DOCUMENT-MEDIA
 
 class Job(BaseModel):
     title: Optional[str] = None
