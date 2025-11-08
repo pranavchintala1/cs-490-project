@@ -21,7 +21,6 @@ const degreeColors = {
   "Bootcamp": "#ff3b30"
 };
 
-// Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -34,8 +33,9 @@ export default function EducationList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const uuid = localStorage.getItem('uuid') || '';
+
   const location = useLocation();
-  // 👇 Check for navigation state (if user came from a special link)
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -49,9 +49,8 @@ export default function EducationList() {
   const loadEducation = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/education/me?uuid=", "");
+      const data = await apiRequest("/api/education/me?uuid=", uuid);
       
-      // Transform backend data to frontend format
       const transformedEntries = (data || []).map(entry => ({
         id: entry._id,
         degree: entry.degree,
@@ -76,7 +75,7 @@ export default function EducationList() {
 
   const addEntry = async (entry) => {
     try {
-      const response = await apiRequest("/api/education?uuid=", "", {
+      const response = await apiRequest("/api/education?uuid=", uuid, {
         method: "POST",
         body: JSON.stringify(entry)
       });
@@ -94,7 +93,7 @@ export default function EducationList() {
 
   const submitEdit = async (updatedEntry) => {
     try {
-      await apiRequest(`/api/education?education_id=${updatedEntry.id}&uuid=`, "", {
+      await apiRequest(`/api/education?education_id=${updatedEntry.id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify(updatedEntry)
       });
@@ -112,7 +111,7 @@ export default function EducationList() {
     if (!window.confirm("Delete this education entry?")) return;
     
     try {
-      await apiRequest(`/api/education?education_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/education?education_id=${id}&uuid=`, uuid, {
         method: "DELETE"
       });
 
@@ -184,7 +183,6 @@ export default function EducationList() {
         />
       )}
 
-      {/* Only show the education entries if we're not showing the form */}
       {!showForm && (
         <>
           {sortedEntries.length === 0 ? (
@@ -201,7 +199,6 @@ export default function EducationList() {
             </div>
           ) : (
             <div style={{ position: "relative", marginTop: "40px" }}>
-              {/* Timeline vertical line */}
               <div
                 style={{
                   position: "absolute",
@@ -235,7 +232,6 @@ export default function EducationList() {
                       zIndex: 1
                     }}
                   >
-                    {/* Timeline dot */}
                     <div
                       style={{
                         width: "60px",
@@ -261,7 +257,6 @@ export default function EducationList() {
                       />
                     </div>
 
-                    {/* Year label */}
                     <div
                       style={{
                         width: "80px",
@@ -277,7 +272,6 @@ export default function EducationList() {
                       {yearLabel}
                     </div>
 
-                    {/* Content card */}
                     <div
                       style={{
                         border: "2px solid #ddd",
