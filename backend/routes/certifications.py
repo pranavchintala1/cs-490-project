@@ -79,9 +79,9 @@ async def delete_certification(certification_id: str, uuid: str = Depends(author
         return {"detail": "Successfully deleted certification"}
     
 @certifications_router.post("/media", tags = ["certifications"])
-async def upload_media(parent_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
+async def upload_media(certification_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
     try:
-        media_id = await media_dao.add_media(parent_id, media.filename, await media.read(), media.content_type)
+        media_id = await media_dao.add_media(certification_id, media.filename, await media.read(), media.content_type)
     except Exception as e:
         raise HTTPException(500, "Encountered interal service error")
     
@@ -109,18 +109,18 @@ async def download_media(media_id, download: bool = False, uuid: str = Depends(a
     )
 
 @certifications_router.get("/media/ids", tags = ["certifications"])
-async def get_all_media_ids(parent_id:str, uuid: str = Depends(authorize)):
+async def get_all_media_ids(certification_id: str, uuid: str = Depends(authorize)):
     try:
-        media_ids = await media_dao.get_all_associated_media_ids(parent_id)
+        media_ids = await media_dao.get_all_associated_media_ids(certification_id)
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     
     return {"detail": "Sucessfully gotten media ids", "media_id_list": media_ids}
 
 @certifications_router.put("/media", tags = ["certifications"])
-async def update_media(parent_id: str, media_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
+async def update_media(certification_id: str, media_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
     try:
-        updated = await media_dao.update_media(media_id, media.filename, await media.read(), parent_id, media.content_type)
+        updated = await media_dao.update_media(media_id, media.filename, await media.read(), certification_id, media.content_type)
     except Exception as e:
         raise HTTPException(500, "Encountered interal service error")
     
