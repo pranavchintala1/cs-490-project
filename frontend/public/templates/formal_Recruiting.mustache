@@ -1,0 +1,43 @@
+**Formal Cover Letter Template for Recruiting**  
+
+[Your Name]  
+[Your Address]  
+[City, State, ZIP Code]  
+[Email Address]  
+[Phone Number]  
+[Date]  
+
+{{#hiring_manager}}
+**Dear {{hiring_manager}},**  
+{{/hiring_manager}}
+{{^hiring_manager}}
+**Dear Hiring Manager,**  
+{{/hiring_manager}}
+
+{{#position}}
+I am writing to express my interest in the {{position}} role at {{company}}.  
+{{/position}}
+{{^position}}
+I am writing to express my interest in joining {{company}} in a recruiting capacity.  
+{{/position}}
+With {{#experience}}{{#has_years}}{{years}} years{{/has_years}}{{/experience}} of experience in recruiting and a strong background in {{#skills}}{{.}}{{#unless @last}}, {{/unless}}{{/skills}}, I am confident in my ability to contribute to your team’s success.  
+
+{{#experience}}
+In my previous role at {{employer}}, I successfully {{#achievements}}{{.}}{{#unless @last}}; {{/unless}}{{/achievements}}, demonstrating my expertise in sourcing, screening, and onboarding top talent. My ability to build strong relationships with candidates and hiring managers has consistently resulted in high placement rates and improved team performance.  
+{{/experience}}
+{{^experience}}
+As an aspiring recruiting professional, I have developed a strong foundation in talent acquisition through coursework, internships, and hands-on projects. I am eager to apply my knowledge and passion for connecting people with opportunities in a dynamic role at {{company}}.  
+{{/experience}}
+
+{{#skills}}
+My skill set includes {{.}}{{#unless @last}}, {{/unless}}{{/skills}}, which I believe align closely with the requirements of this position. I am particularly excited about the opportunity to leverage these skills to support {{company}}’s mission of {{#company_mission}}{{.}}{{/company_mission}}.  
+{{/skills}}
+
+{{#availability}}
+I am available to start {{#start_date}}{{.}}{{/start_date}} and would welcome the opportunity to discuss how my background aligns with the needs of your team.  
+{{/availability}}
+
+Thank you for considering my application. I look forward to the possibility of contributing to {{company}}’s continued growth and success. Please feel free to contact me at [Your Phone Number] or [Your Email Address] to schedule a conversation.  
+
+Sincerely,  
+{{name}}
