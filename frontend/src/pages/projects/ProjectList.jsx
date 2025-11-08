@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ProjectForm from "./ProjectForm";
 import ProjectCard from "./ProjectCard";
 import ProjectsAPI from "../../api/projects";
+import { useLocation } from "react-router-dom";
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
@@ -13,6 +14,14 @@ export default function ProjectsList() {
   const [editProject, setEditProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedCardId, setExpandedCardId] = useState(null);
+
+  const location = useLocation();
+  // 👇 Check for navigation state (if user came from a special link)
+  useEffect(() => {
+    if (location.state?.showForm) {
+      setShowForm(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     loadProjects();

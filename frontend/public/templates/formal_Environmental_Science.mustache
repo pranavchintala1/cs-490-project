@@ -1,0 +1,43 @@
+**Formal Cover Letter Template for Environmental Science**  
+
+[Your Name]  
+[Your Address]  
+[City, State, ZIP Code]  
+[Email Address]  
+[Phone Number]  
+[Date]  
+
+{{#hiring_manager}}
+**Dear {{hiring_manager}},**  
+{{/hiring_manager}}
+{{^hiring_manager}}
+**Dear Hiring Manager,**  
+{{/hiring_manager}}
+
+{{#position}}
+I am writing to express my interest in the {{position}} role at {{company}}.  
+{{/position}}
+{{^position}}
+I am writing to express my interest in joining {{company}} in a role that aligns with my expertise in environmental science.  
+{{/position}}
+
+With {{#experience}}{{#has_years}}{{years}} years{{/has_years}}{{/experience}} of experience in environmental science and a strong foundation in {{#skills}}{{.}}{{#unless @last}}, {{/unless}}{{/skills}}, I am confident in my ability to contribute to {{company}}’s mission of [insert company’s environmental mission or goal, if known].  
+
+{{#experience}}
+During my tenure at {{employer}}, I successfully [highlight a key achievement or responsibility relevant to the role]. For example, [provide a specific accomplishment, such as "led a team in conducting a comprehensive environmental impact assessment that resulted in a 20% reduction in carbon emissions"].  
+{{/experience}}
+{{^experience}}
+Through my academic and research experiences, I have developed a deep understanding of [mention relevant topics, such as "sustainability practices, ecosystem restoration, and environmental policy"]. My coursework and projects have equipped me with the skills to [mention skills, such as "analyze environmental data, develop conservation strategies, and communicate scientific findings to diverse audiences"].  
+{{/experience}}
+
+{{#position}}
+I am particularly drawn to the {{position}} role because [mention specific aspects of the role that align with your skills or interests]. I am eager to leverage my expertise in {{#skills}}{{.}}{{#unless @last}}, {{/unless}}{{/skills}} to support {{company}}’s initiatives in [mention a specific area, such as "renewable energy, biodiversity conservation, or climate change mitigation"].  
+{{/position}}
+{{^position}}
+I am eager to contribute to {{company}}’s initiatives in [mention a specific area, such as "renewable energy, biodiversity conservation, or climate change mitigation"]. My passion for environmental stewardship, combined with my skills in {{#skills}}{{.}}{{#unless @last}}, {{/unless}}{{/skills}}, makes me a strong candidate for a role within your organization.  
+{{/position}}
+
+I would welcome the opportunity to discuss how my background and skills align with the needs of {{company}}. Thank you for considering my application. I look forward to the possibility of contributing to your team and advancing our shared commitment to environmental sustainability.  
+
+Sincerely,  
+{{name}}

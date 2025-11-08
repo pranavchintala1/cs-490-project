@@ -1,19 +1,115 @@
 import React from 'react';
 
 const ProgressTracker = ({ data }) => {
-  // Check which cards have data
-  const cardStatus = {
-    profile: data.profile && data.profile.length > 0,
-    employmentHistory: data.employmentHistory && data.employmentHistory.length > 0,
-    skills: data.skills && data.skills.length > 0,
-    education: data.education && data.education.length > 0,
-    projects: data.projects && data.projects.length > 0
+  // Use the same completion logic as Dashboard
+  const getCompletenessStatus = (cardData, schema) => {
+    if (!cardData || cardData.length === 0) {
+      return 'incomplete';
+    }
+
+    const threshData = {
+      'profile': 7,
+      'employmentHistory': 3,
+      'skills': 1,
+      'education': 3,
+      'projects': 5,
+      'certifications': 4
+    };
+
+    const threshCount = {
+      'profile': 1,
+      'employmentHistory': 2,
+      'skills': 4,
+      'education': 1,
+      'projects': 2,
+      'certifications': 1
+    };
+
+    const totalItems = cardData.length;
+    const itemsWithContent = cardData.filter(([_, values]) => 
+      values && values.length > threshData[schema] && values.some(v => v && v.trim() !== '')
+    ).length;
+    
+    const completenessRatio = itemsWithContent / totalItems;
+    
+    if (completenessRatio >= 0.8 && totalItems >= threshCount[schema]) {
+      return 'complete';
+    } else if (totalItems > 0) {
+      return 'partial';
+    } else {
+      return 'incomplete';
+    }
   };
 
-  // Count completed cards
-  const completedCards = Object.values(cardStatus).filter(Boolean).length;
+  // Get detailed info about what's needed for completion
+  const getCompletionDetails = (cardData, schema) => {
+    const threshCount = {
+      'profile': 1,
+      'employmentHistory': 2,
+      'skills': 4,
+      'education': 1,
+      'projects': 2,
+      'certifications': 1
+    };
+
+    const threshData = {
+      'profile': 7,
+      'employmentHistory': 3,
+      'skills': 2,
+      'education': 4,
+      'projects': 5,
+      'certifications': 4
+    };
+
+    if (!cardData || cardData.length === 0) {
+      return {
+        currentCount: 0,
+        neededCount: threshCount[schema],
+        needsMoreEntries: true,
+        additionalNeeded: threshCount[schema]
+      };
+    }
+
+    const totalItems = cardData.length;
+    const requiredCount = threshCount[schema];
+    const itemsWithContent = cardData.filter(([_, values]) => 
+      values && values.length > threshData[schema] && values.some(v => v && v.trim() !== '')
+    ).length;
+    
+    const completenessRatio = itemsWithContent / totalItems;
+    const needsMoreEntries = totalItems < requiredCount;
+    const additionalNeeded = Math.max(0, requiredCount - totalItems);
+    
+    // Calculate how many items need better quality
+    const itemsNeedingImprovement = totalItems - itemsWithContent;
+
+    return {
+      currentCount: totalItems,
+      neededCount: requiredCount,
+      needsMoreEntries,
+      additionalNeeded,
+      itemsWithContent,
+      itemsNeedingImprovement,
+      completenessRatio
+    };
+  };
+
+  // Check completion status for each card
+  const cardStatus = {
+    profile: getCompletenessStatus(data.profile, 'profile'),
+    employmentHistory: getCompletenessStatus(data.employmentHistory, 'employmentHistory'),
+    skills: getCompletenessStatus(data.skills, 'skills'),
+    education: getCompletenessStatus(data.education, 'education'),
+    projects: getCompletenessStatus(data.projects, 'projects')
+  };
+
+  // Count completed and partial cards
+  const completedCards = Object.values(cardStatus).filter(status => status === 'complete').length;
+  const partialCards = Object.values(cardStatus).filter(status => status === 'partial').length;
   const totalCards = Object.keys(cardStatus).length;
-  const completionPercentage = (completedCards / totalCards) * 100;
+  
+  // Calculate completion percentage (complete = 100%, partial = 50%)
+  const completionPercentage = ((completedCards * 100) + (partialCards * 50)) / totalCards;
 
   // Tips for each category
   const tips = {
@@ -44,10 +140,19 @@ const ProgressTracker = ({ data }) => {
     ]
   };
 
-  // Get cards that need completion
+  // Get cards that need completion or improvement
   const incompleteCards = Object.entries(cardStatus)
-    .filter(([_, isComplete]) => !isComplete)
+    .filter(([_, status]) => status === 'incomplete')
     .map(([cardName, _]) => cardName);
+  
+  const partialCardsArray = Object.entries(cardStatus)
+    .filter(([_, status]) => status === 'partial')
+    .map(([cardName, _]) => cardName);
+
+  // Helper function to format card names
+  const formatCardName = (cardName) => {
+    return cardName.replace(/([A-Z])/g, ' $1').trim();
+  };
 
   return (
     <div style={{
@@ -93,7 +198,7 @@ const ProgressTracker = ({ data }) => {
         fontSize: '14px',
         marginBottom: '20px'
       }}>
-        {completedCards} of {totalCards} sections completed ({Math.round(completionPercentage)}%)
+        {completedCards} complete, {partialCards} partial, {incompleteCards.length} incomplete ({Math.round(completionPercentage)}%)
       </p>
 
       {/* Completion Status */}
@@ -121,48 +226,113 @@ const ProgressTracker = ({ data }) => {
         </div>
       ) : (
         <div>
-          <h4 style={{
-            fontSize: '16px',
-            fontWeight: '600',
-            color: '#0A0F1A', // Text Primary
-            marginBottom: '10px'
-          }}>
-            Complete these sections:
-          </h4>
-          
-          {incompleteCards.map((cardName) => (
-            <div key={cardName} style={{
-              backgroundColor: '#FFFFFF', // Surface White
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid #D1D5DB',
-              marginBottom: '10px'
-            }}>
-              <h5 style={{
-                fontSize: '14px',
+          {/* Incomplete Sections */}
+          {incompleteCards.length > 0 && (
+            <>
+              <h4 style={{
+                fontSize: '16px',
                 fontWeight: '600',
-                color: '#003366', // Primary Blue
-                marginBottom: '6px',
-                textTransform: 'capitalize'
+                color: '#0A0F1A', // Text Primary
+                marginBottom: '10px'
               }}>
-                {cardName.replace(/([A-Z])/g, ' $1').trim()}
-              </h5>
-              <ul style={{
-                margin: 0,
-                paddingLeft: '15px',
-                color: '#4A4A4A' // Text Secondary
-              }}>
-                {tips[cardName].map((tip, index) => (
-                  <li key={index} style={{
-                    fontSize: '12px',
-                    marginBottom: '2px'
+                Complete these sections:
+              </h4>
+              
+              {incompleteCards.map((cardName) => (
+                <div key={cardName} style={{
+                  backgroundColor: '#FFFFFF', // Surface White
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: '1px solid #D1D5DB',
+                  marginBottom: '10px'
+                }}>
+                  <h5 style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#DC2626', // Red for incomplete
+                    marginBottom: '6px',
+                    textTransform: 'capitalize'
                   }}>
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                    {formatCardName(cardName)} - Incomplete
+                  </h5>
+                  <ul style={{
+                    margin: 0,
+                    paddingLeft: '15px',
+                    color: '#4A4A4A' // Text Secondary
+                  }}>
+                    {tips[cardName].map((tip, index) => (
+                      <li key={index} style={{
+                        fontSize: '12px',
+                        marginBottom: '2px'
+                      }}>
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </>
+          )}
+
+          {/* Partial Sections */}
+          {partialCardsArray.length > 0 && (
+            <>
+              <h4 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#0A0F1A', // Text Primary
+                marginBottom: '10px',
+                marginTop: incompleteCards.length > 0 ? '20px' : '0'
+              }}>
+                Improve these sections:
+              </h4>
+              
+              {partialCardsArray.map((cardName) => {
+                const details = getCompletionDetails(data[cardName], cardName);
+                
+                return (
+                  <div key={cardName} style={{
+                    backgroundColor: '#FFFFFF', // Surface White
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #F59E0B', // Warning border
+                    marginBottom: '10px'
+                  }}>
+                    <h5 style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#F59E0B', // Warning color
+                      marginBottom: '6px',
+                      textTransform: 'capitalize'
+                    }}>
+                      {formatCardName(cardName)} - Could be improved
+                    </h5>
+                    
+                    {details.needsMoreEntries ? (
+                      <p style={{
+                        margin: 0,
+                        fontSize: '12px',
+                        color: '#4A4A4A'
+                      }}>
+                        You have <strong>{details.currentCount}</strong> {details.currentCount === 1 ? 'entry' : 'entries'}. 
+                        Add <strong>{details.additionalNeeded}</strong> more {details.additionalNeeded === 1 ? 'entry' : 'entries'} to reach 
+                        the recommended <strong>{details.neededCount}</strong> {details.neededCount === 1 ? 'entry' : 'entries'}.
+                      </p>
+                    ) : (
+                      <p style={{
+                        margin: 0,
+                        fontSize: '12px',
+                        color: '#4A4A4A'
+                      }}>
+                        You have enough entries ({details.currentCount}), but {details.itemsNeedingImprovement} {details.itemsNeedingImprovement === 1 ? 'needs' : 'need'} more 
+                        details. Add more information to your existing {details.itemsNeedingImprovement === 1 ? 'entry' : 'entries'} to complete this section.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
     </div>

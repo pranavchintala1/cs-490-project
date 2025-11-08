@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import EmploymentForm from "./EmploymentForm";
 import EmploymentAPI from "../../api/employment";
+import { useLocation } from 'react-router-dom';
+
 
 // Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
@@ -9,11 +11,25 @@ const parseLocalDate = (dateStr) => {
   return new Date(year, month - 1, day);
 };
 
+
+
+
 export default function EmploymentList() {
+  
+
+
   const [items, setItems] = useState([]);
   const [editEntry, setEditEntry] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  const location = useLocation();
+  // 👇 Check for navigation state (if user came from a special link)
+  useEffect(() => {
+    if (location.state?.showForm) {
+      setShowForm(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     loadEmployment();
