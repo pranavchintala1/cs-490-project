@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ProjectForm from "./ProjectForm";
 import ProjectCard from "./ProjectCard";
-import { apiRequest } from "../../api";
+import ProjectsAPI from "../../api/projects";
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
@@ -21,52 +21,42 @@ export default function ProjectsList() {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/projects/me?uuid=", "");
-      
-      const transformedProjects = await Promise.all((data || []).map(async project => {
+      const res = await ProjectsAPI.getAll();
+
+      const transformedProjects = await Promise.all((res.data || []).map(async project => {
         // Fetch associated media for each project
         let mediaFiles = [];
-        
+
         try {
-          const mediaIdsResponse = await apiRequest(`/api/projects/media/ids?parent_id=${project._id}&uuid=`, "");
-          const mediaIds = mediaIdsResponse.media_id_list || [];
-          
+          const idsRes = await ProjectsAPI.getMediaIds(project._id);
+          const mediaIds = idsRes.data.media_id_list || [];
+
           // Fetch each media file's metadata
           if (mediaIds.length > 0) {
-            const uuid = localStorage.getItem('uuid') || '';
-            const token = localStorage.getItem('session') || '';
-            const baseURL = 'http://localhost:8000';
-            
+
             // First, get all media metadata from the database
             const mediaMetadata = await Promise.all(
               mediaIds.map(async (mediaId) => {
                 try {
                   // Fetch media metadata directly from the API
-                  const metaResponse = await fetch(
-                    `${baseURL}/api/projects/media?media_id=${mediaId}&uuid=${uuid}`,
-                    {
-                      headers: {
-                        ...(token ? { "Authorization": `Bearer ${token}` } : {})
-                      }
-                    }
-                  );
-                  
-                  if (metaResponse.ok) {
-                    const contentType = metaResponse.headers.get('Content-Type');
-                    const blob = await metaResponse.blob();
+                  const metaRes = await ProjectsAPI.getMedia(mediaId, false);
+
+                  if (metaRes.status == 200) {
+                    const contentType = metaRes.headers["Content-Type"];
+                    const blob = metaRes.data;
                     const url = URL.createObjectURL(blob);
-                    
+
                     // Try to extract filename from Content-Disposition
                     let filename = `file_${mediaId}`;
-                    const contentDisposition = metaResponse.headers.get('Content-Disposition');
-                    
+                    const contentDisposition = metaRes.headers["Content-Disposition"];
+
                     if (contentDisposition) {
                       const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
                       if (match && match[1]) {
                         filename = match[1].replace(/['"]/g, '').trim();
                       }
                     }
-                    
+
                     // If still no filename, try to guess from content type
                     if (filename === `file_${mediaId}` && contentType) {
                       const ext = contentType.split('/')[1];
@@ -76,7 +66,7 @@ export default function ProjectsList() {
                     }
                     
                     console.log('Loaded media:', filename, 'Type:', contentType, 'Blob type:', blob.type);
-                    
+
                     return {
                       media_id: mediaId,
                       filename: filename,
@@ -90,7 +80,7 @@ export default function ProjectsList() {
                 return null;
               })
             );
-            
+
             mediaFiles = mediaMetadata.filter(f => f !== null);
           }
         } catch (error) {
@@ -115,13 +105,13 @@ export default function ProjectsList() {
           media_files: mediaFiles
         };
       }));
-      
+
       console.log('Transformed projects:', transformedProjects.map(p => ({
         name: p.project_name,
         thumbnail_id: p.thumbnail_id,
         media_files: p.media_files?.map(f => f.filename)
       })));
-      
+
       setProjects(transformedProjects);
     } catch (error) {
       console.error("Failed to load projects:", error);
@@ -143,40 +133,19 @@ export default function ProjectsList() {
 
   const addProject = async (projectData, mediaFiles) => {
     try {
-      const response = await apiRequest("/api/projects?uuid=", "", {
-        method: "POST",
-        body: JSON.stringify(projectData),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const res = await ProjectsAPI.add(projectData);
 
-      if (response && response.project_id) {
-        const projectId = response.project_id;
-        
+      if (res && res.data.project_id) {
+        const projectId = res.data.project_id;
+
         // Upload media files if any
         if (mediaFiles && mediaFiles.length > 0) {
-          const uuid = localStorage.getItem('uuid') || '';
-          const token = localStorage.getItem('session') || '';
-          const baseURL = 'http://localhost:8000';
-          
+
           for (const file of mediaFiles) {
-            const uploadFormData = new FormData();
-            uploadFormData.append('media', file);
-            
             try {
-              const uploadResponse = await fetch(
-                `${baseURL}/api/projects/media?parent_id=${projectId}&uuid=${uuid}`,
-                {
-                  method: "POST",
-                  headers: {
-                    ...(token ? { "Authorization": `Bearer ${token}` } : {})
-                  },
-                  body: uploadFormData
-                }
-              );
-              
-              if (!uploadResponse.ok) {
+              const mediaRes = await ProjectsAPI.uploadMedia(projectId, file);
+
+              if (mediaRes.status != 200) {
                 console.error("Failed to upload file:", file.name);
               }
             } catch (error) {
@@ -184,7 +153,7 @@ export default function ProjectsList() {
             }
           }
         }
-        
+
         await loadProjects();
       }
       setShowForm(false);
@@ -196,37 +165,16 @@ export default function ProjectsList() {
 
   const submitEdit = async (projectData, mediaFiles) => {
     try {
-      await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify(projectData),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      await ProjectsAPI.update(editProject.id, projectData);
 
       // Upload new media files if any
       if (mediaFiles && mediaFiles.length > 0) {
-        const uuid = localStorage.getItem('uuid') || '';
-        const token = localStorage.getItem('session') || '';
-        const baseURL = 'http://localhost:8000';
-        
+
         for (const file of mediaFiles) {
-          const uploadFormData = new FormData();
-          uploadFormData.append('media', file);
-          
           try {
-            const uploadResponse = await fetch(
-              `${baseURL}/api/projects/media?parent_id=${editProject.id}&uuid=${uuid}`,
-              {
-                method: "POST",
-                headers: {
-                  ...(token ? { "Authorization": `Bearer ${token}` } : {})
-                },
-                body: uploadFormData
-              }
-            );
-            
-            if (!uploadResponse.ok) {
+            const uploadRes = ProjectsAPI.uploadMedia(editProject.id, file);
+
+            if (uploadRes.status != 200) {
               console.error("Failed to upload file:", file.name);
             }
           } catch (error) {
@@ -246,11 +194,9 @@ export default function ProjectsList() {
 
   const deleteProject = async (id) => {
     if (!window.confirm("Delete this project?")) return;
-    
+
     try {
-      await apiRequest(`/api/projects?project_id=${id}&uuid=`, "", {
-        method: "DELETE"
-      });
+      await ProjectsAPI.delete(id);
 
       setProjects(projects.filter((p) => p.id !== id));
       if (expandedCardId === id) {
