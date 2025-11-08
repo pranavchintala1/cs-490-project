@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
-<<<<<<< HEAD
 import EducationAPI from "../../api/education";
-=======
-import { apiRequest } from "../../api";
 import { useLocation } from "react-router-dom";
->>>>>>> origin/dev
 
 const degreeEmojis = {
   "High School": "🏫",
