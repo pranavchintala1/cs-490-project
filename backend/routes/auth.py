@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException,Request
 from fastapi.responses import JSONResponse
 
 from pymongo.errors import DuplicateKeyError
@@ -18,6 +18,10 @@ from sessions.session_manager import session_manager
 from sessions.session_authorizer import authorize
 from schema import RegistInfo, LoginCred, Profile
 
+import httpx
+from jose import jwt, JWTError
+import os
+
 auth_router = APIRouter(prefix = "/auth")
 
 @auth_router.post("/register", tags = ["profiles"])
@@ -27,6 +31,7 @@ async def register(info: RegistInfo):
         uuid = str(uuid4())
         pass_hash = bcrypt.hashpw(info.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         result = await auth_dao.add_user(uuid, {"email": info.email.lower(), "username": info.username, "password": pass_hash})
+        print(result)
     except DuplicateKeyError:
         raise HTTPException(400, "User already exists")
     except Exception as e:
@@ -63,7 +68,7 @@ async def login(credentials: LoginCred):
         raise HTTPException(500, "Encountered internal server error")
     
     if not pass_hash:
-        raise HTTPException(401, "Invalid email address")
+        raise HTTPException(401, "Invalid email or password.")
     
     if bcrypt.checkpw(credentials.password.encode("utf-8"), pass_hash.encode("utf-8")):
         # begin session
@@ -71,7 +76,7 @@ async def login(credentials: LoginCred):
 
         return {"detail": "Successfully logged in", "uuid": uuid, "session_token": session_token}
     else:
-        raise HTTPException(401, "Invalid credentials provided")
+        raise HTTPException(401, "Invalid email or password.")
 
 @auth_router.post("/logout", tags = ["profiles"])
 async def logout(uuid: str = Depends(authorize)):
@@ -182,4 +187,64 @@ async def verify_google_token(token: dict = Body(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail = f"Unknown Error while authenticating: {str(e)}")
-    
+
+@auth_router.put("/login/microsoft", tags = ["profiles"])
+async def verify_microsoft_token(request: Request):
+
+    MICROSOFT_ISSUER = os.getenv("MICROSOFT_ISSUER")
+    MICROSOFT_KEYS_URL = os.getenv("MICROSOFT_KEYS_URL")
+    MICROSOFT_CLIENT_ID = os.getenv("MICROSOFT_CLIENT_ID")
+
+    data = await request.json()
+    token = data.get("token")
+
+    if not token:
+        raise HTTPException(status_code=400, content={"detail": "Missing token"})
+
+    async with httpx.AsyncClient() as client:
+        jwks_resp = await client.get(MICROSOFT_KEYS_URL)
+        if jwks_resp.status_code != 200:
+            raise HTTPException(status_code=500, content={"detail": "Could not fetch Microsoft keys"})
+
+        jwks = jwks_resp.json()
+
+    try:
+        header = jwt.get_unverified_header(token)
+        key = next((k for k in jwks["keys"] if k["kid"] == header["kid"]), None)
+        if not key:
+            return HTTPException(status_code=400, content={"detail": "Key not found"})
+
+        claims = jwt.decode(
+            token,
+            key,
+            algorithms=["RS256"],
+            audience=MICROSOFT_CLIENT_ID,
+            issuer=MICROSOFT_ISSUER,
+        )
+    except JWTError as e:
+        print(e)
+        raise HTTPException(status_code=401, content={"detail": f"Invalid token: {e}"})
+
+    email = claims.get("email") or claims.get("preferred_username")
+    claims["username"] = email # neccesary so register_user doesn't throw a fit.
+    name = claims.get("name")
+    sub = claims.get("sub")
+
+    data = await auth_dao.get_uuid(email)  # this returns a uuid
+
+    if data:  # if the user already exists, still log in because it doesn't matter.
+        uuid = data
+    else:
+        uuid = str(uuid4())
+        await auth_dao.add_user(uuid, email, email, "")
+        await profiles_dao.add_profile(uuid, claims)
+
+    if not email:
+        raise HTTPException(status_code=400, content={"detail": "Email not found in token"})
+
+    session_token = session_manager.begin_session(uuid)
+
+    return JSONResponse(
+        status_code=200,
+        content={"detail": "success", "uuid": uuid, "session_token": session_token},
+    )    

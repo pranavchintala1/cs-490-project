@@ -16,7 +16,7 @@ const ResetPassword = () => {
   useEffect(() => {
   const fetchData = async () => {
     try {
-      const response = await getData(token, "/api/auth/resetpassword");
+      const response = await getData(token, "/api/auth/password/reset");
       if (!response) {
         setRes(null);
         return;
@@ -43,7 +43,7 @@ const ResetPassword = () => {
   const onSubmit = async (data) => {
     try {
         
-      const response = await updateData(data, "/api/user/updatepassword");
+      const response = await updateData(data, "/api/auth/password/update");
       if (!response) {
         showFlash("Something went wrong", "error");
         return;
