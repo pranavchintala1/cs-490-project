@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { sendData } from "../../tools/db_commands";
+// import { sendData } from "../../tools/db_commands";
+import JobsAPI from "../../api/jobs";
 
 export function DeadlineWidget({ jobs, onJobClick }) {
   const today = new Date();
@@ -259,16 +260,18 @@ export function DeadlineReminderModal({ job, onClose, onSave }) {
 
     setIsSending(true);
     try {
-      const response = await sendData(
-        {
-          email: email,
-          jobTitle: job.title,
-          company: job.company,
-          deadline: job.deadline,
-          daysUntil: Math.floor((new Date(job.deadline) - new Date()) / (1000 * 60 * 60 * 24))
-        },
-        "/api/jobs/send-deadline-reminder"
-      );
+      // const response = await sendData(
+      //   {
+      //     email: email,
+      //     jobTitle: job.title,
+      //     company: job.company,
+      //     deadline: job.deadline,
+      //     daysUntil: Math.floor((new Date(job.deadline) - new Date()) / (1000 * 60 * 60 * 24))
+      //   },
+      //   "/api/jobs/send-deadline-reminder"
+      // );
+      // USE AXIOS API, I imported it above...
+      const response = null;
 
       if (response && response.status === 200) {
         alert("✅ Test reminder sent! Check your email.");
