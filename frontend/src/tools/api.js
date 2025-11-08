@@ -7,8 +7,8 @@ const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
 
 function auth() {
-  const uuid = localStorage.getItem("uuid") ?? localStorage.getItem("user_id");
-  const token = localStorage.getItem("token") ?? localStorage.getItem("session");
+  const uuid = localStorage.getItem("uuid");
+  const token = localStorage.getItem("session");
    return { uuid, token };
 }
 
