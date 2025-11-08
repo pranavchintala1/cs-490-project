@@ -39,7 +39,7 @@ async def get_job(job_id: str, uuid: str = Depends(authorize)):
 async def get_all_jobs(uuid: str = Depends(authorize)):
     try:
         results = await jobs_dao.get_all_jobs(uuid)
-        # NOTE: do not return http exception for empty jobs, as it can lead to inconsistent behavior on the frontend
+        # NOTE: do not raise http exception for empty jobs, as it can lead to inconsistent behavior on the frontend
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     
