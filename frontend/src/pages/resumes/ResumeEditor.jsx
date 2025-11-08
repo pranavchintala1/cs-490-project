@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ResumePreview from '../../components/resumes/ResumePreview';
 import SectionCustomizer from '../../components/resumes/SectionCustomizer';
@@ -18,6 +18,9 @@ export default function ResumeEditor() {
   const [resume, setResume] = useState(null);
   const [activeTab, setActiveTab] = useState('sections');
   const [saving, setSaving] = useState(false);
+  const [contentWidth, setContentWidth] = useState(50); // Percentage width of content
+  const layoutRef = useRef(null);
+  const isResizing = useRef(false);
 
   // TODO: Replace with API call when backend is ready
   useEffect(() => {
@@ -87,6 +90,40 @@ export default function ResumeEditor() {
     setResume(mockResume);
   }, [id]);
 
+  // Handle divider drag start
+  const handleDividerStart = () => {
+    isResizing.current = true;
+  };
+
+  // Handle divider resize logic
+  useEffect(() => {
+    const handleResizeEnd = () => {
+      isResizing.current = false;
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isResizing.current || !layoutRef.current) return;
+
+      const container = layoutRef.current;
+      const rect = container.getBoundingClientRect();
+      const dividerX = e.clientX - rect.left;
+
+      // Calculate percentage (between 30% and 70%)
+      const percentage = (dividerX / rect.width) * 100;
+      if (percentage >= 30 && percentage <= 70) {
+        setContentWidth(percentage);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleResizeEnd);
+    };
+  }, []);
+
   const handleSave = async () => {
     setSaving(true);
     // TODO: Replace with actual API call when backend is ready
@@ -95,6 +132,10 @@ export default function ResumeEditor() {
       setSaving(false);
       alert('Resume saved successfully!');
     }, 500);
+  };
+
+  const handleFullPrintView = () => {
+    setContentWidth(25);
   };
 
   if (!resume) {
@@ -115,7 +156,7 @@ export default function ResumeEditor() {
         </div>
       </div>
 
-      <div className="resume-editor-layout">
+      <div className="resume-editor-layout" ref={layoutRef}>
         <div className="editor-sidebar">
           <ul className="nav nav-tabs flex-column">
             <li className="nav-item">
@@ -153,7 +194,10 @@ export default function ResumeEditor() {
           </ul>
         </div>
 
-        <div className="editor-content">
+        <div
+          className="editor-content"
+          style={{ flex: `${contentWidth}%` }}
+        >
           {activeTab === 'sections' && (
             <SectionCustomizer
               sections={resume.sections}
@@ -181,9 +225,28 @@ export default function ResumeEditor() {
           )}
         </div>
 
-        <div className="editor-preview">
-          <h3>Preview</h3>
-          <ResumePreview resume={resume} />
+        {/* Resizable Divider */}
+        <div
+          className="editor-divider"
+          onMouseDown={handleDividerStart}
+          title="Drag to resize editor and preview"
+        />
+
+        <div
+          className="editor-preview"
+          style={{ flex: `${100 - contentWidth}%` }}
+        >
+          <div className="preview-header-bar">
+            <h3>Live Preview</h3>
+            <button onClick={handleFullPrintView} className="btn btn-sm btn-outline-primary">
+              Full Print View
+            </button>
+          </div>
+          <div className="editor-preview-container">
+            <div className="editor-preview-document">
+              <ResumePreview resume={resume} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
