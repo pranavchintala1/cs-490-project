@@ -3,9 +3,6 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
 import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from "jwt-decode";
-import { PublicClientApplication } from "@azure/msal-browser";
-import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
 import { apiRequest } from "../api";
 
