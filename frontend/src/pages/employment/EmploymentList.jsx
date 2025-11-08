@@ -3,28 +3,21 @@ import EmploymentForm from "./EmploymentForm";
 import { apiRequest } from "../../api";
 import { useLocation } from 'react-router-dom';
 
-
-// Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
 };
 
-
-
-
 export default function EmploymentList() {
-  
-
-
   const [items, setItems] = useState([]);
   const [editEntry, setEditEntry] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   
+  const uuid = localStorage.getItem('uuid') || '';
+  
   const location = useLocation();
-  // 👇 Check for navigation state (if user came from a special link)
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -38,7 +31,7 @@ export default function EmploymentList() {
   const loadEmployment = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/employment/me?uuid=", "");
+      const data = await apiRequest("/api/employment/me?uuid=", uuid);
       
       const transformedItems = (data || []).map(item => ({
         id: item._id,
@@ -61,7 +54,7 @@ export default function EmploymentList() {
 
   const onUpdate = async (id, patch) => {
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify(patch)
       });
@@ -77,7 +70,7 @@ export default function EmploymentList() {
     if (!window.confirm("Delete this employment entry?")) return;
     
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, uuid, {
         method: "DELETE"
       });
 
@@ -91,11 +84,9 @@ export default function EmploymentList() {
   const onAdded = async (data) => {
     try {
       if (data.id) {
-        // Update existing
         await onUpdate(data.id, data);
       } else {
-        // Add new
-        const response = await apiRequest("/api/employment?uuid=", "", {
+        const response = await apiRequest("/api/employment?uuid=", uuid, {
           method: "POST",
           body: JSON.stringify(data)
         });
@@ -113,9 +104,8 @@ export default function EmploymentList() {
     }
   };
 
-  // Sort by start date descending (most recent first)
   const sortedItems = [...items].sort((a, b) => {
-    if (!a.end_date && b.end_date) return -1; // Current positions first
+    if (!a.end_date && b.end_date) return -1;
     if (a.end_date && !b.end_date) return 1;
     const dateA = parseLocalDate(a.start_date);
     const dateB = parseLocalDate(b.start_date);
@@ -189,7 +179,6 @@ export default function EmploymentList() {
         />
       )}
 
-      {/* Only show employment list if form is not shown */}
       {!showForm && (
         <>
           {sortedItems.length === 0 ? (
@@ -204,7 +193,6 @@ export default function EmploymentList() {
             </div>
           ) : (
             <div style={{ position: "relative", marginTop: "40px" }}>
-              {/* Timeline vertical line */}
               <div
                 style={{
                   position: "absolute",
@@ -223,7 +211,6 @@ export default function EmploymentList() {
                   return (
                     <li key={it.id} style={{ marginBottom: "30px", position: "relative", zIndex: 1 }}>
                       <div style={{ display: "flex", alignItems: "flex-start" }}>
-                        {/* Timeline dot */}
                         <div style={{
                           width: "60px",
                           display: "flex",
@@ -243,7 +230,6 @@ export default function EmploymentList() {
                           />
                         </div>
 
-                        {/* Date range */}
                         <div
                           style={{
                             width: "140px",
@@ -266,7 +252,6 @@ export default function EmploymentList() {
                           </div>
                         </div>
 
-                        {/* Content card */}
                         <div
                           style={{
                             border: "2px solid #ddd",

@@ -20,6 +20,8 @@ export default function SkillList() {
   const [loading, setLoading] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor));
 
+  const uuid = localStorage.getItem('uuid') || '';
+
   const categories = ["Technical", "Soft Skills", "Languages", "Industry-Specific"];
 
   // Load all skills on mount
@@ -30,7 +32,7 @@ export default function SkillList() {
   const loadSkills = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/skills/me?uuid=", "");
+      const data = await apiRequest("/api/skills/me?uuid=", uuid);
       const transformedSkills = (data || []).map(skill => ({
         id: skill._id,
         name: skill.name,
@@ -59,7 +61,7 @@ export default function SkillList() {
         position: newPosition
       };
 
-      const response = await apiRequest("/api/skills?uuid=", "", {
+      const response = await apiRequest("/api/skills?uuid=", uuid, {
         method: "POST",
         body: JSON.stringify(skillData)
       });
@@ -76,7 +78,7 @@ export default function SkillList() {
 
   const updateSkill = async (id, updatedFields) => {
     try {
-      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify(updatedFields)
       });
@@ -94,7 +96,7 @@ export default function SkillList() {
     if (!window.confirm("Remove this skill?")) return;
     
     try {
-      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, uuid, {
         method: "DELETE"
       });
 
@@ -160,7 +162,7 @@ export default function SkillList() {
     setSkills(updatedSkills);
 
     try {
-      await apiRequest(`/api/skills?skill_id=${activeSkill.id}&uuid=`, "", {
+      await apiRequest(`/api/skills?skill_id=${activeSkill.id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify({
           category: newCategory,
@@ -175,7 +177,7 @@ export default function SkillList() {
 
       await Promise.all(
         affectedSkills.map(skill =>
-          apiRequest(`/api/skills?skill_id=${skill.id}&uuid=`, "", {
+          apiRequest(`/api/skills?skill_id=${skill.id}&uuid=`, uuid, {
             method: "PUT",
             body: JSON.stringify({ position: skill.position })
           })
