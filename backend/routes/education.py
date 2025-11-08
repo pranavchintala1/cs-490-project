@@ -43,7 +43,7 @@ async def get_education(education_id: str, uuid: str = Depends(authorize)):
 async def get_all_education(uuid: str = Depends(authorize)):
     try:
         results = await education_dao.get_all_education(uuid)
-        # NOTE: do not return http exception for empty education, as it can lead to inconsistent behavior on the frontend
+        # NOTE: do not raise http exception for empty education, as it can lead to inconsistent behavior on the frontend
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     
