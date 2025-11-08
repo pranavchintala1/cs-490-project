@@ -25,6 +25,8 @@ export default function JobList() {
   const [reminderJob, setReminderJob] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
 
+  const uuid = localStorage.getItem('uuid') || '';
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -118,7 +120,6 @@ export default function JobList() {
       
       await JobsAPI.update(id, backendData);
 
-      // Optimistically update the job in state
       setJobs(prev => prev.map(job => {
         if (job.id === id) {
           return {
@@ -136,7 +137,6 @@ export default function JobList() {
     } catch (error) {
       console.error("Failed to update job:", error);
       alert("Failed to update job. Please try again.");
-      // Reload on error to ensure consistency
       loadJobs();
     }
   };
@@ -223,7 +223,6 @@ export default function JobList() {
       
       setJobs(jobs.map((j) => (j.id === activeJob.id ? updatedJob : j)));
 
-      // Update in backend
       try {
         await JobsAPI.update(activeJob.id, {status: newStatus, status_history: updatedStatusHistory});
       } catch (error) {
@@ -234,7 +233,6 @@ export default function JobList() {
   };
 
   const filteredJobs = jobs.filter((job) => {
-    // Filter archived/active jobs based on view
     if (showArchived && !job.archived) return false;
     if (!showArchived && job.archived) return false;
 

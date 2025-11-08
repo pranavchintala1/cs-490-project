@@ -26,8 +26,8 @@ const logout = async () => {
 
   };
 
-    localStorage.removeItem("session");
     localStorage.removeItem("uuid");
+    localStorage.removeItem("session");
 
     navigate("/");
   };

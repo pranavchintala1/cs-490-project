@@ -20,6 +20,8 @@ export default function SkillList() {
   const [loading, setLoading] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor));
 
+  const uuid = localStorage.getItem('uuid') || '';
+
   const categories = ["Technical", "Soft Skills", "Languages", "Industry-Specific"];
 
   // Load all skills on mount
