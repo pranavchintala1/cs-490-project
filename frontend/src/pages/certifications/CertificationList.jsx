@@ -48,7 +48,8 @@ export default function CertificationList() {
           verified: cert.verified || false,
           has_document: hasDocument,
           media_id: mediaId,
-          cert_id: cert.cert_number
+          cert_id: cert.cert_number,
+          document_name: cert.document_name
         };
       }));
 
@@ -96,7 +97,8 @@ export default function CertificationList() {
         date_expiry: certData.does_not_expire === 'true' ? null : certData.expiration_date,
         cert_number: certData.cert_number,
         category: certData.category,
-        verified: certData.verified === 'true'
+        verified: certData.verified === 'true',
+        document_name: documentFile && documentFile.size > 0 ? documentFile.name : null
       };
 
       // Create certification first
@@ -163,6 +165,11 @@ export default function CertificationList() {
         category: certData.category,
         verified: certData.verified === 'true'
       };
+
+      // If there's a new document, update the document_name
+      if (documentFile && documentFile.size > 0) {
+        backendData.document_name = documentFile.name;
+      }
 
       // Update certification
       await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
@@ -352,6 +359,7 @@ export default function CertificationList() {
                     setEditCert(cert);
                     setShowForm(true);
                   }}
+                  onMediaDelete={loadCertifications}
                 />
               ))}
             </div>
