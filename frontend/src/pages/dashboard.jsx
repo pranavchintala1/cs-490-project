@@ -1,97 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
-<<<<<<< HEAD
 import EmploymentAPI from "../api/employment";
 import SkillsAPI from "../api/skills";
 import EducationAPI from "../api/education";
 import ProjectsAPI from "../api/projects";
 import ProfilesAPI from "../api/profiles";
-=======
-import { apiRequest } from "../api";
-
-// Simulate API calls to a generic database
-const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual api and enpoints
-  // // Simulate network delay
-  // await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 500));
-  
-  // // // Generate mock data based on endpoint
-  // const mockData = {
-  //   'api/users/me': [
-  //     ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
-  //     ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
-  //     ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
-  //   ],
-  //   'api/employment/me': [
-  //     ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-  //     ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-  //     ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-  //   ],
-  //   'api/skills/me': [
-  //     ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
-  //     ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
-  //     ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
-  //   ],
-  //   'api/education/me': [
-  //     ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-  //     ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-  //     ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-  //   ],
-  //   'api/projects/me': [
-  //     ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
-  //     ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
-  //     ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
-  //   ]
-
-  // // // const mockData = {
-  // // //   'api/users/me': [],
-  // // //   'api/employment/me': [
-  // // //     ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-  // // //     ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-  // // //     ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-  // // //   ],
-  // // //   'api/skills/me': [],
-  // // //   'api/education/me': [
-  // // //     ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-  // // //     ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-  // // //     ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-  // // //   ],
-  // // //   'api/projects/me': []
-  // };
-  
-  // return mockData[endpoint] || [];
-
-
-
-  ///////COMMENT BREAK COMMENT BREAK
-
-  const apidata = await apiRequest(endpoint);
-
-  function transformData(data, titleKey = "title") {
-    console.log(typeof data);
-    console.log(data);
-    return data.map(obj => {
-      const cleaned = Object.fromEntries(
-        Object.entries(obj).filter(([_, value]) => value != null)
-      );
-      if (Object.keys(cleaned).length === 0) return [];
-
-      const title = cleaned[titleKey] ?? "(no title)";
-      const otherValues = Object.entries(cleaned)
-        .filter(([key]) => key !== titleKey)
-        .map(([_, value]) => value);
-
-      if (otherValues.length === 0 && !cleaned[titleKey]) return [];
-      return [title, otherValues];
-    }).filter(item => item.length > 0);
-  }
-
-  const formatted=transformData(apidata,name)
-  
-  return formatted;
-
-};
->>>>>>> origin/dev
 
 // Dashboard component
 const Dashboard = () => {
