@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { getMe, updateMe, profileImageDataUrl } from "../tools/api";
+import { useEffect, useRef, useState } from "react";
+import { getMe, updateMe, getAvatarUrl } from "../tools/api";
 import DeleteAccount from "../components/DeleteAccount";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -40,10 +41,14 @@ export default function Profile() {
           industry: me.industry ?? "",
           experience_level: me.experience_level ?? "",
         });
+
+        // Load avatar
+        const url = await getAvatarUrl();
+        if (url) {
+          setAvatarUrl(url);
+        }
       } catch (e) {
-        // If profile fails to load (e.g., backend returning binary image data),
-        // continue with empty form so user can still update their profile
-        setErr("Note: Profile picture support not yet fully implemented. You can still update other fields.");
+        setErr("Failed to load profile: " + (e.message || "Unknown error"));
         setProfile({});
       } finally {
         setLoading(false);
@@ -51,7 +56,14 @@ export default function Profile() {
     })();
   }, []);
 
-  const imgSrc = useMemo(() => profileImageDataUrl(profile), [profile]);
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (avatarUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
+  }, [avatarUrl]);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -81,8 +93,8 @@ export default function Profile() {
     setMsg("");
 
     try {
-      //send on teh single endpoints
-      await updateMe(
+
+      const result = await updateMe(
         {
           username: form.username || null,
           email: form.email || null,
@@ -100,13 +112,29 @@ export default function Profile() {
       // Refetch the full profile to get the updated data
       const updatedProfile = await getMe();
       setProfile(updatedProfile);
-      setMsg("Profile updated.");
-      // Only clear preview/selected file after successful save
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      if (fileRef.current) fileRef.current.value = "";
+
+      setMsg("Profile updated successfully!");
+
+      // If user uploaded a new avatar, fetch it from backend
+      if (selectedFile) {
+        const newAvatarUrl = await getAvatarUrl();
+        if (newAvatarUrl) {
+          // Revoke old blob URL if it exists
+          if (avatarUrl?.startsWith("blob:")) {
+            URL.revokeObjectURL(avatarUrl);
+          }
+          setAvatarUrl(newAvatarUrl);
+        }
+      }
+
+      // Clear file selection UI after brief delay so save completes visually
+      setTimeout(() => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        if (fileRef.current) fileRef.current.value = "";
+      }, 500);
     } catch (e) {
-      setErr(e.message || "Failed to save.");
+      setErr(e.message || "Failed to save profile.");
     } finally {
       setSaving(false);
     }
@@ -138,9 +166,9 @@ export default function Profile() {
               alt="preview"
               style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
             />
-          ) : imgSrc ? (
+          ) : avatarUrl ? (
             <img
-              src={imgSrc}
+              src={avatarUrl}
               alt="pfp"
               style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
             />
