@@ -20,18 +20,36 @@ export default function CertificationList() {
       const data = await apiRequest("/api/certifications/me?uuid=", "");
 
       // Transform backend data to frontend format
-      const transformedCerts = (data || []).map(cert => ({
-        id: cert._id,
-        name: cert.name,
-        category: cert.category,
-        issuer: cert.issuer,
-        date_earned: cert.date_earned,
-        expiration_date: cert.date_expiry,
-        does_not_expire: !cert.date_expiry,
-        verified: cert.verified || false,
-        has_document: cert.has_document || false,
-        document_name: cert.document_name,
-        cert_id: cert.cert_number
+      const transformedCerts = await Promise.all((data || []).map(async cert => {
+        // Check if certification has associated media
+        let hasDocument = false;
+        let mediaId = null;
+
+        try {
+          const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${cert._id}&uuid=`, "");
+          const mediaIds = mediaIdsResponse.media_id_list || [];
+          
+          if (mediaIds.length > 0) {
+            hasDocument = true;
+            mediaId = mediaIds[0];
+          }
+        } catch (error) {
+          console.error("Error fetching media for cert:", cert._id, error);
+        }
+
+        return {
+          id: cert._id,
+          name: cert.name,
+          category: cert.category,
+          issuer: cert.issuer,
+          date_earned: cert.date_earned,
+          expiration_date: cert.date_expiry,
+          does_not_expire: !cert.date_expiry,
+          verified: cert.verified || false,
+          has_document: hasDocument,
+          media_id: mediaId,
+          cert_id: cert.cert_number
+        };
       }));
 
       setCerts(sortCerts(transformedCerts));
@@ -68,6 +86,7 @@ export default function CertificationList() {
   const addCert = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
+      const documentFile = formData.get('document');
 
       // Transform frontend data to match backend schema exactly
       const backendData = {
@@ -80,10 +99,45 @@ export default function CertificationList() {
         verified: certData.verified === 'true'
       };
 
-      await apiRequest("/api/certifications?uuid=", "", {
+      // Create certification first
+      const response = await apiRequest("/api/certifications?uuid=", "", {
         method: "POST",
         body: JSON.stringify(backendData)
       });
+
+      // If there's a document file, upload it
+      if (documentFile && documentFile.size > 0) {
+        const certificationId = response.certification_id;
+        const uploadFormData = new FormData();
+        uploadFormData.append('media', documentFile);
+
+        // Get auth details
+        const uuid = localStorage.getItem('uuid') || '';
+        const token = localStorage.getItem('session') || '';
+        const baseURL = 'http://localhost:8000';
+        
+        // Use fetch directly - do NOT use apiRequest as it sets wrong Content-Type
+        const uploadResponse = await fetch(
+          `${baseURL}/api/certifications/media?parent_id=${certificationId}&uuid=${uuid}`,
+          {
+            method: "POST",
+            headers: {
+              // Only set Authorization, NOT Content-Type (browser sets it automatically)
+              ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
+            body: uploadFormData
+          }
+        );
+
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error("Upload failed - Status:", uploadResponse.status);
+          console.error("Response:", errorText);
+          throw new Error(`Failed to upload document: ${uploadResponse.status}`);
+        }
+        
+        console.log("File uploaded successfully!");
+      }
 
       // Reload certifications from server to get the actual data
       await loadCertifications();
@@ -97,6 +151,7 @@ export default function CertificationList() {
   const submitEdit = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
+      const documentFile = formData.get('document');
 
       // Transform frontend data to match backend schema exactly
       const backendData = {
@@ -109,10 +164,65 @@ export default function CertificationList() {
         verified: certData.verified === 'true'
       };
 
+      // Update certification
       await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
         method: "PUT",
         body: JSON.stringify(backendData)
       });
+
+      // If there's a new document file, handle upload/update
+      if (documentFile && documentFile.size > 0) {
+        // Check if certification already has media
+        const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${editCert.id}&uuid=`, "");
+        const existingMediaIds = mediaIdsResponse.media_id_list || [];
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('media', documentFile);
+
+        // Get auth details
+        const uuid = localStorage.getItem('uuid') || '';
+        const token = localStorage.getItem('session') || '';
+        const baseURL = 'http://localhost:8000';
+
+        if (existingMediaIds.length > 0) {
+          // Update existing media
+          const mediaId = existingMediaIds[0];
+          const updateResponse = await fetch(
+            `${baseURL}/api/certifications/media?parent_id=${editCert.id}&media_id=${mediaId}&uuid=${uuid}`,
+            {
+              method: "PUT",
+              headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+              },
+              body: uploadFormData
+            }
+          );
+
+          if (!updateResponse.ok) {
+            const errorText = await updateResponse.text();
+            console.error("Update failed:", errorText);
+            throw new Error("Failed to update document");
+          }
+        } else {
+          // Upload new media
+          const uploadResponse = await fetch(
+            `${baseURL}/api/certifications/media?parent_id=${editCert.id}&uuid=${uuid}`,
+            {
+              method: "POST",
+              headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+              },
+              body: uploadFormData
+            }
+          );
+
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error("Upload failed:", errorText);
+            throw new Error("Failed to upload document");
+          }
+        }
+      }
 
       // Reload certifications from server to get the actual updated data
       await loadCertifications();

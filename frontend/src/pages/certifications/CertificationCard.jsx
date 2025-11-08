@@ -37,23 +37,92 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
   }
 
   const handleDownload = async () => {
+    if (!cert.media_id) {
+      alert("No document available");
+      return;
+    }
+
     try {
+      // Get auth details
+      const uuid = localStorage.getItem('uuid') || '';
+      const token = localStorage.getItem('session') || '';
+      const baseURL = 'http://localhost:8000';
+      
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/certifications/download/${encodeURIComponent(cert.id)}?user_id=temp_user`
+        `${baseURL}/api/certifications/media?media_id=${cert.media_id}&uuid=${uuid}`,
+        {
+          headers: {
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          }
+        }
       );
-      if (!response.ok) return alert("File not found");
+      
+      if (!response.ok) {
+        alert("File not found or error downloading");
+        return;
+      }
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
 
+      // Try to get filename from Content-Disposition header
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'certificate-document';
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
       const link = document.createElement("a");
       link.href = url;
-      link.download = cert.document_name || "document";
+      link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error(err);
+      console.error("Download error:", err);
       alert("Error downloading file");
+    }
+  };
+
+  const handleDeleteMedia = async () => {
+    if (!cert.media_id) {
+      alert("No document to delete");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this document? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const uuid = localStorage.getItem('uuid') || '';
+      const token = localStorage.getItem('session') || '';
+      const baseURL = 'http://localhost:8000';
+      
+      const response = await fetch(
+        `${baseURL}/api/certifications/media?media_id=${cert.media_id}&uuid=${uuid}`,
+        {
+          method: "DELETE",
+          headers: {
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        alert("Failed to delete document");
+        return;
+      }
+
+      alert("Document deleted successfully!");
+      // Reload the page to refresh the certifications list
+      window.location.reload();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Error deleting document");
     }
   };
 
@@ -143,7 +212,8 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
           gap: "12px",
           marginBottom: "12px",
           paddingTop: "8px",
-          borderTop: "1px solid #eee"
+          borderTop: "1px solid #eee",
+          flexWrap: "wrap"
         }}>
           <div style={{ fontSize: "13px" }}>
             <strong style={{ color: "#333" }}>Verified:</strong>{" "}
@@ -156,21 +226,38 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
           </div>
 
           {cert.has_document && (
-            <button
-              onClick={handleDownload}
-              style={{
-                padding: "4px 12px",
-                background: "#2196f3",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "12px",
-                fontWeight: "600"
-              }}
-            >
-              📄 Download
-            </button>
+            <>
+              <button
+                onClick={handleDownload}
+                style={{
+                  padding: "4px 12px",
+                  background: "#2196f3",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600"
+                }}
+              >
+                📄 Download
+              </button>
+              <button
+                onClick={handleDeleteMedia}
+                style={{
+                  padding: "4px 12px",
+                  background: "#ff9800",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600"
+                }}
+              >
+                🗑️ Delete Doc
+              </button>
+            </>
           )}
         </div>
 
