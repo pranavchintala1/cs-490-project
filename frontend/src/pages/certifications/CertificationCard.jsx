@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function CertificationCard({ cert, onDelete, onEdit }) {
+export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelete }) {
   // Helper function to parse date string as local date without timezone issues
   const parseLocalDate = (dateStr) => {
     if (!dateStr) return null;
@@ -65,14 +65,16 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
 
-      // Try to get filename from Content-Disposition header
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = 'certificate-document';
+      // Use the document_name from cert if available, otherwise try Content-Disposition
+      let filename = cert.document_name || 'certificate-document';
       
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
+      if (!cert.document_name) {
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (match && match[1]) {
+            filename = match[1].replace(/['"]/g, '').trim();
+          }
         }
       }
 
@@ -117,9 +119,10 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
         return;
       }
 
-      alert("Document deleted successfully!");
-      // Reload the page to refresh the certifications list
-      window.location.reload();
+      // Trigger parent reload if callback provided
+      if (onMediaDelete) {
+        onMediaDelete();
+      }
     } catch (err) {
       console.error("Delete error:", err);
       alert("Error deleting document");
@@ -226,7 +229,13 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
           </div>
 
           {cert.has_document && (
-            <>
+            <div style={{ 
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
+            }}>
+              <strong style={{ color: "#333" }}>Document:</strong>
               <button
                 onClick={handleDownload}
                 style={{
@@ -255,9 +264,9 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
                   fontWeight: "600"
                 }}
               >
-                🗑️ Delete Doc
+                🗑️ Delete
               </button>
-            </>
+            </div>
           )}
         </div>
 
