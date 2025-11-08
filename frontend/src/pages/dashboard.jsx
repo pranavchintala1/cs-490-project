@@ -1,96 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
-import { apiRequest } from "../api";
-
-// Simulate API calls to a generic database
-const fetchDataFromAPI = async (endpoint, name) => { //TODO update with actual api and enpoints
-  // // Simulate network delay
-  // await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 500));
-  
-  // // Generate mock data based on endpoint
-  const mockData = {
-    'api/users/me': [
-      ["Personal Information", ["John Smith", "Software Engineer", "New York, NY"]],
-      ["Contact Details", ["john.smith@email.com", "+1 (555) 123-4567", "LinkedIn: /in/johnsmith"]],
-      ["Summary", ["5+ years experience", "Full-stack developer", "Team leader"]]
-    ],
-    'api/employment/me': [
-      ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-      ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-      ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-    ],
-    'api/skills/me': [
-      ["Programming Languages", ["JavaScript", "Python", "Java", "TypeScript"]],
-      ["Frameworks & Libraries", ["React", "Node.js", "Express", "Django"]],
-      ["Tools & Technologies", ["Git", "Docker", "AWS", "MongoDB"]]
-    ],
-    'api/education/me': [
-      ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-      ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-      ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-    ],
-    'api/projects/me': [
-      ["Web Applications", ["E-commerce Platform", "Task Management System", "Social Media Dashboard"]],
-      ["Mobile Apps", ["Budget Tracker", "Fitness App", "Recipe Finder"]],
-      ["Open Source", ["JavaScript Library", "Documentation Site", "Code Utilities"]]
-    ]
-
-  // // const mockData = {
-  // //   'api/users/me': [],
-  // //   'api/employment/me': [
-  // //     ["Current Position", ["Senior Developer at TechCorp", "2022 - Present", "Led team of 4 developers"]],
-  // //     ["Previous Roles", ["Developer at StartupXYZ", "2020 - 2022", "Built scalable web applications"]],
-  // //     ["Early Career", ["Junior Developer at WebAgency", "2019 - 2020", "Frontend development"]]
-  // //   ],
-  // //   'api/skills/me': [],
-  // //   'api/education/me': [
-  // //     ["Degrees", ["Bachelor of Computer Science", "University of Technology", "2015 - 2019"]],
-  // //     ["Certifications", ["AWS Certified Developer", "React Developer Certification", "Agile Project Management"]],
-  // //     ["Additional Learning", ["Online Courses", "Technical Workshops", "Conference Attendance"]]
-  // //   ],
-  // //   'api/projects/me': []
-  };
-  
-  return mockData[endpoint] || [];
-
-
-
-  ///////COMMENT BREAK COMMENT BREAK
-
-  const apidata = await apiRequest(endpoint);
-
-  function transformData(data, titleKey = "title") {
-  return data.map(obj => {
-    // Remove key-value pairs where the value is null or undefined
-    const cleaned = Object.fromEntries(
-      Object.entries(obj).filter(([_, value]) => value != null)
-    );
-
-    // If the cleaned object has no keys, return an empty list
-    if (Object.keys(cleaned).length === 0) {
-      return [];
-    }
-
-    const title = cleaned[titleKey] ?? "(no title)";
-    const otherValues = Object.entries(cleaned)
-      .filter(([key]) => key !== titleKey)
-      .map(([_, value]) => value);
-
-    // If no other values remain, return an empty list
-    if (otherValues.length === 0 && !cleaned[titleKey]) {
-      return [];
-    }
-
-    return [title, otherValues];
-  }).filter(item => item.length > 0); // Remove any empty results
-}
-
-  const formatted=transformData(apidata,name)
-  
-  return formatted;
-
-};
+import EmploymentAPI from "../api/employment";
+import SkillsAPI from "../api/skills";
+import EducationAPI from "../api/education";
+import ProjectsAPI from "../api/projects";
+import ProfilesAPI from "../api/profiles";
 
 // Dashboard component
 const Dashboard = () => {
@@ -108,14 +23,20 @@ const Dashboard = () => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
-        
+
         // Make 5 parallel API requests
-        const [profileData, employmentData, skillsData, educationData, projectsData] = await Promise.all([
-          fetchDataFromAPI('/api/users/me',"username"),
-          fetchDataFromAPI('/api/employment/me',"title"),
-          fetchDataFromAPI('/api/skills/me',"name"),
-          fetchDataFromAPI('/api/education/me',"institution_name"),
-          fetchDataFromAPI('/api/projects/me',"project-name")
+        const [
+          {data: profileData}, 
+          {data: employmentData}, 
+          {data: skillsData}, 
+          {data: educationData}, 
+          {data: projectsData}
+        ] = await Promise.all([
+          ProfilesAPI.get(),
+          EmploymentAPI.getAll(),
+          SkillsAPI.getAll(),
+          EducationAPI.getAll(),
+          ProjectsAPI.getAll()
         ]);
 
         // Store results in state
@@ -165,8 +86,8 @@ const Dashboard = () => {
               fontSize: '24px',
               marginBottom: '10px'
             }}>⏳</div>
-            <div style={{ 
-              fontSize: '18px', 
+            <div style={{
+              fontSize: '18px',
               color: '#FFFFFF' // White text on gradient
             }}>
               Loading dashboard data...
@@ -232,7 +153,7 @@ const Dashboard = () => {
         }}>
           Dashboard
         </h1>
-        
+
         <div style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -248,8 +169,8 @@ const Dashboard = () => {
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <a 
-              href="/profile" 
+            <a
+              href="/profile"
               style={{
                 fontSize: '18px', // Slightly reduced from 20px
                 fontWeight: '600',
@@ -267,7 +188,7 @@ const Dashboard = () => {
             </a>
             <CategoryCard data={data.profile} />
           </div>
-          
+
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
             padding: '18px', // Slightly increased padding to give cards breathing room
@@ -276,8 +197,8 @@ const Dashboard = () => {
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <a 
-              href="/employment-history" 
+            <a
+              href="/employment-history"
               style={{
                 fontSize: '18px', // Slightly reduced from 20px
                 fontWeight: '600',
@@ -295,7 +216,7 @@ const Dashboard = () => {
             </a>
             <CategoryCard data={data.employmentHistory} />
           </div>
-          
+
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
             padding: '18px', // Slightly increased padding to give cards breathing room
@@ -304,8 +225,8 @@ const Dashboard = () => {
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <a 
-              href="/skills" 
+            <a
+              href="/skills"
               style={{
                 fontSize: '18px', // Slightly reduced from 20px
                 fontWeight: '600',
@@ -323,7 +244,7 @@ const Dashboard = () => {
             </a>
             <CategoryCard data={data.skills} />
           </div>
-          
+
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
             padding: '18px', // Slightly increased padding to give cards breathing room
@@ -332,8 +253,8 @@ const Dashboard = () => {
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <a 
-              href="/education" 
+            <a
+              href="/education"
               style={{
                 fontSize: '18px', // Slightly reduced from 20px
                 fontWeight: '600',
@@ -351,7 +272,7 @@ const Dashboard = () => {
             </a>
             <CategoryCard data={data.education} />
           </div>
-          
+
           <div style={{
             backgroundColor: '#F9FAFC', // Background Light for section containers
             padding: '18px', // Slightly increased padding to give cards breathing room
@@ -360,8 +281,8 @@ const Dashboard = () => {
             flex: '1 1 calc(33.333% - 14px)', // Accounts for gap
             minWidth: '300px'
           }}>
-            <a 
-              href="/projects" 
+            <a
+              href="/projects"
               style={{
                 fontSize: '18px', // Slightly reduced from 20px
                 fontWeight: '600',
@@ -380,7 +301,7 @@ const Dashboard = () => {
             <CategoryCard data={data.projects} />
           </div>
         </div>
-        
+
         {/* Progress Tracker */}
         <ProgressTracker data={data} />
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import EmploymentForm from "./EmploymentForm";
-import { apiRequest } from "../../api";
+import EmploymentAPI from "../../api/employment";
 
 // Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
@@ -22,9 +22,9 @@ export default function EmploymentList() {
   const loadEmployment = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/employment/me?uuid=", "");
+      const res = await EmploymentAPI.getAll();
       
-      const transformedItems = (data || []).map(item => ({
+      const transformedItems = (res.data || []).map(item => ({
         id: item._id,
         title: item.title,
         company: item.company,
@@ -45,10 +45,7 @@ export default function EmploymentList() {
 
   const onUpdate = async (id, patch) => {
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify(patch)
-      });
+      await EmploymentAPI.update(id, patch);
       
       setItems(items.map(it => it.id === id ? { ...it, ...patch } : it));
     } catch (error) {
@@ -61,9 +58,7 @@ export default function EmploymentList() {
     if (!window.confirm("Delete this employment entry?")) return;
     
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, "", {
-        method: "DELETE"
-      });
+      await EmploymentAPI.delete(id);
 
       setItems(items.filter(it => it.id !== id));
     } catch (error) {
@@ -79,13 +74,10 @@ export default function EmploymentList() {
         await onUpdate(data.id, data);
       } else {
         // Add new
-        const response = await apiRequest("/api/employment?uuid=", "", {
-          method: "POST",
-          body: JSON.stringify(data)
-        });
+        const res = await EmploymentAPI.add(data);
 
-        if (response && response.employment_id) {
-          const newEntry = { ...data, id: response.employment_id };
+        if (res && res.data.employment_id) {
+          const newEntry = { ...data, id: res.data.employment_id };
           setItems([newEntry, ...items]);
         }
       }

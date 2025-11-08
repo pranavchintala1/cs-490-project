@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import SkillItem from "./SkillItem";
-import { apiRequest } from "../../api";
+import SkillsAPI from "../../api/skills";
 
 export default function SkillList() {
   const [skills, setSkills] = useState([]);
@@ -30,8 +30,8 @@ export default function SkillList() {
   const loadSkills = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/skills/me?uuid=", "");
-      const transformedSkills = (data || []).map(skill => ({
+      const res = await SkillsAPI.getAll();
+      const transformedSkills = (res.data || []).map(skill => ({
         id: skill._id,
         name: skill.name,
         category: skill.category || "Technical",
@@ -59,13 +59,10 @@ export default function SkillList() {
         position: newPosition
       };
 
-      const response = await apiRequest("/api/skills?uuid=", "", {
-        method: "POST",
-        body: JSON.stringify(skillData)
-      });
+      const res = SkillsAPI.add(skillData);
 
-      if (response && response.skill_id) {
-        const newSkill = { ...skillData, id: response.skill_id };
+      if (res && res.data.skill_id) {
+        const newSkill = { ...skillData, id: res.data.skill_id };
         setSkills([...skills, newSkill]);
       }
     } catch (error) {
@@ -76,10 +73,7 @@ export default function SkillList() {
 
   const updateSkill = async (id, updatedFields) => {
     try {
-      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify(updatedFields)
-      });
+      await SkillsAPI.update(id, updatedFields);
 
       setSkills((prev) =>
         prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s))
@@ -94,9 +88,7 @@ export default function SkillList() {
     if (!window.confirm("Remove this skill?")) return;
     
     try {
-      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
-        method: "DELETE"
-      });
+      await SkillsAPI.delete(id);
 
       setSkills((prev) => prev.filter((s) => s.id !== id));
     } catch (error) {
@@ -160,13 +152,7 @@ export default function SkillList() {
     setSkills(updatedSkills);
 
     try {
-      await apiRequest(`/api/skills?skill_id=${activeSkill.id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify({
-          category: newCategory,
-          position: newPosition
-        })
-      });
+      await SkillsAPI.update(activeSkill.id, {category: newCategory, position: newPosition});
 
       const affectedSkills = updatedSkills.filter(s => 
         s.id !== activeSkill.id && 
@@ -175,10 +161,7 @@ export default function SkillList() {
 
       await Promise.all(
         affectedSkills.map(skill =>
-          apiRequest(`/api/skills?skill_id=${skill.id}&uuid=`, "", {
-            method: "PUT",
-            body: JSON.stringify({ position: skill.position })
-          })
+          SkillsAPI.update(skill.id, {position: skill.position})
         )
       );
     } catch (error) {

@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 
-import { apiRequest } from "../api.js";
-
 async function deleteCurrentUser() {
-  try {
-    const response = await apiRequest("api/users/me", {
-      method: "DELETE",
-    });
+  // try {
+  //   const response = await apiRequest("api/users/me", {
+  //     method: "DELETE",
+  //   });
 
-    console.log("User deleted:", response);
-    // Optionally clear local storage and redirect after delete
-    localStorage.clear();
-    window.location.href = "/login?deleted=true";
-  } catch (err) {
-    console.error("Failed to delete user:", err);
-  }
+  //   console.log("User deleted:", response);
+  //   // Optionally clear local storage and redirect after delete
+  //   localStorage.clear();
+  //   window.location.href = "/login?deleted=true";
+  // } catch (err) {
+  //   console.error("Failed to delete user:", err);
+  // }
 }
 
 

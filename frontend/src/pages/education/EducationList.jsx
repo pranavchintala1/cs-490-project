@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
-import { apiRequest } from "../../api";
+import EducationAPI from "../../api/education";
 
 const degreeEmojis = {
   "High School": "🏫",
@@ -40,10 +40,10 @@ export default function EducationList() {
   const loadEducation = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/education/me?uuid=", "");
+      const res = await EducationAPI.getAll();
       
       // Transform backend data to frontend format
-      const transformedEntries = (data || []).map(entry => ({
+      const transformedEntries = (res.data || []).map(entry => ({
         id: entry._id,
         degree: entry.degree,
         institution: entry.institution_name,
@@ -67,13 +67,10 @@ export default function EducationList() {
 
   const addEntry = async (entry) => {
     try {
-      const response = await apiRequest("/api/education?uuid=", "", {
-        method: "POST",
-        body: JSON.stringify(entry)
-      });
+      const res = await EducationAPI.add(entry);
 
-      if (response && response.education_id) {
-        const newEntry = { ...entry, id: response.education_id };
+      if (res.data && res.data.education_id) {
+        const newEntry = { ...entry, id: res.data.education_id };
         setEntries([newEntry, ...entries]);
       }
       setShowForm(false);
@@ -85,10 +82,7 @@ export default function EducationList() {
 
   const submitEdit = async (updatedEntry) => {
     try {
-      await apiRequest(`/api/education?education_id=${updatedEntry.id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify(updatedEntry)
-      });
+      await EducationAPI.update(updatedEntry.id, updatedEntry);
 
       setEntries(entries.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
       setEditEntry(null);
@@ -103,9 +97,7 @@ export default function EducationList() {
     if (!window.confirm("Delete this education entry?")) return;
     
     try {
-      await apiRequest(`/api/education?education_id=${id}&uuid=`, "", {
-        method: "DELETE"
-      });
+      await EducationAPI.delete(id);
 
       setEntries(entries.filter((e) => e.id !== id));
     } catch (error) {
