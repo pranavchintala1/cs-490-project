@@ -11,7 +11,12 @@ export default function CertificationList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  // 👇 Check for navigation state (if user came from a special link)
+
+  // Get these once at component level
+  const uuid = localStorage.getItem('uuid') || '';
+  const token = localStorage.getItem('session') || '';
+  const baseURL = 'http://localhost:8000';
+
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -97,7 +102,6 @@ export default function CertificationList() {
       const certData = Object.fromEntries(formData.entries());
       const documentFile = formData.get('document');
 
-      // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
         issuer: certData.issuer,
@@ -112,7 +116,6 @@ export default function CertificationList() {
       // Create certification first
       const res = await CertificationsAPI.add(backendData);
 
-      // If there's a document file, upload it
       if (documentFile && documentFile.size > 0) {
         const certificationId = res.data.certification_id;
 
@@ -130,7 +133,6 @@ export default function CertificationList() {
         console.log("File uploaded successfully!");
       }
 
-      // Reload certifications from server to get the actual data
       await loadCertifications();
       setShowForm(false);
     } catch (error) {
@@ -144,7 +146,6 @@ export default function CertificationList() {
       const certData = Object.fromEntries(formData.entries());
       const documentFile = formData.get('document');
 
-      // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
         issuer: certData.issuer,
@@ -155,7 +156,6 @@ export default function CertificationList() {
         verified: certData.verified === 'true'
       };
 
-      // If there's a new document, update the document_name
       if (documentFile && documentFile.size > 0) {
         backendData.document_name = documentFile.name;
       }
@@ -163,14 +163,12 @@ export default function CertificationList() {
       // Update certification
       await CertificationsAPI.update(editCert.id, backendData);
 
-      // If there's a new document file, handle upload/update
       if (documentFile && documentFile.size > 0) {
         // Check if certification already has media
         const idsRes = await CertificationsAPI.getMediaIds(editCert.id);
         const existingMediaIds = idsRes.data.media_id_list || [];
 
         if (existingMediaIds.length > 0) {
-          // Update existing media
           const mediaId = existingMediaIds[0];
           const updateRes = await CertificationsAPI.updateMedia(mediaId, documentFile)
 
@@ -191,7 +189,6 @@ export default function CertificationList() {
         }
       }
 
-      // Reload certifications from server to get the actual updated data
       await loadCertifications();
       setEditCert(null);
       setShowForm(false);
