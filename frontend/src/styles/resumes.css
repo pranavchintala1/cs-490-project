@@ -181,12 +181,23 @@
   display: inline;
 }
 
+/* Global h1/h2 text color fix */
+h1, h2 {
+  color: #1a1a1a !important;
+}
+
 /* Resume List */
 .resume-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+}
+
+.resume-list-header h1,
+.resume-list-header h2 {
+  color: #1a1a1a !important;
+  margin: 0;
 }
 
 .resume-cards-grid {
@@ -295,6 +306,12 @@
   margin: 0 auto;
 }
 
+.create-resume-form h1,
+.create-resume-form h2,
+.create-resume-form h3 {
+  color: #1a1a1a !important;
+}
+
 .template-selection {
   margin: 2rem 0;
 }
@@ -371,6 +388,7 @@
 .template-info h4 {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
+  color: #1a1a1a;
 }
 
 .template-info p {
@@ -396,6 +414,11 @@
   min-height: 100vh;
 }
 
+.resume-editor-container h1,
+.resume-editor-container h2 {
+  color: #1a1a1a !important;
+}
+
 .resume-editor-header {
   display: flex;
   justify-content: space-between;
@@ -404,6 +427,14 @@
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
+  color: #333;
+}
+
+.resume-editor-header h1,
+.resume-editor-header h2,
+.resume-editor-header h3 {
+  color: #1a1a1a !important;
+  margin: 0;
 }
 
 .editor-actions {
@@ -442,6 +473,14 @@
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+.editor-content h3,
+.editor-content h4,
+.editor-content h5,
+.editor-content h6 {
+  color: #1a1a1a !important;
 }
 
 .editor-preview {
@@ -466,6 +505,11 @@
   padding: 2rem;
 }
 
+.resume-preview-page h1,
+.resume-preview-page h2 {
+  color: #1a1a1a !important;
+}
+
 .preview-header {
   display: flex;
   justify-content: space-between;
@@ -474,6 +518,14 @@
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
+  color: #333;
+}
+
+.preview-header h1,
+.preview-header h2,
+.preview-header h3 {
+  color: #1a1a1a !important;
+  margin: 0;
 }
 
 .preview-actions {
@@ -637,6 +689,14 @@
 /* Section Customizer */
 .section-customizer {
   max-width: 600px;
+  color: #333;
+}
+
+.section-customizer h3,
+.section-customizer h4,
+.section-customizer h5,
+.section-customizer label {
+  color: #1a1a1a !important;
 }
 
 .section-customizer-layout {
@@ -719,6 +779,11 @@
   margin-bottom: 1.5rem;
 }
 
+.editor-header h3 {
+  color: #1a1a1a;
+  margin: 0;
+}
+
 .experience-list {
   display: flex;
   flex-direction: column;
@@ -730,6 +795,14 @@
   border-radius: 8px;
   padding: 1rem;
   background: white;
+  color: #333;
+}
+
+.experience-item-card h3,
+.experience-item-card h4,
+.experience-item-card h5,
+.experience-item-card label {
+  color: #1a1a1a !important;
 }
 
 .experience-form {
@@ -768,6 +841,14 @@
 /* Skills Manager */
 .skills-manager {
   max-width: 500px;
+  color: #333;
+}
+
+.skills-manager h3,
+.skills-manager h4,
+.skills-manager h5,
+.skills-manager label {
+  color: #1a1a1a !important;
 }
 
 .add-skill-form .input-group {
@@ -809,6 +890,15 @@
 /* Template Customizer */
 .template-customizer {
   max-width: 600px;
+  color: #333;
+}
+
+.template-customizer h3,
+.template-customizer h4,
+.template-customizer h5,
+.template-customizer h6,
+.template-customizer label {
+  color: #1a1a1a !important;
 }
 
 .customizer-section {
@@ -820,6 +910,7 @@
 
 .customizer-section h5 {
   margin-top: 0;
+  color: #1a1a1a;
 }
 
 .color-pickers {
@@ -884,6 +975,14 @@
   background: #f8f9fa;
   padding: 1.5rem;
   border-radius: 8px;
+  color: #333;
+}
+
+.validation-feedback h3,
+.validation-feedback h4,
+.validation-feedback h5,
+.validation-feedback h6 {
+  color: #1a1a1a !important;
 }
 
 .ats-score {
@@ -1099,6 +1198,19 @@
   padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid #ddd;
+  color: #333;
+}
+
+.export-options h3,
+.theme-options h3,
+.export-settings h3,
+.export-options h4,
+.theme-options h4,
+.export-settings h4,
+.export-options h5,
+.theme-options h5,
+.export-settings h5 {
+  color: #1a1a1a !important;
 }
 
 .theme-grid {
@@ -1151,6 +1263,16 @@
   padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid #ddd;
+  color: #333;
+}
+
+.versions-list h3,
+.version-comparison h3,
+.versions-list h4,
+.version-comparison h4,
+.versions-list h5,
+.version-comparison h5 {
+  color: #1a1a1a !important;
 }
 
 .versions-container {
@@ -1191,6 +1313,7 @@
 .version-info h4 {
   margin: 0 0 0.25rem 0;
   font-size: 0.95rem;
+  color: #1a1a1a;
 }
 
 .version-description {
@@ -1236,6 +1359,22 @@
   padding: 1.5rem;
   border-radius: 8px;
   border: 1px solid #ddd;
+  color: #333;
+}
+
+.sharing-controls-section h3,
+.feedback-section h3,
+.shared-with-section h3,
+.sharing-controls-section h4,
+.feedback-section h4,
+.shared-with-section h4,
+.sharing-controls-section h5,
+.feedback-section h5,
+.shared-with-section h5,
+.sharing-controls-section h6,
+.feedback-section h6,
+.shared-with-section h6 {
+  color: #1a1a1a !important;
 }
 
 .sharing-controls {
@@ -1260,6 +1399,7 @@
 
 .settings-section h6 {
   margin-top: 0;
+  color: #1a1a1a;
 }
 
 .add-comment-form {
@@ -1270,6 +1410,7 @@
 
 .add-comment-form h5 {
   margin-top: 0;
+  color: #1a1a1a;
 }
 
 .feedback-list {
