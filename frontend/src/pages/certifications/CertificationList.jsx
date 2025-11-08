@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
-<<<<<<< HEAD
 import CertificationsAPI from "../../api/certifications";
-=======
-import { apiRequest } from "../../api";
 import { useLocation } from "react-router-dom";
->>>>>>> origin/dev
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
