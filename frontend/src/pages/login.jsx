@@ -61,7 +61,7 @@ function Login() {
                 localStorage.setItem("session",json.session_token)
                 localStorage.setItem("uuid",json.uuid)
                 
-                navigate(`/profile`); // make profile later lmao. 
+                navigate(`/dashboard`); // make profile later lmao. 
 
             }
 
