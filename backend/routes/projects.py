@@ -79,7 +79,7 @@ async def delete_project(project_id: str, uuid: str = Depends(authorize)):
         return {"detail": "Successfully deleted project"}
     
 @projects_router.post("/media", tags = ["projects"])
-async def upload_media(project_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
+async def upload_media(project_id: str, media: UploadFile = File(...), uuid: str = Depends(authorize)):
     try:
         media_id = await media_dao.add_media(project_id, media.filename, await media.read(), media.content_type)
     except Exception as e:
@@ -99,7 +99,7 @@ async def download_media(media_id, download: bool = False, uuid: str = Depends(a
     
     if not media:
         raise HTTPException(400, "Could not find requested media")
-    media = media[0]
+
     return StreamingResponse(
         BytesIO(media["contents"]),
         media_type = media["content_type"],
@@ -118,7 +118,7 @@ async def get_all_media_ids(project_id: str, uuid: str = Depends(authorize)):
     return {"detail": "Sucessfully gotten media ids", "media_id_list": media_ids}
 
 @projects_router.put("/media", tags = ["projects"])
-async def update_media(project_id: str, media_id: str, media: UploadFile = File, uuid: str = Depends(authorize)):
+async def update_media(project_id: str, media_id: str, media: UploadFile = File(...), uuid: str = Depends(authorize)):
     try:
         updated = await media_dao.update_media(media_id, media.filename, await media.read(), project_id, media.content_type)
     except Exception as e:
