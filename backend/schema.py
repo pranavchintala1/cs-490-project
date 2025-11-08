@@ -97,3 +97,9 @@ class Job(BaseModel):
     archived: Optional[bool] = False
     archive_reason: Optional[str] = None
     archive_date: Optional[str] = None
+
+class CoverLetter(BaseModel):
+    category: str
+    industry: str
+    data: dict
+    

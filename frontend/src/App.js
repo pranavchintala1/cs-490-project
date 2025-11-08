@@ -17,6 +17,7 @@ import EducationList from "./pages/education/EducationList";
 import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
 import JobsList from "./pages/jobs/JobList";
+import CoverLetter from "./pages/coverLetter/coverLetter";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
 
 
@@ -44,6 +45,7 @@ export function App() {
                 <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path = "/resetPassword/:token" element = {<ResetPassword />}/>
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
+                <Route path = "/coverLetter" element = {<CoverLetter />} />
 
               <Route path="/skills" element={<SkillsList />} />
               <Route path="/education" element={<EducationList />} />

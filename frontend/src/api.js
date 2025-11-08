@@ -15,7 +15,15 @@ export async function apiRequest(endpoint, id  = "", options = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`; //TODO replace with actual structure
 
 
-  const url = uuid ? `${baseURL}${endpoint}${uuid}` : `${baseURL}${endpoint}${id}` ;
+  const url = id
+  ? `${baseURL}${endpoint}${id}`              
+  : options.method?.toUpperCase() === "POST"
+    ? `${baseURL}${endpoint}`                  
+    : uuid
+      ? `${baseURL}${endpoint}${uuid}`       
+      : `${baseURL}${endpoint}`;              
+
+
   const config = { ...options, headers };
 console.log("testtest")
 console.log(url)
