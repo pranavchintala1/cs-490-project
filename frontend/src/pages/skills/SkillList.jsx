@@ -30,11 +30,7 @@ export default function SkillList() {
   const loadSkills = async () => {
     try {
       setLoading(true);
-      // Fixed: GET needs ?uuid= parameter
-      // apiRequest will append the uuid from localStorage
       const data = await apiRequest("/api/skills/me?uuid=", "");
-      
-      // Transform backend data to frontend format
       const transformedSkills = (data || []).map(skill => ({
         id: skill._id,
         name: skill.name,
@@ -42,7 +38,6 @@ export default function SkillList() {
         proficiency: skill.proficiency || "Intermediate",
         position: skill.position || 0
       }));
-      
       setSkills(transformedSkills);
     } catch (error) {
       console.error("Failed to load skills:", error);
@@ -64,7 +59,6 @@ export default function SkillList() {
         position: newPosition
       };
 
-      // Fixed: POST needs ?uuid= parameter
       const response = await apiRequest("/api/skills?uuid=", "", {
         method: "POST",
         body: JSON.stringify(skillData)
@@ -165,9 +159,7 @@ export default function SkillList() {
 
     setSkills(updatedSkills);
 
-    // Update the dragged skill's category and position in backend
     try {
-      // Fixed: Include skill_id in the endpoint, let apiRequest append uuid
       await apiRequest(`/api/skills?skill_id=${activeSkill.id}&uuid=`, "", {
         method: "PUT",
         body: JSON.stringify({
@@ -176,7 +168,6 @@ export default function SkillList() {
         })
       });
 
-      // Update all affected skills' positions
       const affectedSkills = updatedSkills.filter(s => 
         s.id !== activeSkill.id && 
         (s.category === newCategory || s.category === oldCategory)
@@ -192,7 +183,6 @@ export default function SkillList() {
       );
     } catch (error) {
       console.error("Failed to update skill positions:", error);
-      // Reload skills to ensure consistency
       loadSkills();
     }
   };
@@ -206,6 +196,7 @@ export default function SkillList() {
     return acc;
   }, {});
 
+  // Sort each category by position
   Object.keys(groupedSkills).forEach(cat => {
     groupedSkills[cat].sort((a, b) => a.position - b.position);
   });
@@ -250,7 +241,7 @@ export default function SkillList() {
         <SortableContext items={skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div style={{ 
             display: "grid", 
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", 
+            gridTemplateColumns: "repeat(2, 1fr)", // 2 columns per category
             gap: "16px",
             marginBottom: "20px"
           }}>

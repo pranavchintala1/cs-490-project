@@ -33,7 +33,7 @@ export default function CertificationList() {
         document_name: cert.document_name,
         cert_id: cert.cert_number
       }));
-      
+
       setCerts(sortCerts(transformedCerts));
     } catch (error) {
       console.error("Failed to load certifications:", error);
@@ -68,7 +68,7 @@ export default function CertificationList() {
   const addCert = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
-      
+
       // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
@@ -94,7 +94,7 @@ export default function CertificationList() {
   const submitEdit = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
-      
+
       // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
@@ -120,7 +120,7 @@ export default function CertificationList() {
 
   const deleteCert = async (id) => {
     if (!window.confirm("Delete this certification?")) return;
-    
+
     try {
       await CertificationsAPI.delete(id); // :(
 
@@ -188,7 +188,6 @@ export default function CertificationList() {
         />
       )}
 
-      {/* Only show the certification list if we're not showing the form */}
       {!showForm && (
         <>
           <div style={{ marginBottom: "20px" }}>
@@ -220,7 +219,12 @@ export default function CertificationList() {
               </p>
             </div>
           ) : (
-            <div>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: "20px",
+              paddingTop: "20px"
+            }}>
               {filteredCerts.map((c) => (
                 <CertificationCard
                   key={c.id}

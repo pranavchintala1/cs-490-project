@@ -25,11 +25,15 @@ console.log(config)
     const response = await fetch(url, config);
 
 
-    // Redirect if unauthorized
+    // Redirect if unauthorized <--- ????
     if (response.status === 401 || response.status === 403 || response.status === 422) {
       localStorage.clear();
       // window.location.href = "/login?error=unauthorized";
-      return;
+    }
+
+     if (response.status != 200){
+      const error = await response.json();
+      throw error.detail;
     }
 
 

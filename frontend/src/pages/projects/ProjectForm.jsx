@@ -50,6 +50,11 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
     if (!teamSize || isNaN(teamSize) || parseInt(teamSize) <= 0) return alert("Team Size must be positive");
     if (!status) return alert("Please select a project status");
 
+    // End Date Validation: Ensure end date is not earlier than start date
+    if (endDate && new Date(endDate) < new Date(startDate)) {
+      return alert("End date cannot be earlier than start date.");
+    }
+
     // Send as JSON object instead of FormData
     const projectData = {
       project_name: projectName.trim(),
@@ -291,25 +296,22 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
           />
         </div>
 
-          {/* Media Upload*/}
-          <div style={{
-  ...sectionStyle,
-}}>
-  <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
-    📸 Media Files
-  </h3>
-  
-  <label style={labelStyle}>Upload Screenshots / Documents</label>
-  <input
-    type="file"
-    multiple
-    style={{
-      ...inputStyle,
-      padding: "8px",
-    }}
-  />
-</div>
+        {/* Media Upload*/}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📸 Media Files
+          </h3>
 
+          <label style={labelStyle}>Upload Screenshots / Documents</label>
+          <input
+            type="file"
+            multiple
+            style={{
+              ...inputStyle,
+              padding: "8px",
+            }}
+          />
+        </div>
 
         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
           <button
