@@ -47,13 +47,80 @@ export const updateMe = async (profileObj, file /* File | null */) => {
   const { uuid, token } = auth();
   if (!uuid || !token) throw new Error("Not authenticated");
 
-  // Backend only accepts JSON, not FormData
-  // Profile picture upload is not yet implemented
-  return http("PUT", "/api/users/me", {
+  // Update profile data
+  await http("PUT", "/api/users/me", {
     params: { uuid },
     headers: { Authorization: `Bearer ${token}` },
     body: profileObj,
   });
+
+  // If file is provided, upload as avatar and return the image_id
+  let imageId = null;
+  if (file) {
+    const uploadResponse = await uploadAvatar(file);
+    imageId = uploadResponse?.image_id;
+  }
+
+  return { detail: "Profile updated successfully", image_id: imageId };
+};
+
+export const uploadAvatar = async (file /* File */) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const url = new URL("/api/users/me/avatar", process.env.REACT_APP_API_URL || "http://127.0.0.1:8000");
+  url.searchParams.set("uuid", uuid);
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || `${res.status} ${res.statusText}`);
+  return text ? JSON.parse(text) : null;
+};
+
+export const getAvatarUrl = async () => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) {
+    console.log("No auth credentials for avatar");
+    return null;
+  }
+
+  try {
+    const url = new URL("/api/users/me/avatar", process.env.REACT_APP_API_URL || "http://127.0.0.1:8000");
+    url.searchParams.set("uuid", uuid);
+
+    const res = await fetch(url.toString(), {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      console.warn("Avatar fetch failed:", res.status, res.statusText);
+      return null;
+    }
+
+    const blob = await res.blob();
+    console.log("Avatar blob received, size:", blob.size);
+
+    if (!blob || blob.size === 0) {
+      console.warn("Avatar blob is empty");
+      return null;
+    }
+
+    const url2 = URL.createObjectURL(blob);
+    console.log("Avatar blob URL created successfully");
+    return url2;
+  } catch (error) {
+    console.error("Failed to get avatar:", error);
+    return null;
+  }
 };
 
 
@@ -61,7 +128,6 @@ export const profileImageDataUrl = (profile) => {
   const b64 = profile?.profile_picture ?? profile?.profile_image;
   if (!b64) return null;
 
-  
   const mimeType = profile?.image_type || "image/jpeg";
   return `data:${mimeType};base64,${b64}`;
 };

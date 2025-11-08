@@ -14,7 +14,10 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
   const [industry, setIndustry] = useState("");
   const [status, setStatus] = useState("");
   const [projectUrl, setProjectUrl] = useState("");
+  const [mediaFiles, setMediaFiles] = useState([]);
   const [id, setId] = useState(null);
+
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (editProject) {
@@ -32,13 +35,15 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
       setStatus(editProject.status || "");
       setProjectUrl(editProject.project_url || "");
       setId(editProject.id);
+      setMediaFiles([]);
     }
   }, [editProject]);
 
   const resetForm = () => {
     setProjectName(""); setDescription(""); setRole(""); setStartDate(""); setEndDate(""); setNoEndDate(false);
     setSkills(""); setTeamSize(""); setDetails(""); setAchievements(""); setIndustry(""); setStatus(""); 
-    setProjectUrl(""); setId(null);
+    setProjectUrl(""); setMediaFiles([]); setId(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = (e) => {
@@ -50,7 +55,11 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
     if (!teamSize || isNaN(teamSize) || parseInt(teamSize) <= 0) return alert("Team Size must be positive");
     if (!status) return alert("Please select a project status");
 
-    // Send as JSON object instead of FormData
+    // End Date Validation
+    if (endDate && new Date(endDate) < new Date(startDate)) {
+      return alert("End date cannot be earlier than start date.");
+    }
+
     const projectData = {
       project_name: projectName.trim(),
       description: description.trim() || undefined,
@@ -67,13 +76,18 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
     };
 
     if (editProject) {
-      editProject.submit(projectData);
+      editProject.submit(projectData, mediaFiles);
     } else {
-      addProject(projectData);
+      addProject(projectData, mediaFiles);
     }
 
     resetForm();
     cancelEdit && cancelEdit();
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setMediaFiles(files);
   };
 
   const inputStyle = {
@@ -113,7 +127,7 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
         {editProject ? "✏️ Edit Project" : "🚀 Add Project"}
       </h2>
 
-      <form onSubmit={handleSubmit}>
+      <div>
         {/* Basic Information */}
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
@@ -291,25 +305,34 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
           />
         </div>
 
-          {/* Media Upload*/}
-          <div style={{
-  ...sectionStyle,
-}}>
-  <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
-    📸 Media Files
-  </h3>
-  
-  <label style={labelStyle}>Upload Screenshots / Documents</label>
-  <input
-    type="file"
-    multiple
-    style={{
-      ...inputStyle,
-      padding: "8px",
-    }}
-  />
-</div>
+        {/* Media Upload*/}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📸 Media Files
+          </h3>
 
+          <label style={labelStyle}>Upload Screenshots / Documents (Multiple files supported)</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileChange}
+            style={{
+              ...inputStyle,
+              padding: "8px",
+              cursor: "pointer"
+            }}
+          />
+          {mediaFiles.length > 0 && (
+            <div style={{ 
+              marginTop: "8px", 
+              fontSize: "13px", 
+              color: "#666" 
+            }}>
+              {mediaFiles.length} file(s) selected
+            </div>
+          )}
+        </div>
 
         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
           <button
@@ -332,7 +355,8 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             Cancel
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={handleSubmit}
             style={{
               padding: "12px 24px",
               background: "#4f8ef7",
@@ -347,7 +371,7 @@ export default function ProjectForm({ addProject, editProject, cancelEdit }) {
             {editProject ? "💾 Save Changes" : "➕ Add Project"}
           </button>
         </div>
-      </form>
+      </div>
     </div>
   );
 }

@@ -43,7 +43,7 @@ async def get_employment(employment_id: str, uuid: str = Depends(authorize)):
 async def get_all_employment(uuid: str = Depends(authorize)):
     try:
         results = await employment_dao.get_all_employment(uuid)
-        # NOTE: do not return http exception for empty employment, as it can lead to inconsistent behavior on the frontend
+        # NOTE: do not raise http exception for empty employment, as it can lead to inconsistent behavior on the frontend
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     

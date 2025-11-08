@@ -1,8 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
-import gridfs
+from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
+from io import BytesIO
 
 from mongo.profiles_dao import profiles_dao
+from mongo.media_dao import media_dao
 from sessions.session_authorizer import authorize
 from schema import Profile
 
@@ -35,16 +37,6 @@ async def update_profile(profile: Profile, uuid: str = Depends(authorize)):
         raise HTTPException(400, "User profile not found")  
     else:
         return {"detail": "Successfully updated profile"}
-    
-@profiles_router.post("/me/avatar", tags = ["profiles"])
-async def upload_pfp(image: UploadFile = File(...), uuid: str = Depends(authorize)):
-    pass   
-    # TODO: Implement profile picture upload
-
-@profiles_router.get("/me/avatar", tags = ["profiles"])
-async def download_pfp(uuid: str = Depends(authorize)):
-    pass
-    # TODO: Implement profile picture download
 
 @profiles_router.delete("/me", tags = ["profiles"])
 async def delete_profile(uuid: str = Depends(authorize)):
@@ -57,4 +49,62 @@ async def delete_profile(uuid: str = Depends(authorize)):
         raise HTTPException(400, "User profile not found")  
     else:
         return {"detail": "Successfully deleted profile"}
+    
+@profiles_router.post("/me/avatar", tags = ["profiles"])
+async def upload_pfp(image: UploadFile = File(...), uuid: str = Depends(authorize)):
+    try:
+        media_id = await media_dao.add_media(uuid, image.filename, await image.read(), image.content_type)
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal service error")
+    
+    if not media_id:
+        raise HTTPException(500, "Unable to upload image")
+    
+    return {"detail": "Sucess", "image_id": media_id}
 
+@profiles_router.get("/me/avatar", tags = ["profiles"])
+async def download_pfp(uuid: str = Depends(authorize)):
+    try:
+        media_ids = await media_dao.get_all_associated_media_ids(uuid)
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal service error")
+    
+    if not media_ids:
+        raise HTTPException(400, "Could not find profile picture for user")
+    
+    try:
+        media = await media_dao.get_media(media_ids[-1])
+    except:
+        raise HTTPException(500, "Encountered internal server error")
+
+    return StreamingResponse(
+        BytesIO(media["contents"]),
+        media_type = media["content_type"],
+        headers = {
+            "Content-Disposition": f"inline; filename=\"{media['filename']}\""
+        }
+    )
+
+@profiles_router.put("/me/avatar", tags = ["profiles"])
+async def update_pfp(media_id: str, media: UploadFile = File(...), uuid: str = Depends(authorize)):
+    try:
+        updated = media_dao.update_media(media_id, media.filename, await media.read(), uuid, media.content_type)
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal server error")
+    
+    if not updated:
+        raise HTTPException(400, "Could not update profile picture")
+    
+    return {"detail": "Sucessfully updated profile picture"}
+    
+@profiles_router.delete("/me/avatar", tags = ["projects"])
+async def delete_media(media_id: str, uuid: str = Depends(authorize)):
+    try:
+        deleted = await media_dao.delete_media(media_id)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not deleted:
+        raise HTTPException(500, "Unable to delete profile picture")
+    
+    return {"detail": "Sucessfully deleted profile picture"}

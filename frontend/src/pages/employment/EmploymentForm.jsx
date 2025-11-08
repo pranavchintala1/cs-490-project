@@ -50,6 +50,11 @@ export default function EmploymentForm({ onAdded, editEntry, cancelEdit }) {
     setErr("");
     if (!f.title.trim()) return setErr("Title is required.");
     if (!f.start_date) return setErr("Start date is required.");
+    
+    // Check if end date is before start date
+    if (f.end_date && new Date(f.end_date) < new Date(f.start_date)) {
+      return setErr("End date cannot be before start date.");
+    }
 
     setSaving(true);
     

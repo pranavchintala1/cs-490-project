@@ -13,6 +13,7 @@ export default function ProjectsList() {
   const [showForm, setShowForm] = useState(false);
   const [editProject, setEditProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expandedCardId, setExpandedCardId] = useState(null);
 
   const location = useLocation();
   // 👇 Check for navigation state (if user came from a special link)
@@ -31,22 +32,104 @@ export default function ProjectsList() {
       setLoading(true);
       const data = await apiRequest("/api/projects/me?uuid=", "");
       
-      const transformedProjects = (data || []).map(project => ({
-        id: project._id,
-        project_name: project.project_name,
-        description: project.description,
-        role: project.role,
-        start_date: project.start_date,
-        end_date: project.end_date,
-        skills: project.skills || [],
-        team_size: project.team_size,
-        details: project.details,
-        achievements: project.achievements,
-        industry: project.industry,
-        status: project.status,
-        project_url: project.project_url,
-        media_files: project.media_files || []
+      const transformedProjects = await Promise.all((data || []).map(async project => {
+        // Fetch associated media for each project
+        let mediaFiles = [];
+        
+        try {
+          const mediaIdsResponse = await apiRequest(`/api/projects/media/ids?parent_id=${project._id}&uuid=`, "");
+          const mediaIds = mediaIdsResponse.media_id_list || [];
+          
+          // Fetch each media file's metadata
+          if (mediaIds.length > 0) {
+            const uuid = localStorage.getItem('uuid') || '';
+            const token = localStorage.getItem('session') || '';
+            const baseURL = 'http://localhost:8000';
+            
+            // First, get all media metadata from the database
+            const mediaMetadata = await Promise.all(
+              mediaIds.map(async (mediaId) => {
+                try {
+                  // Fetch media metadata directly from the API
+                  const metaResponse = await fetch(
+                    `${baseURL}/api/projects/media?media_id=${mediaId}&uuid=${uuid}`,
+                    {
+                      headers: {
+                        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                      }
+                    }
+                  );
+                  
+                  if (metaResponse.ok) {
+                    const contentType = metaResponse.headers.get('Content-Type');
+                    const blob = await metaResponse.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Try to extract filename from Content-Disposition
+                    let filename = `file_${mediaId}`;
+                    const contentDisposition = metaResponse.headers.get('Content-Disposition');
+                    
+                    if (contentDisposition) {
+                      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                      if (match && match[1]) {
+                        filename = match[1].replace(/['"]/g, '').trim();
+                      }
+                    }
+                    
+                    // If still no filename, try to guess from content type
+                    if (filename === `file_${mediaId}` && contentType) {
+                      const ext = contentType.split('/')[1];
+                      if (ext) {
+                        filename = `image_${mediaId}.${ext}`;
+                      }
+                    }
+                    
+                    console.log('Loaded media:', filename, 'Type:', contentType, 'Blob type:', blob.type);
+                    
+                    return {
+                      media_id: mediaId,
+                      filename: filename,
+                      url: url,
+                      content_type: contentType || blob.type
+                    };
+                  }
+                } catch (error) {
+                  console.error(`Error fetching media ${mediaId}:`, error);
+                }
+                return null;
+              })
+            );
+            
+            mediaFiles = mediaMetadata.filter(f => f !== null);
+          }
+        } catch (error) {
+          console.error("Error fetching media for project:", project._id, error);
+        }
+
+        return {
+          id: project._id,
+          project_name: project.project_name,
+          description: project.description,
+          role: project.role,
+          start_date: project.start_date,
+          end_date: project.end_date,
+          skills: project.skills || [],
+          team_size: project.team_size,
+          details: project.details,
+          achievements: project.achievements,
+          industry: project.industry,
+          status: project.status,
+          project_url: project.project_url,
+          thumbnail_id: project.thumbnail_id,
+          media_files: mediaFiles
+        };
       }));
+      
+      console.log('Transformed projects:', transformedProjects.map(p => ({
+        name: p.project_name,
+        thumbnail_id: p.thumbnail_id,
+        media_files: p.media_files?.map(f => f.filename)
+      })));
       
       setProjects(transformedProjects);
     } catch (error) {
@@ -57,9 +140,18 @@ export default function ProjectsList() {
     }
   };
 
-  const addProject = async (projectData) => {
+  const sortProjects = (projectArray) => {
+    return projectArray
+      .map((p) => ({ ...p }))
+      .sort((a, b) => {
+        if (sort === "date_desc") return new Date(b.start_date) - new Date(a.start_date);
+        if (sort === "date_asc") return new Date(a.start_date) - new Date(b.start_date);
+        return 0;
+      });
+  };
+
+  const addProject = async (projectData, mediaFiles) => {
     try {
-      // Send as JSON instead of FormData
       const response = await apiRequest("/api/projects?uuid=", "", {
         method: "POST",
         body: JSON.stringify(projectData),
@@ -69,7 +161,39 @@ export default function ProjectsList() {
       });
 
       if (response && response.project_id) {
-        // Reload projects to get the full data
+        const projectId = response.project_id;
+        
+        // Upload media files if any
+        if (mediaFiles && mediaFiles.length > 0) {
+          const uuid = localStorage.getItem('uuid') || '';
+          const token = localStorage.getItem('session') || '';
+          const baseURL = 'http://localhost:8000';
+          
+          for (const file of mediaFiles) {
+            const uploadFormData = new FormData();
+            uploadFormData.append('media', file);
+            
+            try {
+              const uploadResponse = await fetch(
+                `${baseURL}/api/projects/media?parent_id=${projectId}&uuid=${uuid}`,
+                {
+                  method: "POST",
+                  headers: {
+                    ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                  },
+                  body: uploadFormData
+                }
+              );
+              
+              if (!uploadResponse.ok) {
+                console.error("Failed to upload file:", file.name);
+              }
+            } catch (error) {
+              console.error("Error uploading file:", file.name, error);
+            }
+          }
+        }
+        
         await loadProjects();
       }
       setShowForm(false);
@@ -79,9 +203,8 @@ export default function ProjectsList() {
     }
   };
 
-  const submitEdit = async (projectData) => {
+  const submitEdit = async (projectData, mediaFiles) => {
     try {
-      // Send as JSON instead of FormData
       await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
         method: "PUT",
         body: JSON.stringify(projectData),
@@ -90,7 +213,37 @@ export default function ProjectsList() {
         }
       });
 
-      // Reload projects to get updated data
+      // Upload new media files if any
+      if (mediaFiles && mediaFiles.length > 0) {
+        const uuid = localStorage.getItem('uuid') || '';
+        const token = localStorage.getItem('session') || '';
+        const baseURL = 'http://localhost:8000';
+        
+        for (const file of mediaFiles) {
+          const uploadFormData = new FormData();
+          uploadFormData.append('media', file);
+          
+          try {
+            const uploadResponse = await fetch(
+              `${baseURL}/api/projects/media?parent_id=${editProject.id}&uuid=${uuid}`,
+              {
+                method: "POST",
+                headers: {
+                  ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                },
+                body: uploadFormData
+              }
+            );
+            
+            if (!uploadResponse.ok) {
+              console.error("Failed to upload file:", file.name);
+            }
+          } catch (error) {
+            console.error("Error uploading file:", file.name, error);
+          }
+        }
+      }
+
       await loadProjects();
       setEditProject(null);
       setShowForm(false);
@@ -109,34 +262,38 @@ export default function ProjectsList() {
       });
 
       setProjects(projects.filter((p) => p.id !== id));
+      if (expandedCardId === id) {
+        setExpandedCardId(null);
+      }
     } catch (error) {
       console.error("Failed to delete project:", error);
       alert("Failed to delete project. Please try again.");
     }
   };
 
-  const filteredProjects = projects
-    .filter((p) => {
-      const s = search.toLowerCase();
-      return (
-        p.project_name?.toLowerCase().includes(s) ||
-        p.role?.toLowerCase().includes(s) ||
-        p.description?.toLowerCase().includes(s) ||
-        p.details?.toLowerCase().includes(s) ||
-        (Array.isArray(p.skills) && p.skills.some((t) => t.toLowerCase().includes(s)))
-      );
-    })
-    .filter((p) =>
-      industrySearch
-        ? p.industry?.toLowerCase().includes(industrySearch.toLowerCase())
-        : true
-    )
-    .filter((p) => (statusFilter ? p.status === statusFilter : true))
-    .sort((a, b) => {
-      if (sort === "date_desc") return new Date(b.start_date) - new Date(a.start_date);
-      if (sort === "date_asc") return new Date(a.start_date) - new Date(b.start_date);
-      return 0;
-    });
+  const handleCardToggle = (projectId) => {
+    setExpandedCardId(expandedCardId === projectId ? null : projectId);
+  };
+
+  const filteredProjects = sortProjects(
+    projects
+      .filter((p) => {
+        const s = search.toLowerCase();
+        return (
+          p.project_name?.toLowerCase().includes(s) ||
+          p.role?.toLowerCase().includes(s) ||
+          p.description?.toLowerCase().includes(s) ||
+          p.details?.toLowerCase().includes(s) ||
+          (Array.isArray(p.skills) && p.skills.some((t) => t.toLowerCase().includes(s)))
+        );
+      })
+      .filter((p) =>
+        industrySearch
+          ? p.industry?.toLowerCase().includes(industrySearch.toLowerCase())
+          : true
+      )
+      .filter((p) => (statusFilter ? p.status === statusFilter : true))
+  );
 
   if (loading) {
     return (
@@ -187,7 +344,6 @@ export default function ProjectsList() {
         />
       )}
 
-      {/* Only show filters and projects if form is not shown */}
       {!showForm && (
         <>
           <div style={{
@@ -289,7 +445,8 @@ export default function ProjectsList() {
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: "16px"
+              gap: "16px",
+              alignItems: "start"
             }}>
               {filteredProjects.map((p) => (
                 <ProjectCard
@@ -301,6 +458,9 @@ export default function ProjectsList() {
                     setEditProject(proj);
                     setShowForm(true);
                   }}
+                  expanded={expandedCardId === p.id}
+                  onToggle={handleCardToggle}
+                  onMediaDelete={loadProjects}
                 />
               ))}
             </div>
