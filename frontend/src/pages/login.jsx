@@ -9,6 +9,9 @@ import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
 import { sendData } from "../tools/db_commands";
 import { apiRequest } from "../api";
+import "../Styles/login.css"; 
+import logo from "../logo.svg.png"; 
+
 // import { useSearchParams } from "react-router-dom";
 
 function Login() {
@@ -127,49 +130,63 @@ async function handleMicrosoftLogin() {
   }
 };
     
-
-    return (
-        <>
-            <h2>Login</h2>
-
+      return (
+        <div className="login-page">
+          <div className="login-card shadow">
+            <div className="login-logo mb-3">
+              <img src={logo} alt="Metamorphosis logo" className="login-logo-img" />
+            </div>
+            <h2 className="fw-bold mb-3">Welcome Back</h2>
+            <p className="text-muted mb-4">
+              Sign in to access your <strong>Metamorphosis</strong> dashboard.
+            </p>
 
             <form className="Login" onSubmit={handleSubmit(onSubmit)}>
+              <input
+                type="email"
+                {...register("email", { required: true })}
+                placeholder="Email"
+                className="form-control mb-3"
+              />
 
-                <input
-                    type="email"
-                    {...register("email", { required: true })}
-                    placeholder="Email"
-                />
+              <input
+                type="password"
+                {...register("password", { required: true })}
+                placeholder="Password"
+                className="form-control mb-3"
+              />
 
-                <input
-                    type="password"
-                    {...register("password", { required: true })}
-                    placeholder="Password"
-                />
-
-                <input type="submit" style={{}} /> 
+              <input
+                type="submit"
+                className="btn btn-success w-100 fw-semibold"
+                value="Login"
+              />  
             </form>
 
-            <GoogleLogin
-                onSuccess={credentialResponse => {
-                    OAuthSubmit(credentialResponse);
-                }}
-                onError={() => {
-                    console.log('Login Failed');
-                }}
-            />
+              <div className="oauth-buttons mt-3">
+                <div className="google-login mb-2">
+                  <GoogleLogin
+                    onSuccess={credentialResponse => OAuthSubmit(credentialResponse)}
+                    onError={() => console.log('Login Failed')}
+                  />
+                </div>
 
-            <button onClick={handleMicrosoftLogin}>
-            Login with Microsoft
-            </button>
+                <button
+                  className="btn btn-outline-dark w-100 fw-semibold microsoft-login"
+                  onClick={handleMicrosoftLogin}
+                >
+                <i className="fab fa-microsoft me-2"></i> Login with Microsoft
+                </button>
+                </div>
 
-
-            <Link to="/forgotPassword">Forgot password</Link>
-        </>
-    );
-
+              <div className="extra-links mt-3">
+                <Link to="/register" className="d-block text-success">Register</Link>
+                <Link to="/forgotPassword" className="d-block text-muted">Forgot Password?</Link>
+              </div>
+            </div>
+          </div>
+  );
 }
-
 
 
 export default Login;

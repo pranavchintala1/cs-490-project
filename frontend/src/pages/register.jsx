@@ -8,7 +8,8 @@ import { PublicClientApplication } from "@azure/msal-browser";
 import { msalConfig } from "../tools/msal";
 import { useMsal } from "@azure/msal-react";
 import { apiRequest } from "../api";
-
+import "../Styles/register.css";
+import logo from "../logo.svg.png"; 
 
 function Register() {
 
@@ -134,89 +135,100 @@ async function handleMicrosoftLogin() {
   }
 };
 
-
-    
     return (
-        <>
-            <h2>Register</h2>
+        <div className="register-page">
+            <div className="register-card shadow">
+                <div className="login-logo mb-3">
+                <img src={logo} alt="Metamorphosis logo" className="login-logo-img" />
+                </div>
 
-            <form className="Register" onSubmit={handleSubmit(onSubmit)}>
+                <h2 className="fw-bold mb-2">Create Your Account</h2>
+                <p className="text-muted mb-4">
+                    Join <strong>Metamorphosis</strong> and start your journey today.
+                </p>
 
-                 <input
+                <form className="Register" onSubmit={handleSubmit(onSubmit)}>
+                <input
                     type="text"
                     {...register("username", { required: true })}
                     placeholder="Username"
-                    required
+                    className="form-control mb-3"
                 />
-
 
                 <input
                     type="email"
                     {...register("email", { required: true })}
                     placeholder="Email"
+                    className="form-control mb-3"
                 />
 
                 <input
                     type="password"
                     minLength="8"
-                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$"
                     {...register("password", { required: true })}
                     placeholder="Password"
                     title="Password must be minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number"
+                    className="form-control mb-3"
                 />
 
                 <input
                     type="password"
-                    {...register("confirm", { 
-                        required: true, 
-                        validate: (value,data) => value === data.password || "Passwords must match."})}
+                    {...register("confirm", {
+                    required: true,
+                    validate: (value, data) =>
+                    value === data.password || "Passwords must match.",
+                    })}
                     placeholder="Confirm Password"
+                    className="form-control mb-3"
                 />
-
-                
 
                 <input
                     type="text"
                     {...register("firstName", { required: true })}
                     placeholder="First Name"
-                    required
                     pattern="^[A-Za-z]+$"
                     title="Please enter a valid name only"
+                    className="form-control mb-3"
                 />
 
                 <input
                     type="text"
                     {...register("lastName", { required: true })}
                     placeholder="Last Name"
-                    required
                     pattern="^[A-Za-z]+$"
                     title="Please enter a valid name only"
+                    className="form-control mb-3"
                 />
 
-                <input type="submit" style={{}} /> 
+                <input
+                    type="submit"
+                    className="btn btn-success w-100 fw-semibold"
+                    value="Register"
+                />
             </form>
 
-            <GoogleLogin
-                onSuccess={credentialResponse => {
-                    OAuthSubmit(credentialResponse);
-                }}
-                onError={() => {
-                    console.log('Login Failed');
-                }}
+            <div className="oauth-buttons mt-3">
+            <div className="google-login mb-2">
+                <GoogleLogin
+                    onSuccess={(credentialResponse) =>
+                    OAuthSubmit(credentialResponse)
+                    }
+                    onError={() => console.log("Login Failed")}
                 />
+            </div>
 
-            <button onClick={handleMicrosoftLogin}>
-            Login with Microsoft
+            <button
+                className="btn btn-outline-dark w-100 fw-semibold"
+                onClick={handleMicrosoftLogin}
+            >
+                <i className="fab fa-microsoft me-2"></i> Login with Microsoft
             </button>
-        </>
+            </div>
+        </div>
+        </div>
     );
-
-
-
-
-
-
-
 }
+
 
 export default Register;
