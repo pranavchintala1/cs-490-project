@@ -17,7 +17,7 @@ const logout = async () => {
   
 
   try {
-    apiRequest("/api/auth/logout?uuid=", "", {
+    apiRequest(`/api/auth/logout?uuid=${uuid}`, "", {
         method: "POST",
         headers: {
           'Content-Type': 'application/json',
@@ -35,8 +35,8 @@ const logout = async () => {
 
   };
 
-    localStorage.removeItem("session");
     localStorage.removeItem("uuid");
+    localStorage.removeItem("session");
 
     navigate("/");
   };
