@@ -123,9 +123,6 @@ function skillFilter(skills) {
         if (skill.category !== null && skill.category !== undefined && skill.category !== '') {
             details.push(`Skill Category: ${skill.category}`);
         }
-        if (skill.position !== null && skill.position !== undefined && skill.position !== '') {
-            details.push(`Position: ${skill.position}`);
-        }
         
         return [skill.name, details];
     });
@@ -182,12 +179,10 @@ function educationFilter(educations) {
         if (education.graduation_date !== null && education.graduation_date !== undefined && education.graduation_date !== '') {
             details.push(`Graduation Date: ${education.graduation_date}`);
         }
-        if (education.gpa !== null && education.gpa !== undefined) {
+        if (education.gpa !== null && education.gpa !== undefined && education.gpa_private !== null && education.gpa_private !== undefined && education.gpa_private === false) {
             details.push(`GPA: ${education.gpa}`);
         }
-        if (education.gpa_private !== null && education.gpa_private !== undefined) {
-            details.push(`GPA Private: ${education.gpa_private}`);
-        }
+
         if (education.education_level !== null && education.education_level !== undefined && education.education_level !== '') {
             details.push(`Education Level: ${education.education_level}`);
         }
@@ -618,8 +613,8 @@ const Dashboard = () => {
     const threshData = {
     'Profile': 7,
     'Employment History': 3,
-    'Skills': 2,
-    'Education': 4,
+    'Skills': 1,
+    'Education': 3,
     'Projects': 5,
     'Certifications': 4};
 
@@ -649,7 +644,7 @@ const Dashboard = () => {
     
     if (completenessRatio >= 0.8 && totalItems >= threshCount[schema]) {
       return 'complete';
-    } else if (completenessRatio >= 0.4 && totalItems > 0 ) {
+    } else if (totalItems > 0 ) {
       return 'partial';
     } else {
       return 'incomplete';
