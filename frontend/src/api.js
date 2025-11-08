@@ -15,7 +15,7 @@ export async function apiRequest(endpoint, id  = "", options = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`; //TODO replace with actual structure
 
 
-  const url = id
+  const url = id // Basically a flow chart for sending apirequest. Not the prettiest, but works enough probably idk.
   ? `${baseURL}${endpoint}${id}`              
   : options.method?.toUpperCase() === "POST"
     ? `${baseURL}${endpoint}`                  
