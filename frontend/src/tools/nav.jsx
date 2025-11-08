@@ -14,6 +14,7 @@ const Nav = () => {
 
 const logout = async () => {
   const uuid = localStorage.getItem("uuid");
+  
 
   try {
     apiRequest("/api/auth/logout?uuid=", "", {
@@ -23,17 +24,20 @@ const logout = async () => {
           'Authorization': `Bearer ${token}`
         }
       }
+
     );
 
+    showFlash("Successfully Logged out", "success");
+
   } catch (error) {
+    showFlash(error.detail,"error");
     console.error("Logout failed:", error);
+
   };
 
     localStorage.removeItem("session");
     localStorage.removeItem("uuid");
 
-
-    showFlash("Successfully Logged out", "success");
     navigate("/");
   };
 
