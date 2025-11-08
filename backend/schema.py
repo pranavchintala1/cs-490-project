@@ -63,6 +63,7 @@ class Project(BaseModel):
     achievements: Optional[str] = None
     industry: Optional[str] = None
     status: Optional[str] = None
+    thumbnail_id: Optional[str] = None
     # TODO: requires multi-media
 
 class Certification(BaseModel): 
