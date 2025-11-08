@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes.auth import auth_router
@@ -26,6 +26,14 @@ app.add_middleware(
     allow_methods=["*"],         
     allow_headers=["*"],         
 )
+
+# @app.middleware("http")
+# async def add_global_headers(request: Request, call_next):
+#     response: Response = await call_next(request)
+#     # Add headers to every response
+#     response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+#     response.headers["Cross-Origin-Embedder-Policy"] = "unsafe-none"
+#     return response
 
 app.include_router(auth_router, prefix = api_prefix) 
 app.include_router(profiles_router, prefix = api_prefix)
