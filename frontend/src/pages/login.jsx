@@ -24,6 +24,7 @@ function Login() {
   const { flash, showFlash } = useFlash();
   const { instance } = useMsal();
 
+<<<<<<< HEAD
   //     const [searchParams] = useSearchParams(); //maybe broke
   //     useEffect(() => {
   //     const errParam = searchParams.get("error");
@@ -31,6 +32,12 @@ function Login() {
   //       setError("You must log in to access that page.");
   //     }
   //   }, [searchParams]);
+=======
+                localStorage.setItem("session",res.session_token)
+                localStorage.setItem("uuid",res.uuid)
+                
+                navigate(`/dashboard`); // make profile later lmao. 
+>>>>>>> origin/dev
 
 
   const onSubmit = async (data) => {

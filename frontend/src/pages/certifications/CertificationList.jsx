@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
+<<<<<<< HEAD
 import CertificationsAPI from "../../api/certifications";
+=======
+import { apiRequest } from "../../api";
+import { useLocation } from "react-router-dom";
+>>>>>>> origin/dev
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
@@ -9,6 +14,13 @@ export default function CertificationList() {
   const [editCert, setEditCert] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  // 👇 Check for navigation state (if user came from a special link)
+  useEffect(() => {
+    if (location.state?.showForm) {
+      setShowForm(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     loadCertifications();
