@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createResume } from '../../tools/api';
 import TemplateSelector from '../../components/resumes/TemplateSelector';
 import '../../styles/resumes.css';
 
@@ -45,15 +46,28 @@ export default function ResumeCreate() {
       return;
     }
 
-    setLoading(true);
-    // TODO: Replace with actual API call when backend is ready
-    console.log('Creating resume:', { name: resumeName, template: selectedTemplate });
+    try {
+      setLoading(true);
+      const result = await createResume({
+        name: resumeName.trim(),
+        template: selectedTemplate,
+        sections: ['contact', 'summary', 'experience', 'education', 'skills'],
+        contact: {},
+        summary: '',
+        experience: [],
+        education: [],
+        skills: [],
+        colors: { primary: '#1a1a1a', accent: '#2c3e50' },
+        fonts: { heading: 'Calibri', body: 'Calibri' },
+      });
 
-    setTimeout(() => {
+      // Redirect to editor with the new resume ID
+      navigate(`/resumes/edit/${result.resume_id}`);
+    } catch (err) {
+      alert('Failed to create resume: ' + err.message);
+      console.error('Error creating resume:', err);
       setLoading(false);
-      // Redirect to editor after creation
-      navigate('/resumes/edit/new');
-    }, 500);
+    }
   };
 
   return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { getResume } from '../../tools/api';
 import ResumePreview from '../../components/resumes/ResumePreview';
 import ValidationFeedback from '../../components/resumes/ValidationFeedback';
 import '../../styles/resumes.css';
@@ -14,55 +15,29 @@ export default function ResumePreviewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [resume, setResume] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showValidation, setShowValidation] = useState(true);
   const [previewWidth, setPreviewWidth] = useState(800); // Default width in pixels
   const previewContainerRef = useRef(null);
   const isResizing = useRef(false);
 
-  // TODO: Replace with API call when backend is ready
+  // Fetch resume from backend
   useEffect(() => {
-    const mockResume = {
-      id: id,
-      name: 'Software Engineer Resume',
-      template: 'chronological',
-      contact: {
-        name: 'John Smith',
-        email: 'john.smith@email.com',
-        phone: '(555) 123-4567',
-        location: 'San Francisco, CA',
-        linkedin: 'linkedin.com/in/johnsmith',
-      },
-      summary: 'Results-driven Senior Software Engineer with 5+ years of experience designing and implementing scalable cloud-based solutions. Proven expertise in full-stack development, microservices architecture, and leading cross-functional teams.',
-      experience: [
-        {
-          id: 1,
-          company: 'Tech Corp',
-          position: 'Senior Software Engineer',
-          startDate: '2022-01',
-          endDate: 'present',
-          description: 'Led development of microservices architecture supporting 2M+ daily active users. Architected and implemented real-time data processing pipeline using Node.js and AWS Lambda, reducing latency by 40%.',
-        },
-        {
-          id: 2,
-          company: 'StartUp Inc',
-          position: 'Full Stack Developer',
-          startDate: '2020-06',
-          endDate: '2022-01',
-          description: 'Developed and deployed 15+ full-stack web applications using React and Python. Optimized database queries resulting in 35% improvement in API response times.',
-        },
-      ],
-      skills: ['React', 'Node.js', 'Python', 'AWS', 'Docker', 'PostgreSQL', 'JavaScript', 'TypeScript'],
-      education: [
-        {
-          id: 1,
-          school: 'University of California, Berkeley',
-          degree: 'Bachelor of Science',
-          field: 'Computer Science',
-          year: '2019',
-        },
-      ],
+    const fetchResume = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getResume(id);
+        setResume(data);
+      } catch (err) {
+        setError(err.message || 'Failed to load resume');
+        console.error('Error loading resume:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-    setResume(mockResume);
+    fetchResume();
   }, [id]);
 
   // Handle resize start
@@ -98,8 +73,26 @@ export default function ResumePreviewPage() {
     };
   }, []);
 
-  if (!resume) {
+  if (loading) {
     return <div className="container mt-5"><h2>Loading resume...</h2></div>;
+  }
+
+  if (error) {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger">
+          <h4>Error Loading Resume</h4>
+          <p>{error}</p>
+          <button onClick={() => navigate('/resumes')} className="btn btn-secondary">
+            Back to Resumes
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!resume) {
+    return <div className="container mt-5"><h4>Resume not found</h4></div>;
   }
 
   // Calculate height based on 8.5" x 11" aspect ratio (1:1.294)

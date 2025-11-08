@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { listResumeVersions, deleteResumeVersion, restoreResumeVersion, createResumeVersion } from '../../tools/api';
 import VersionComparison from '../../components/resumes/VersionComparison';
 import '../../styles/resumes.css';
 
@@ -12,44 +13,27 @@ export default function VersionManagementPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [versions, setVersions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedVersions, setSelectedVersions] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
 
-  // TODO: Replace with API call when backend is ready
+  // Fetch versions from backend
   useEffect(() => {
-    const mockVersions = [
-      {
-        id: 1,
-        name: 'v1 - Initial',
-        createdAt: '2024-11-05T10:00:00',
-        updatedAt: '2024-11-05T10:00:00',
-        createdBy: 'User',
-        description: 'Initial resume creation',
-        isCurrent: true,
-        jobLinked: null,
-      },
-      {
-        id: 2,
-        name: 'v2 - For Tech Corp',
-        createdAt: '2024-11-04T14:30:00',
-        updatedAt: '2024-11-04T14:30:00',
-        createdBy: 'User',
-        description: 'Tailored for Tech Corp software engineer position',
-        isCurrent: false,
-        jobLinked: 'Senior Developer at Tech Corp',
-      },
-      {
-        id: 3,
-        name: 'v3 - Skills Focus',
-        createdAt: '2024-11-03T09:15:00',
-        updatedAt: '2024-11-03T09:15:00',
-        createdBy: 'User',
-        description: 'Version with enhanced skills section',
-        isCurrent: false,
-        jobLinked: null,
-      },
-    ];
-    setVersions(mockVersions);
+    const fetchVersions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await listResumeVersions(id);
+        setVersions(data);
+      } catch (err) {
+        setError(err.message || 'Failed to load versions');
+        console.error('Error loading versions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVersions();
   }, [id]);
 
   const handleVersionSelect = (versionId) => {
@@ -63,32 +47,57 @@ export default function VersionManagementPage() {
     });
   };
 
-  const handleRestore = (versionId) => {
+  const handleRestore = async (versionId) => {
     if (window.confirm('Are you sure you want to restore this version?')) {
-      console.log('Restoring version:', versionId);
-      // TODO: Replace with API call when backend is ready
-      alert('Version restored successfully!');
+      try {
+        await restoreResumeVersion(id, versionId);
+        alert('Version restored successfully!');
+        navigate(`/resumes/edit/${id}`);
+      } catch (err) {
+        alert('Failed to restore version: ' + err.message);
+      }
     }
   };
 
-  const handleDelete = (versionId) => {
+  const handleDelete = async (versionId) => {
     if (window.confirm('Are you sure you want to delete this version?')) {
-      setVersions(versions.filter((v) => v.id !== versionId));
+      try {
+        await deleteResumeVersion(id, versionId);
+        setVersions(versions.filter((v) => v._id !== versionId));
+      } catch (err) {
+        alert('Failed to delete version: ' + err.message);
+      }
     }
   };
 
-  const handleCreateFromVersion = (versionId) => {
-    const version = versions.find((v) => v.id === versionId);
+  const handleCreateFromVersion = async (versionId) => {
+    const version = versions.find((v) => v._id === versionId);
     const newName = prompt('Enter name for new version:', `${version.name} (Copy)`);
     if (newName) {
-      console.log('Creating new version from:', versionId);
-      // TODO: Replace with API call when backend is ready
-      alert(`New version "${newName}" created!`);
+      try {
+        await createResumeVersion(id, {
+          name: newName,
+          description: `Copy of ${version.name}`,
+          resume_data: version.resume_data,
+        });
+        alert(`New version "${newName}" created!`);
+        // Refresh versions list
+        const data = await listResumeVersions(id);
+        setVersions(data);
+      } catch (err) {
+        alert('Failed to create version: ' + err.message);
+      }
     }
   };
+
+  if (loading) {
+    return <div className="container mt-5"><h2>Loading versions...</h2></div>;
+  }
 
   return (
     <div className="container mt-5">
+      {error && <div className="alert alert-danger mb-4">{error}</div>}
+
       <div className="version-management-header">
         <h1>Version Management</h1>
         <button onClick={() => navigate(`/resumes/edit/${id}`)} className="btn btn-secondary">
@@ -103,54 +112,50 @@ export default function VersionManagementPage() {
           <div className="versions-container">
             {versions.map((version) => (
               <div
-                key={version.id}
-                className={`version-item ${version.isCurrent ? 'current' : ''}`}
+                key={version._id}
+                className={`version-item`}
               >
                 <div className="version-checkbox">
                   <input
                     type="checkbox"
-                    id={`version-${version.id}`}
-                    checked={selectedVersions.includes(version.id)}
-                    onChange={() => handleVersionSelect(version.id)}
-                    disabled={selectedVersions.length === 2 && !selectedVersions.includes(version.id)}
+                    id={`version-${version._id}`}
+                    checked={selectedVersions.includes(version._id)}
+                    onChange={() => handleVersionSelect(version._id)}
+                    disabled={selectedVersions.length === 2 && !selectedVersions.includes(version._id)}
                   />
                 </div>
                 <div className="version-info">
-                  <h4>{version.name} {version.isCurrent && <span className="badge bg-success">Current</span>}</h4>
+                  <h4>{version.name}</h4>
                   <p className="version-description">{version.description}</p>
                   <p className="version-date">
-                    Created: {new Date(version.createdAt).toLocaleString()}
+                    Created: {new Date(version.date_created).toLocaleString()}
                   </p>
-                  {version.jobLinked && (
-                    <p className="version-job">📌 Linked to: {version.jobLinked}</p>
+                  {version.job_linked && (
+                    <p className="version-job">📌 Linked to: {version.job_linked}</p>
                   )}
                 </div>
                 <div className="version-actions">
-                  {!version.isCurrent && (
-                    <button
-                      onClick={() => handleRestore(version.id)}
-                      className="btn btn-sm btn-success"
-                      title="Restore this version"
-                    >
-                      Restore
-                    </button>
-                  )}
                   <button
-                    onClick={() => handleCreateFromVersion(version.id)}
+                    onClick={() => handleRestore(version._id)}
+                    className="btn btn-sm btn-success"
+                    title="Restore this version"
+                  >
+                    Restore
+                  </button>
+                  <button
+                    onClick={() => handleCreateFromVersion(version._id)}
                     className="btn btn-sm btn-info"
                     title="Create a copy of this version"
                   >
                     Copy
                   </button>
-                  {!version.isCurrent && (
-                    <button
-                      onClick={() => handleDelete(version.id)}
-                      className="btn btn-sm btn-danger"
-                      title="Delete this version"
-                    >
-                      Delete
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDelete(version._id)}
+                    className="btn btn-sm btn-danger"
+                    title="Delete this version"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
@@ -177,8 +182,8 @@ export default function VersionManagementPage() {
               </button>
               {showComparison && (
                 <VersionComparison
-                  version1={versions.find((v) => v.id === selectedVersions[0])}
-                  version2={versions.find((v) => v.id === selectedVersions[1])}
+                  version1={versions.find((v) => v._id === selectedVersions[0])}
+                  version2={versions.find((v) => v._id === selectedVersions[1])}
                 />
               )}
             </>

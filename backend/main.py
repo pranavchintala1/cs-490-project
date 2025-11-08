@@ -9,6 +9,7 @@ from routes.employment import employment_router
 from routes.certifications import certifications_router
 from routes.education import education_router
 from routes.jobs import jobs_router
+from routes.resumes import resumes_router
 
 app = FastAPI()
 
@@ -35,5 +36,4 @@ app.include_router(education_router, prefix = api_prefix)
 app.include_router(employment_router, prefix = api_prefix)
 app.include_router(certifications_router, prefix = api_prefix)
 app.include_router(jobs_router, prefix = api_prefix)
-
-# TODO: jobs, resumes?
+app.include_router(resumes_router, prefix = api_prefix)

@@ -112,3 +112,178 @@ export const deleteEmployment = async (id) => {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
+
+
+// ==================== RESUME API ====================
+
+export const listResumes = async () => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("GET", "/api/resumes/me", {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const getResume = async (resumeId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("GET", `/api/resumes/${resumeId}`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const createResume = async (payload) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("POST", "/api/resumes", {
+    params: { uuid },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: payload,
+  });
+};
+
+export const updateResume = async (resumeId, payload) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("PUT", `/api/resumes/${resumeId}`, {
+    params: { uuid },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: payload,
+  });
+};
+
+export const deleteResume = async (resumeId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("DELETE", `/api/resumes/${resumeId}`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const setDefaultResume = async (resumeId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("POST", `/api/resumes/${resumeId}/set-default`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+// Resume Versions
+export const listResumeVersions = async (resumeId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("GET", `/api/resumes/${resumeId}/versions`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const getResumeVersion = async (resumeId, versionId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("GET", `/api/resumes/${resumeId}/versions/${versionId}`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const createResumeVersion = async (resumeId, payload) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("POST", `/api/resumes/${resumeId}/versions`, {
+    params: { uuid },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: payload,
+  });
+};
+
+export const deleteResumeVersion = async (resumeId, versionId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("DELETE", `/api/resumes/${resumeId}/versions/${versionId}`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const restoreResumeVersion = async (resumeId, versionId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("POST", `/api/resumes/${resumeId}/versions/${versionId}/restore`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+// Resume Feedback
+export const addResumeFeedback = async (resumeId, payload) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("POST", `/api/resumes/${resumeId}/feedback`, {
+    params: { uuid },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: payload,
+  });
+};
+
+export const getResumeFeedback = async (resumeId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("GET", `/api/resumes/${resumeId}/feedback`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const updateResumeFeedback = async (resumeId, feedbackId, payload) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("PUT", `/api/resumes/${resumeId}/feedback/${feedbackId}`, {
+    params: { uuid },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: payload,
+  });
+};
+
+export const deleteResumeFeedback = async (resumeId, feedbackId) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("DELETE", `/api/resumes/${resumeId}/feedback/${feedbackId}`, {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};

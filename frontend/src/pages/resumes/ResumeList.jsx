@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { listResumes, deleteResume, setDefaultResume, updateResume } from '../../tools/api';
 import '../../styles/resumes.css';
 
 /**
@@ -10,89 +11,88 @@ import '../../styles/resumes.css';
 export default function ResumeList() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
-  // TODO: Replace with actual API call when backend is ready
+  // Fetch resumes from backend
   useEffect(() => {
-    // Mock data - replace with API call
-    const mockResumes = [
-      {
-        id: 1,
-        name: 'Software Engineer Resume',
-        template: 'chronological',
-        createdAt: '2024-11-01',
-        updatedAt: '2024-11-05',
-        versions: 3,
-        isDefault: true,
-      },
-      {
-        id: 2,
-        name: 'Product Manager Resume',
-        template: 'functional',
-        createdAt: '2024-10-15',
-        updatedAt: '2024-10-20',
-        versions: 2,
-        isDefault: false,
-      },
-      {
-        id: 3,
-        name: 'Data Scientist Resume',
-        template: 'hybrid',
-        createdAt: '2024-09-10',
-        updatedAt: '2024-11-03',
-        versions: 1,
-        isDefault: false,
-      },
-    ];
-    setResumes(mockResumes);
-    setLoading(false);
+    const fetchResumes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await listResumes();
+        setResumes(data);
+      } catch (err) {
+        setError(err.message || 'Failed to load resumes');
+        console.error('Error loading resumes:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchResumes();
   }, []);
 
   const filteredResumes = resumes.filter((resume) =>
     resume.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this resume?')) {
-      // Start deletion animation
-      setDeletingId(id);
-      // Wait for animation to complete (300ms) before removing from state
-      setTimeout(() => {
-        setResumes(resumes.filter((resume) => resume.id !== id));
+      try {
+        // Start deletion animation
+        setDeletingId(id);
+        // Wait for animation to complete (300ms) before API call
+        setTimeout(async () => {
+          await deleteResume(id);
+          setResumes(resumes.filter((resume) => resume._id !== id));
+          setDeletingId(null);
+        }, 300);
+      } catch (err) {
         setDeletingId(null);
-      }, 300);
+        alert('Failed to delete resume: ' + err.message);
+      }
     }
   };
 
-  const handleSetDefault = (id) => {
-    setResumes(
-      resumes.map((resume) => ({
-        ...resume,
-        isDefault: resume.id === id,
-      }))
-    );
+  const handleSetDefault = async (id) => {
+    try {
+      await setDefaultResume(id);
+      setResumes(
+        resumes.map((resume) => ({
+          ...resume,
+          is_default: resume._id === id,
+        }))
+      );
+    } catch (err) {
+      alert('Failed to set default resume: ' + err.message);
+    }
   };
 
   const handleRenameStart = (resume) => {
-    setEditingId(resume.id);
+    setEditingId(resume._id);
     setEditingName(resume.name);
   };
 
-  const handleRenameSave = () => {
+  const handleRenameSave = async () => {
     if (!editingName.trim()) {
       alert('Resume name cannot be empty');
       return;
     }
-    setResumes(
-      resumes.map((resume) =>
-        resume.id === editingId ? { ...resume, name: editingName.trim() } : resume
-      )
-    );
-    setEditingId(null);
-    setEditingName('');
+    try {
+      await updateResume(editingId, { name: editingName.trim() });
+      setResumes(
+        resumes.map((resume) =>
+          resume._id === editingId ? { ...resume, name: editingName.trim() } : resume
+        )
+      );
+      setEditingId(null);
+      setEditingName('');
+    } catch (err) {
+      alert('Failed to rename resume: ' + err.message);
+    }
   };
 
   const handleRenameCancel = () => {
@@ -106,6 +106,8 @@ export default function ResumeList() {
 
   return (
     <div className="container mt-5">
+      {error && <div className="alert alert-danger mb-4">{error}</div>}
+
       <div className="resume-list-header">
         <h1>My Resumes</h1>
         <Link to="/resumes/create" className="btn btn-primary">
@@ -131,11 +133,11 @@ export default function ResumeList() {
         <div className="resume-cards-grid">
           {filteredResumes.map((resume) => (
             <div
-              key={resume.id}
-              className={`resume-card ${deletingId === resume.id ? 'deleting' : ''}`}
+              key={resume._id}
+              className={`resume-card ${deletingId === resume._id ? 'deleting' : ''}`}
             >
               <div className="resume-card-header">
-                {editingId === resume.id ? (
+                {editingId === resume._id ? (
                   <div className="resume-name-edit">
                     <input
                       type="text"
@@ -163,30 +165,29 @@ export default function ResumeList() {
                 ) : (
                   <>
                     <h3>{resume.name}</h3>
-                    {resume.isDefault && <span className="badge bg-success">Default</span>}
+                    {resume.is_default && <span className="badge bg-success">Default</span>}
                   </>
                 )}
               </div>
               <div className="resume-card-body">
                 <p><strong>Template:</strong> {resume.template}</p>
-                <p><strong>Versions:</strong> {resume.versions}</p>
-                <p><strong>Updated:</strong> {new Date(resume.updatedAt).toLocaleDateString()}</p>
+                <p><strong>Updated:</strong> {new Date(resume.date_updated).toLocaleDateString()}</p>
               </div>
               <div className="resume-card-actions">
-                <Link to={`/resumes/edit/${resume.id}`} className="btn btn-sm btn-secondary">
+                <Link to={`/resumes/edit/${resume._id}`} className="btn btn-sm btn-secondary">
                   Edit
                 </Link>
-                <Link to={`/resumes/preview/${resume.id}`} className="btn btn-sm btn-info">
+                <Link to={`/resumes/preview/${resume._id}`} className="btn btn-sm btn-info">
                   Preview
                 </Link>
-                <Link to={`/resumes/versions/${resume.id}`} className="btn btn-sm btn-warning">
-                  Versions ({resume.versions})
+                <Link to={`/resumes/versions/${resume._id}`} className="btn btn-sm btn-warning">
+                  Versions
                 </Link>
                 <button
-                  onClick={() => handleSetDefault(resume.id)}
-                  className={`btn btn-sm ${resume.isDefault ? 'btn-success' : 'btn-outline-success'}`}
+                  onClick={() => handleSetDefault(resume._id)}
+                  className={`btn btn-sm ${resume.is_default ? 'btn-success' : 'btn-outline-success'}`}
                 >
-                  {resume.isDefault ? 'Default' : 'Set Default'}
+                  {resume.is_default ? 'Default' : 'Set Default'}
                 </button>
                 <button
                   onClick={() => handleRenameStart(resume)}
@@ -197,7 +198,7 @@ export default function ResumeList() {
                   Rename
                 </button>
                 <button
-                  onClick={() => handleDelete(resume.id)}
+                  onClick={() => handleDelete(resume._id)}
                   className="btn btn-sm btn-danger"
                 >
                   Delete
