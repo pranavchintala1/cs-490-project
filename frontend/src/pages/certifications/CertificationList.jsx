@@ -11,7 +11,12 @@ export default function CertificationList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  // 👇 Check for navigation state (if user came from a special link)
+
+  // Get these once at component level
+  const uuid = localStorage.getItem('uuid') || '';
+  const token = localStorage.getItem('session') || '';
+  const baseURL = 'http://localhost:8000';
+
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -25,16 +30,16 @@ export default function CertificationList() {
   const loadCertifications = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/certifications/me?uuid=", "");
+      // Pass uuid as the 'id' parameter so api.js appends it correctly
+      const data = await apiRequest(`/api/certifications/me?uuid=`, uuid);
 
-      // Transform backend data to frontend format
       const transformedCerts = await Promise.all((data || []).map(async cert => {
-        // Check if certification has associated media
         let hasDocument = false;
         let mediaId = null;
 
         try {
-          const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${cert._id}&uuid=`, "");
+          // Pass uuid as 'id' parameter
+          const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${cert._id}&uuid=`, uuid);
           const mediaIds = mediaIdsResponse.media_id_list || [];
           
           if (mediaIds.length > 0) {
@@ -97,7 +102,6 @@ export default function CertificationList() {
       const certData = Object.fromEntries(formData.entries());
       const documentFile = formData.get('document');
 
-      // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
         issuer: certData.issuer,
@@ -109,30 +113,22 @@ export default function CertificationList() {
         document_name: documentFile && documentFile.size > 0 ? documentFile.name : null
       };
 
-      // Create certification first
-      const response = await apiRequest("/api/certifications?uuid=", "", {
+      // For POST requests, api.js doesn't append uuid, so include it in endpoint
+      const response = await apiRequest(`/api/certifications?uuid=${uuid}`, "", {
         method: "POST",
         body: JSON.stringify(backendData)
       });
 
-      // If there's a document file, upload it
       if (documentFile && documentFile.size > 0) {
         const certificationId = response.certification_id;
         const uploadFormData = new FormData();
         uploadFormData.append('media', documentFile);
 
-        // Get auth details
-        const uuid = localStorage.getItem('uuid') || '';
-        const token = localStorage.getItem('session') || '';
-        const baseURL = 'http://localhost:8000';
-        
-        // Use fetch directly - do NOT use apiRequest as it sets wrong Content-Type
         const uploadResponse = await fetch(
           `${baseURL}/api/certifications/media?parent_id=${certificationId}&uuid=${uuid}`,
           {
             method: "POST",
             headers: {
-              // Only set Authorization, NOT Content-Type (browser sets it automatically)
               ...(token ? { "Authorization": `Bearer ${token}` } : {})
             },
             body: uploadFormData
@@ -149,7 +145,6 @@ export default function CertificationList() {
         console.log("File uploaded successfully!");
       }
 
-      // Reload certifications from server to get the actual data
       await loadCertifications();
       setShowForm(false);
     } catch (error) {
@@ -163,7 +158,6 @@ export default function CertificationList() {
       const certData = Object.fromEntries(formData.entries());
       const documentFile = formData.get('document');
 
-      // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
         issuer: certData.issuer,
@@ -174,33 +168,25 @@ export default function CertificationList() {
         verified: certData.verified === 'true'
       };
 
-      // If there's a new document, update the document_name
       if (documentFile && documentFile.size > 0) {
         backendData.document_name = documentFile.name;
       }
 
-      // Update certification
-      await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
+      // For PUT requests, pass uuid as 'id' parameter to let api.js append it
+      await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify(backendData)
       });
 
-      // If there's a new document file, handle upload/update
       if (documentFile && documentFile.size > 0) {
-        // Check if certification already has media
-        const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${editCert.id}&uuid=`, "");
+        // Pass uuid as 'id' parameter
+        const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${editCert.id}&uuid=`, uuid);
         const existingMediaIds = mediaIdsResponse.media_id_list || [];
 
         const uploadFormData = new FormData();
         uploadFormData.append('media', documentFile);
 
-        // Get auth details
-        const uuid = localStorage.getItem('uuid') || '';
-        const token = localStorage.getItem('session') || '';
-        const baseURL = 'http://localhost:8000';
-
         if (existingMediaIds.length > 0) {
-          // Update existing media
           const mediaId = existingMediaIds[0];
           const updateResponse = await fetch(
             `${baseURL}/api/certifications/media?parent_id=${editCert.id}&media_id=${mediaId}&uuid=${uuid}`,
@@ -219,7 +205,6 @@ export default function CertificationList() {
             throw new Error("Failed to update document");
           }
         } else {
-          // Upload new media
           const uploadResponse = await fetch(
             `${baseURL}/api/certifications/media?parent_id=${editCert.id}&uuid=${uuid}`,
             {
@@ -239,7 +224,6 @@ export default function CertificationList() {
         }
       }
 
-      // Reload certifications from server to get the actual updated data
       await loadCertifications();
       setEditCert(null);
       setShowForm(false);
@@ -253,7 +237,8 @@ export default function CertificationList() {
     if (!window.confirm("Delete this certification?")) return;
 
     try {
-      await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, "", {
+      // For DELETE requests, pass uuid as 'id' parameter to let api.js append it
+      await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, uuid, {
         method: "DELETE"
       });
 

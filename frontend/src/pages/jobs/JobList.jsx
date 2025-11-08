@@ -25,6 +25,8 @@ export default function JobList() {
   const [reminderJob, setReminderJob] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
 
+  const uuid = localStorage.getItem('uuid') || '';
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -44,9 +46,8 @@ export default function JobList() {
   const loadJobs = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/jobs/me?uuid=", "");
+      const data = await apiRequest("/api/jobs/me?uuid=", uuid);
       
-      // Transform backend snake_case to frontend camelCase
       const transformedJobs = (data || []).map(job => ({
         id: job._id,
         title: job.title,
@@ -88,7 +89,7 @@ export default function JobList() {
 
   const addJob = async (jobData) => {
     try {
-      const response = await apiRequest("/api/jobs?uuid=", "", {
+      const response = await apiRequest("/api/jobs?uuid=", uuid, {
         method: "POST",
         body: JSON.stringify(jobData),
         headers: {
@@ -97,7 +98,6 @@ export default function JobList() {
       });
 
       if (response && response.job_id) {
-        // Optimistically add the job with the returned ID instead of reloading
         const newJob = {
           id: response.job_id,
           ...jobData,
@@ -122,7 +122,7 @@ export default function JobList() {
     try {
       const { id, createdAt, updatedAt, statusHistory, jobType, salaryNotes, interviewNotes, ...backendData } = jobData;
       
-      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify(backendData),
         headers: {
@@ -130,7 +130,6 @@ export default function JobList() {
         }
       });
 
-      // Optimistically update the job in state
       setJobs(prev => prev.map(job => {
         if (job.id === id) {
           return {
@@ -148,7 +147,6 @@ export default function JobList() {
     } catch (error) {
       console.error("Failed to update job:", error);
       alert("Failed to update job. Please try again.");
-      // Reload on error to ensure consistency
       loadJobs();
     }
   };
@@ -157,7 +155,7 @@ export default function JobList() {
     if (!window.confirm("Are you sure you want to delete this job?")) return;
     
     try {
-      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, uuid, {
         method: "DELETE"
       });
 
@@ -171,8 +169,7 @@ export default function JobList() {
 
   const archiveJob = async (id, reason = "") => {
     try {
-      const job = jobs.find(j => j.id === id);
-      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify({
           archived: true,
@@ -193,7 +190,7 @@ export default function JobList() {
 
   const restoreJob = async (id) => {
     try {
-      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify({
           archived: false,
@@ -255,9 +252,8 @@ export default function JobList() {
       
       setJobs(jobs.map((j) => (j.id === activeJob.id ? updatedJob : j)));
 
-      // Update in backend
       try {
-        await apiRequest(`/api/jobs?job_id=${activeJob.id}&uuid=`, "", {
+        await apiRequest(`/api/jobs?job_id=${activeJob.id}&uuid=`, uuid, {
           method: "PUT",
           body: JSON.stringify({
             status: newStatus,
@@ -275,7 +271,6 @@ export default function JobList() {
   };
 
   const filteredJobs = jobs.filter((job) => {
-    // Filter archived/active jobs based on view
     if (showArchived && !job.archived) return false;
     if (!showArchived && job.archived) return false;
 

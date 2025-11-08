@@ -15,8 +15,11 @@ export default function ProjectsList() {
   const [loading, setLoading] = useState(true);
   const [expandedCardId, setExpandedCardId] = useState(null);
 
+  const uuid = localStorage.getItem('uuid') || '';
+  const token = localStorage.getItem('session') || '';
+  const baseURL = 'http://localhost:8000';
+
   const location = useLocation();
-  // 👇 Check for navigation state (if user came from a special link)
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -30,27 +33,19 @@ export default function ProjectsList() {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/projects/me?uuid=", "");
+      const data = await apiRequest("/api/projects/me?uuid=", uuid);
       
       const transformedProjects = await Promise.all((data || []).map(async project => {
-        // Fetch associated media for each project
         let mediaFiles = [];
         
         try {
-          const mediaIdsResponse = await apiRequest(`/api/projects/media/ids?parent_id=${project._id}&uuid=`, "");
+          const mediaIdsResponse = await apiRequest(`/api/projects/media/ids?parent_id=${project._id}&uuid=`, uuid);
           const mediaIds = mediaIdsResponse.media_id_list || [];
           
-          // Fetch each media file's metadata
           if (mediaIds.length > 0) {
-            const uuid = localStorage.getItem('uuid') || '';
-            const token = localStorage.getItem('session') || '';
-            const baseURL = 'http://localhost:8000';
-            
-            // First, get all media metadata from the database
             const mediaMetadata = await Promise.all(
               mediaIds.map(async (mediaId) => {
                 try {
-                  // Fetch media metadata directly from the API
                   const metaResponse = await fetch(
                     `${baseURL}/api/projects/media?media_id=${mediaId}&uuid=${uuid}`,
                     {
@@ -65,7 +60,6 @@ export default function ProjectsList() {
                     const blob = await metaResponse.blob();
                     const url = URL.createObjectURL(blob);
                     
-                    // Try to extract filename from Content-Disposition
                     let filename = `file_${mediaId}`;
                     const contentDisposition = metaResponse.headers.get('Content-Disposition');
                     
@@ -76,15 +70,12 @@ export default function ProjectsList() {
                       }
                     }
                     
-                    // If still no filename, try to guess from content type
                     if (filename === `file_${mediaId}` && contentType) {
                       const ext = contentType.split('/')[1];
                       if (ext) {
                         filename = `image_${mediaId}.${ext}`;
                       }
                     }
-                    
-                    console.log('Loaded media:', filename, 'Type:', contentType, 'Blob type:', blob.type);
                     
                     return {
                       media_id: mediaId,
@@ -125,12 +116,6 @@ export default function ProjectsList() {
         };
       }));
       
-      console.log('Transformed projects:', transformedProjects.map(p => ({
-        name: p.project_name,
-        thumbnail_id: p.thumbnail_id,
-        media_files: p.media_files?.map(f => f.filename)
-      })));
-      
       setProjects(transformedProjects);
     } catch (error) {
       console.error("Failed to load projects:", error);
@@ -152,7 +137,7 @@ export default function ProjectsList() {
 
   const addProject = async (projectData, mediaFiles) => {
     try {
-      const response = await apiRequest("/api/projects?uuid=", "", {
+      const response = await apiRequest("/api/projects?uuid=", uuid, {
         method: "POST",
         body: JSON.stringify(projectData),
         headers: {
@@ -163,12 +148,7 @@ export default function ProjectsList() {
       if (response && response.project_id) {
         const projectId = response.project_id;
         
-        // Upload media files if any
         if (mediaFiles && mediaFiles.length > 0) {
-          const uuid = localStorage.getItem('uuid') || '';
-          const token = localStorage.getItem('session') || '';
-          const baseURL = 'http://localhost:8000';
-          
           for (const file of mediaFiles) {
             const uploadFormData = new FormData();
             uploadFormData.append('media', file);
@@ -205,7 +185,7 @@ export default function ProjectsList() {
 
   const submitEdit = async (projectData, mediaFiles) => {
     try {
-      await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
+      await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, uuid, {
         method: "PUT",
         body: JSON.stringify(projectData),
         headers: {
@@ -213,12 +193,7 @@ export default function ProjectsList() {
         }
       });
 
-      // Upload new media files if any
       if (mediaFiles && mediaFiles.length > 0) {
-        const uuid = localStorage.getItem('uuid') || '';
-        const token = localStorage.getItem('session') || '';
-        const baseURL = 'http://localhost:8000';
-        
         for (const file of mediaFiles) {
           const uploadFormData = new FormData();
           uploadFormData.append('media', file);
@@ -257,7 +232,7 @@ export default function ProjectsList() {
     if (!window.confirm("Delete this project?")) return;
     
     try {
-      await apiRequest(`/api/projects?project_id=${id}&uuid=`, "", {
+      await apiRequest(`/api/projects?project_id=${id}&uuid=`, uuid, {
         method: "DELETE"
       });
 
