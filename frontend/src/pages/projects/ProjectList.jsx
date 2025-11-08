@@ -15,8 +15,11 @@ export default function ProjectsList() {
   const [loading, setLoading] = useState(true);
   const [expandedCardId, setExpandedCardId] = useState(null);
 
+  const uuid = localStorage.getItem('uuid') || '';
+  const token = localStorage.getItem('session') || '';
+  const baseURL = 'http://localhost:8000';
+
   const location = useLocation();
-  // 👇 Check for navigation state (if user came from a special link)
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -40,10 +43,8 @@ export default function ProjectsList() {
           const idsRes = await ProjectsAPI.getMediaIds(project._id);
           const mediaIds = idsRes.data.media_id_list || [];
 
-          // Fetch each media file's metadata
+          
           if (mediaIds.length > 0) {
-
-            // First, get all media metadata from the database
             const mediaMetadata = await Promise.all(
               mediaIds.map(async (mediaId) => {
                 try {
@@ -54,8 +55,7 @@ export default function ProjectsList() {
                     const contentType = metaRes.headers["Content-Type"];
                     const blob = metaRes.data;
                     const url = URL.createObjectURL(blob);
-
-                    // Try to extract filename from Content-Disposition
+                    
                     let filename = `file_${mediaId}`;
                     const contentDisposition = metaRes.headers["Content-Disposition"];
 
@@ -65,8 +65,7 @@ export default function ProjectsList() {
                         filename = match[1].replace(/['"]/g, '').trim();
                       }
                     }
-
-                    // If still no filename, try to guess from content type
+                    
                     if (filename === `file_${mediaId}` && contentType) {
                       const ext = contentType.split('/')[1];
                       if (ext) {
@@ -74,8 +73,6 @@ export default function ProjectsList() {
                       }
                     }
                     
-                    console.log('Loaded media:', filename, 'Type:', contentType, 'Blob type:', blob.type);
-
                     return {
                       media_id: mediaId,
                       filename: filename,
@@ -114,13 +111,7 @@ export default function ProjectsList() {
           media_files: mediaFiles
         };
       }));
-
-      console.log('Transformed projects:', transformedProjects.map(p => ({
-        name: p.project_name,
-        thumbnail_id: p.thumbnail_id,
-        media_files: p.media_files?.map(f => f.filename)
-      })));
-
+      
       setProjects(transformedProjects);
     } catch (error) {
       console.error("Failed to load projects:", error);
@@ -176,9 +167,7 @@ export default function ProjectsList() {
     try {
       await ProjectsAPI.update(editProject.id, projectData);
 
-      // Upload new media files if any
       if (mediaFiles && mediaFiles.length > 0) {
-
         for (const file of mediaFiles) {
           try {
             const uploadRes = ProjectsAPI.uploadMedia(editProject.id, file);
