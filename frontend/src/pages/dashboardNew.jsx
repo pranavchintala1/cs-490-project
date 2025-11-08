@@ -430,26 +430,61 @@ const Dashboard = () => {
     );
   }
 
-  const getCompletenessStatus = (cardData) => {
+
+
+
+  const getCompletenessStatus = (inputCat) => {        //INDICATORS
+    const cardData=inputCat.data
+    const schema=inputCat.title
     if (!cardData || cardData.length === 0) {
       return 'incomplete';
     }
-    
+
+
+    const threshData = {
+    'Profile': 7,
+    'Employment History': 3,
+    'Skills': 2,
+    'Education': 4,
+    'Projects': 5,
+    'Certifications': 4};
+
+    const threshCount = {
+    'Profile': 1,
+    'Employment History': 2,
+    'Skills': 4,
+    'Education': 1,
+    'Projects': 2,
+    'Certifications': 1};
+
+
     const totalItems = cardData.length;
     const itemsWithContent = cardData.filter(([_, values]) => 
-      values && values.length > 0 && values.some(v => v && v.trim() !== '')
+      values && values.length > threshData[schema] && values.some(v => v && v.trim() !== '')
     ).length;
     
+    
+
+
+
+
+
+
+
     const completenessRatio = itemsWithContent / totalItems;
     
-    if (completenessRatio >= 0.8) {
+    if (completenessRatio >= 0.8 && totalItems >= threshCount[schema]) {
       return 'complete';
-    } else if (completenessRatio >= 0.4) {
+    } else if (completenessRatio >= 0.4 && totalItems > 0 ) {
       return 'partial';
     } else {
       return 'incomplete';
     }
   };
+
+
+
+
 
   const categories = [
     { title: 'Profile', data: data.profile },
@@ -475,17 +510,18 @@ const Dashboard = () => {
         <h1 className="text-center text-white fw-bold mb-5 display-4">
           Dashboard
         </h1>
-
+        <ProgressTracker data={data} />
         <Row>
           {/* Left side: 3x2 grid */}
           <Col lg={9}>
             <Row className="g-3">
               {categories.map((category, index) => {
-                const status = getCompletenessStatus(category.data);
+                const status = getCompletenessStatus(category);
                 const statusVariant = statusColors[status];
                 const link = `/${category.title.toLowerCase().replace(/\s+/g, '-')}`;
                 
                 return (
+                  
                   <Col md={6} key={index}>
                     <Card className="dashboard-card">
                       <Card.Body className="d-flex flex-column h-100">
