@@ -63,7 +63,7 @@ async def upload_pfp(image: UploadFile = File(...), uuid: str = Depends(authoriz
     return {"detail": "Sucess", "image_id": media_id}
 
 @profiles_router.get("/me/avatar", tags = ["profiles"])
-async def download_pfp(uuid: str = Depends(authorize)):
+async def retrieve_pfp(uuid: str = Depends(authorize)):
     try:
         media_ids = await media_dao.get_all_associated_media_ids(uuid)
     except Exception as e:
@@ -98,7 +98,7 @@ async def update_pfp(media_id: str, media: UploadFile = File(...), uuid: str = D
     return {"detail": "Sucessfully updated profile picture"}
     
 @profiles_router.delete("/me/avatar", tags = ["projects"])
-async def delete_media(media_id: str, uuid: str = Depends(authorize)):
+async def delete_pfp(media_id: str, uuid: str = Depends(authorize)):
     try:
         deleted = await media_dao.delete_media(media_id)
     except Exception as e:

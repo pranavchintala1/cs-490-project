@@ -2,8 +2,7 @@ import React from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Nav as BootstrapNav, Container, Button, NavDropdown } from "react-bootstrap";
 import { useFlash } from "../context/flashContext";
-import { sendData } from "../tools/db_commands";
-import { apiRequest } from "../api";
+import AuthAPI from "../api/authentication";
 
 
 const Nav = () => {
@@ -17,15 +16,7 @@ const logout = async () => {
   
 
   try {
-    apiRequest(`/api/auth/logout?uuid=${uuid}`, "", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      }
-
-    );
+    await AuthAPI.logout();
 
     showFlash("Successfully Logged out", "success");
 
