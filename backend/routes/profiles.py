@@ -1,12 +1,22 @@
-from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, Body
 from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
 from io import BytesIO
+import bcrypt
 
 from mongo.profiles_dao import profiles_dao
 from mongo.media_dao import media_dao
+from mongo.auth_dao import auth_dao
+from mongo.certifications_dao import certifications_dao
+from mongo.cover_letters_dao import cover_letters_dao
+from mongo.education_dao import education_dao
+from mongo.employment_dao import employment_dao
+from mongo.jobs_dao import jobs_dao
+from mongo.projects_dao import projects_dao
+from mongo.skills_dao import skills_dao
+from sessions.session_manager import session_manager
 from sessions.session_authorizer import authorize
-from schema import Profile
+from schema import Profile, DeletePassword
 
 profiles_router = APIRouter(prefix = "/users")
 
@@ -39,16 +49,64 @@ async def update_profile(profile: Profile, uuid: str = Depends(authorize)):
         return {"detail": "Successfully updated profile"}
 
 @profiles_router.delete("/me", tags = ["profiles"])
-async def delete_profile(uuid: str = Depends(authorize)):
+async def delete_profile(passSchema: DeletePassword, uuid: str = Depends(authorize)):
     try:
-        deleted = await profiles_dao.delete_profile(uuid)
+        pass_hash = await auth_dao.get_password_by_uuid(uuid)
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
+    
+    if not bcrypt.checkpw(passSchema.password.encode("utf-8"), pass_hash.encode("utf-8")):
+        raise HTTPException(401, "Invalid credentials")
+    
+    # continue to delete all data if password succeeds
 
-    if deleted == 0:
-        raise HTTPException(400, "User profile not found")  
-    else:
-        return {"detail": "Successfully deleted profile"}
+    try:
+        cert_list = await certifications_dao.get_all_certifications(uuid)
+        for cert in cert_list:
+            media_ids = await media_dao.get_all_associated_media_ids(cert.get("_id"))
+            for id in media_ids:
+                await media_dao.delete_media(id)
+            await certifications_dao.delete_certification(cert.get("_id"))
+        
+        cov_list = await cover_letters_dao.get_all_cover_letters(uuid)
+        for cov in cov_list:
+            await cover_letters_dao.delete_cover_letter(cov.get("_id"))
+        
+        education_list = await education_dao.get_all_education(uuid)
+        for education in education_list:
+            await education_dao.delete_education(education.get("_id"))
+
+        employment_list = await employment_dao.get_all_employment(uuid)
+        for employment in employment_list:
+            await employment_dao.delete_employment(employment.get("_id"))
+
+        jobs_list = await jobs_dao.get_all_jobs(uuid)
+        for job in jobs_list:
+            await jobs_dao.delete_job(job.get("_id"))
+
+        projects_list = await projects_dao.get_all_projects(uuid)
+        for project in projects_list:
+            media_ids = await media_dao.get_all_associated_media_ids(project.get("_id"))
+            for id in media_ids:
+                await media_dao.delete_media(id)
+            await projects_dao.delete_project(project.get("_id"))
+        
+        skills_list = await skills_dao.get_all_skills(uuid)
+        for skill in skills_list:
+            await skills_dao.delete_skill(skill.get("_id"))
+
+        media_ids = await media_dao.get_all_associated_media_ids(uuid)
+        for id in media_ids:
+            await media_dao.delete_media(id)
+        await profiles_dao.delete_profile(uuid)
+
+        session_manager.kill_session(uuid)
+
+        await auth_dao.delete_user(uuid)
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal service error")
+    
+    return {"detail": "Sucessfully deleted all user data"}
     
 @profiles_router.post("/me/avatar", tags = ["profiles"])
 async def upload_pfp(image: UploadFile = File(...), uuid: str = Depends(authorize)):

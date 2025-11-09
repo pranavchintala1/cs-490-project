@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from pymongo.errors import DuplicateKeyError
 from io import BytesIO
 
-from backend.mongo.projects_dao import projects_dao
+from mongo.projects_dao import projects_dao
 from mongo.media_dao import media_dao
 from sessions.session_authorizer import authorize
 from schema import Project
