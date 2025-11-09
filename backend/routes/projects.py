@@ -6,7 +6,7 @@ from io import BytesIO
 from mongo.projects_dao import projects_dao
 from mongo.media_dao import media_dao
 from sessions.session_authorizer import authorize
-from schema import Project
+from schema.Project import Project
 
 projects_router = APIRouter(prefix = "/projects")
 
