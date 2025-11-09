@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { listResumes, deleteResume, setDefaultResume, updateResume } from '../../tools/api';
+import { listResumes, deleteResume, /*setDefaultResume,*/ updateResume } from '../../tools/api';
 import '../../styles/resumes.css';
 
 /**

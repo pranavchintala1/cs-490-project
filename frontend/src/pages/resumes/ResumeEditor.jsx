@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getResume, updateResume, createResumeVersion } from '../../tools/api';
+import { getResume, updateResume, /*createResumeVersion*/ } from '../../tools/api';
 import ResumePreview from '../../components/resumes/ResumePreview';
 import SectionCustomizer from '../../components/resumes/SectionCustomizer';
 import TemplateCustomizer from '../../components/resumes/TemplateCustomizer';

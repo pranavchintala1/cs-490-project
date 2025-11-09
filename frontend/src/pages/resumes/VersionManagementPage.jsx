@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { listResumeVersions, deleteResumeVersion, restoreResumeVersion, createResumeVersion } from '../../tools/api';
+// import { listResumeVersions, deleteResumeVersion, restoreResumeVersion, createResumeVersion } from '../../tools/api';
+// TODO: UNCOMMENT WHEN BACKEND ENDPOINTS ARE IMPLEMENTED
 import VersionComparison from '../../components/resumes/VersionComparison';
 import '../../styles/resumes.css';
 
