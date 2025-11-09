@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes.auth import auth_router
@@ -9,7 +9,7 @@ from routes.employment import employment_router
 from routes.certifications import certifications_router
 from routes.education import education_router
 from routes.jobs import jobs_router
-from routes.coverLetter import coverletter_router
+from routes.cover_letters import cover_letters_router
 
 app = FastAPI()
 
@@ -28,7 +28,15 @@ app.add_middleware(
     allow_headers=["*"],         
 )
 
-app.include_router(auth_router, prefix = api_prefix) # FIXME: overhaul auth endpoints
+# @app.middleware("http")
+# async def add_global_headers(request: Request, call_next):
+#     response: Response = await call_next(request)
+#     # Add headers to every response
+#     response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+#     response.headers["Cross-Origin-Embedder-Policy"] = "unsafe-none"
+#     return response
+
+app.include_router(auth_router, prefix = api_prefix) 
 app.include_router(profiles_router, prefix = api_prefix)
 app.include_router(skills_router, prefix = api_prefix)
 app.include_router(projects_router, prefix = api_prefix)
@@ -36,6 +44,9 @@ app.include_router(education_router, prefix = api_prefix)
 app.include_router(employment_router, prefix = api_prefix)
 app.include_router(certifications_router, prefix = api_prefix)
 app.include_router(jobs_router, prefix = api_prefix)
-app.include_router(coverletter_router)
+app.include_router(cover_letters_router, prefix = api_prefix)
 
-# TODO: jobs, resumes?
+# TODO: add user deletion services (deletes all data, requires password authentication)
+# Where to put it though?
+
+# TODO: resumes?

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getMe, updateMe, getAvatarUrl } from "../tools/api";
+import ProfilesAPI from "../api/profiles";
 import DeleteAccount from "../components/DeleteAccount";
 
 export default function Profile() {
@@ -28,7 +28,8 @@ export default function Profile() {
   useEffect(() => {
     (async () => {
       try {
-        const me = await getMe();
+        const meRes = await ProfilesAPI.get();
+        const me = meRes.data;
         setProfile(me);
         setForm({
           username: me.username ?? "",
@@ -43,7 +44,9 @@ export default function Profile() {
         });
 
         // Load avatar
-        const url = await getAvatarUrl();
+        const res = await ProfilesAPI.getAvatar();
+        const blob = res.data;
+        const url = URL.createObjectURL(blob);
         if (url) {
           setAvatarUrl(url);
         }
@@ -94,8 +97,7 @@ export default function Profile() {
 
     try {
 
-      const result = await updateMe(
-        {
+      const data = {
           username: form.username || null,
           email: form.email || null,
           full_name: form.full_name || null,
@@ -105,19 +107,24 @@ export default function Profile() {
           biography: form.biography || "",
           industry: form.industry || "",
           experience_level: form.experience_level || null,
-        },
-        selectedFile
-      );
+      };
+      await ProfilesAPI.update(data);
+      if (selectedFile) {
+        await ProfilesAPI.uploadAvatar(selectedFile);
+      }
 
       // Refetch the full profile to get the updated data
-      const updatedProfile = await getMe();
+      const getRes = await ProfilesAPI.get();
+      const updatedProfile = getRes.data;
       setProfile(updatedProfile);
 
       setMsg("Profile updated successfully!");
 
       // If user uploaded a new avatar, fetch it from backend
       if (selectedFile) {
-        const newAvatarUrl = await getAvatarUrl();
+        const res = await ProfilesAPI.getAvatar();
+        const blob = res.data;
+        const newAvatarUrl = URL.createObjectURL(blob);
         if (newAvatarUrl) {
           // Revoke old blob URL if it exists
           if (avatarUrl?.startsWith("blob:")) {
