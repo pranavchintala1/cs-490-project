@@ -119,7 +119,6 @@ export default function CertificationList() {
       if (documentFile && documentFile.size > 0) {
         const certificationId = res.data.certification_id;
 
-        // Use fetch directly - do NOT use apiRequest as it sets wrong Content-Type
         // no longer required to use fetch, axios fixes this (automatically too)
         const uploadRes = await CertificationsAPI.uploadMedia(certificationId, documentFile);
 

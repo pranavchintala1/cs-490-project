@@ -49,7 +49,7 @@ export default function ProjectsList() {
               mediaIds.map(async (mediaId) => {
                 try {
                   // Fetch media metadata directly from the API
-                  const metaRes = await ProjectsAPI.getMedia(mediaId, false);
+                  const metaRes = await ProjectsAPI.getMedia(mediaId);
 
                   if (metaRes.status == 200) {
                     const contentType = metaRes.headers["Content-Type"];
@@ -170,7 +170,7 @@ export default function ProjectsList() {
       if (mediaFiles && mediaFiles.length > 0) {
         for (const file of mediaFiles) {
           try {
-            const uploadRes = ProjectsAPI.uploadMedia(editProject.id, file);
+            const uploadRes = await ProjectsAPI.uploadMedia(editProject.id, file);
 
             if (uploadRes.status != 200) {
               console.error("Failed to upload file:", file.name);

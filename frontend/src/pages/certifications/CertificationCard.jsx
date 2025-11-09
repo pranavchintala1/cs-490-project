@@ -1,5 +1,5 @@
 import React from "react";
-import { apiRequest } from "../../api";
+import CertificationsAPI from "../../api/certifications";
 
 export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelete }) {
   // Helper function to parse date string as local date without timezone issues
@@ -48,22 +48,14 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
       const token = localStorage.getItem('session') || '';
       const baseURL = 'http://localhost:8000';
 
-      const response = await fetch(
-        `${baseURL}/api/certifications/media?parent_id=${cert.id}&media_id=${cert.media_id}&uuid=${uuid}`,
-        {
-          method: "GET",
-          headers: {
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          }
-        }
-      );
+      const res = await CertificationsAPI.getMedia(cert.media_id);
 
-      if (!response.ok) {
-        console.error("Download failed:", response.status);
+      if (res.status != 200) {
+        console.error("Download failed:", res.status);
         return alert("Failed to download file");
       }
 
-      const blob = await response.blob();
+      const blob = await res.data;
       const url = URL.createObjectURL(blob);
 
       const link = document.createElement("a");
@@ -87,18 +79,9 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
       const token = localStorage.getItem('session') || '';
       const baseURL = 'http://localhost:8000';
 
-      const response = await fetch(
-        `${baseURL}/api/certifications/media?parent_id=${cert.id}&media_id=${cert.media_id}&uuid=${uuid}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          }
-        }
-      );
+      const res = await CertificationsAPI.deleteMedia(cert.media_id);
 
-      if (!response.ok) {
+      if (res.status != 200) {
         throw new Error("Failed to delete document");
       }
 

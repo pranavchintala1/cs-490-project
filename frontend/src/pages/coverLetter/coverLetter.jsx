@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import CoverLetterForm from "./CoverLetterForm";
-import { apiRequest } from "../../api";
+import CoverLetterAPI from "../../api/coverLetters";
 import { renderTemplate } from "./renderTemplate"; 
 import { useFlash } from "../../context/flashContext"; 
 
@@ -41,11 +41,9 @@ export default function CoverLetterList() {
     const loadCoverLetters = async () => {
       try {
         setLoading(true);
-        const uuid = localStorage.getItem("uuid");
-        if (!uuid) throw new Error("Missing UUID in localStorage");
 
-        const data = await apiRequest(`/api/coverletters/me/${uuid}`);
-        const mapped = (data || []).map((item) => ({
+        const res = CoverLetterAPI.getAll();
+        const mapped = (res.data || []).map((item) => ({
           id: item._id,
           title: item.title,
           company: item.company,
@@ -100,10 +98,8 @@ export default function CoverLetterList() {
           position: data.position || "",
           content: data.content,
         };
-        await apiRequest("/api/coverletters/", data.id, {
-          method: "PUT",
-          body: JSON.stringify(putBody),
-        });
+
+        await CoverLetterAPI.update(data.id, putBody);
         setLetters((prev) => prev.map((l) => (l.id === data.id ? { ...l, ...putBody } : l)));
         showFlash("Cover letter updated successfully!", "success");
       } else {
@@ -117,14 +113,12 @@ export default function CoverLetterList() {
           },
           uuid,
         };
-        const response = await apiRequest("/api/coverletters", "", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
 
-        if (response?.coverletter_id) {
+        const res = await CoverLetterAPI.add(payload);
+
+        if (res?.data.cover_letter_id) {
           const newEntry = {
-            id: response.coverletter_id,
+            id: res.data.cover_letter_id,
             title: payload.coverletter.title,
             company: payload.coverletter.company,
             position: payload.coverletter.position,
@@ -151,7 +145,7 @@ export default function CoverLetterList() {
     if (!window.confirm("Are you sure you want to delete this cover letter?")) return;
 
     try {
-      await apiRequest("/api/coverletters/", id, { method: "DELETE" });
+      await CoverLetterAPI.delete(id);
       setLetters((prev) => prev.filter((l) => l.id !== id));
       showFlash("Cover letter deleted successfully.", "success");
     } catch (err) {
