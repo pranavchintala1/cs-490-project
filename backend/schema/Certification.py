@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class Certification(BaseModel):
+class Certification(BaseModel): 
     name: Optional[str] = None # NOTE: required for creation
     issuer: Optional[str] = None
     date_earned: Optional[str] = None # date?

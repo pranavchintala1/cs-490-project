@@ -12,7 +12,7 @@ class Job(BaseModel):
     industry: Optional[str] = None
     job_type: Optional[str] = None
     description: Optional[str] = None
-
+    
     # purely user generated data
     status: Optional[str] = None
     notes: Optional[str] = None
