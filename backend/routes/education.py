@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from mongo.education_dao import education_dao
 from sessions.session_authorizer import authorize
-from schema import Education
+from schema.Education import Education
 
 education_router = APIRouter(prefix = "/education")
 

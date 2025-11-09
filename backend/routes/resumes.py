@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from mongo.resumes_dao import resumes_dao
 from sessions.session_authorizer import authorize
-from schema import Resume
+from schema.Resume import Resume
 
 resumes_router = APIRouter(prefix = "/resumes")
 

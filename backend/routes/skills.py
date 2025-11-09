@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from mongo.skills_dao import skills_dao
 from sessions.session_authorizer import authorize
-from schema import Skill
+from schema.Skill import Skill
 
 skills_router = APIRouter(prefix = "/skills")
 

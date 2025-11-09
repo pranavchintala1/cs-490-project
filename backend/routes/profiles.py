@@ -16,7 +16,7 @@ from mongo.projects_dao import projects_dao
 from mongo.skills_dao import skills_dao
 from sessions.session_manager import session_manager
 from sessions.session_authorizer import authorize
-from schema import Profile, DeletePassword
+from schema.Profile import Profile, DeletePassword
 
 profiles_router = APIRouter(prefix = "/users")
 
