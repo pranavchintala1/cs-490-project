@@ -6,7 +6,7 @@ from io import BytesIO
 from mongo.certifications_dao import certifications_dao
 from mongo.media_dao import media_dao
 from sessions.session_authorizer import authorize
-from schema import Certification
+from schema.Certification import Certification
 
 certifications_router = APIRouter(prefix = "/certifications")
 

@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from mongo.cover_letters_dao import cover_letters_dao
 from sessions.session_authorizer import authorize
-from schema import CoverLetter
+from schema.CoverLetter import CoverLetter
 
 cover_letters_router = APIRouter(prefix = "/cover-letters")
 
