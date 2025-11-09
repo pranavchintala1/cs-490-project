@@ -4,27 +4,40 @@ import EducationAPI from "../../api/education";
 import { useLocation } from "react-router-dom";
 
 const degreeEmojis = {
-  "High School": "🏫",
-  "Associate": "📘",
-  "Bachelor's": "🎓",
-  "Master's": "📚",
-  "PhD": "🔬",
+  "High School Degree": "🏫",
+  "Associate Degree": "📘",
+  "Bachelor's Degree": "🎓",
+  "Master's Degree": "📚",
+  "PhD/Doctorate": "🔬",
 };
 
 const degreeColors = {
-  "High School": "#9e9e9e",
-  "Associate": "#2196f3",
-  "Bachelor's": "#4caf50",
-  "Master's": "#ff9800",
-  "PhD": "#af52de",
-  "Certificate": "#34c759",
-  "Bootcamp": "#ff3b30"
+  "High School Degree": "#9e9e9e",
+  "Associate Degree": "#2196f3",
+  "Bachelor's Degree": "#4caf50",
+  "Master's Degree": "#ff9800",
+  "PhD/Doctorate": "#af52de",
 };
 
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
+};
+
+const normalizeEntry = (entry) => {
+  return {
+    id: entry._id || entry.id,
+    degree: entry.degree,
+    institution: entry.institution || entry.institution_name,
+    institution_name: entry.institution || entry.institution_name,
+    field_of_study: entry.field_of_study,
+    graduation_date: entry.graduation_date,
+    gpa: entry.gpa,
+    gpa_private: entry.gpa_private || false,
+    achievements: entry.achievements,
+    currently_enrolled: !entry.graduation_date
+  };
 };
 
 export default function EducationList() {
@@ -51,18 +64,7 @@ export default function EducationList() {
       const response = await EducationAPI.getAll();
       const data = response.data;
       
-      const transformedEntries = (data || []).map(entry => ({
-        id: entry._id,
-        degree: entry.degree,
-        institution: entry.institution_name,
-        institution_name: entry.institution_name,
-        field_of_study: entry.field_of_study,
-        graduation_date: entry.graduation_date,
-        gpa: entry.gpa,
-        gpa_private: entry.gpa_private || false,
-        achievements: entry.achievements,
-        currently_enrolled: !entry.graduation_date
-      }));
+      const transformedEntries = (data || []).map(normalizeEntry);
       
       setEntries(transformedEntries);
     } catch (error) {
@@ -78,7 +80,11 @@ export default function EducationList() {
       const response = await EducationAPI.add(entry);
 
       if (response.data && response.data.education_id) {
-        const newEntry = { ...entry, id: response.data.education_id };
+        const newEntry = normalizeEntry({ 
+          ...entry, 
+          id: response.data.education_id,
+          _id: response.data.education_id
+        });
         setEntries([newEntry, ...entries]);
       }
       setShowForm(false);
@@ -91,7 +97,8 @@ export default function EducationList() {
     try {
       await EducationAPI.update(updatedEntry.id, updatedEntry);
 
-      setEntries(entries.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
+      const normalizedEntry = normalizeEntry(updatedEntry);
+      setEntries(entries.map((e) => (e.id === normalizedEntry.id ? normalizedEntry : e)));
       setEditEntry(null);
       setShowForm(false);
     } catch (error) {
