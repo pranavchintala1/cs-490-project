@@ -25,8 +25,6 @@ export default function JobList() {
   const [reminderJob, setReminderJob] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
 
-  const uuid = localStorage.getItem('uuid') || '';
-
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -93,7 +91,7 @@ export default function JobList() {
       const res = await JobsAPI.add(jobData);
 
       if (res && res.data.job_id) {
-        // Optimistically add the job with the returned ID instead of reloading
+        // Optimistically add the job with the returned ID
         const newJob = {
           id: res.data.job_id,
           ...jobData,
@@ -110,7 +108,7 @@ export default function JobList() {
       }
     } catch (error) {
       console.error("Failed to add job:", error);
-      alert("Failed to add job. Please try again.");
+      alert(error.response?.data?.detail || "Failed to add job. Please try again.");
     }
   };
 
@@ -136,7 +134,7 @@ export default function JobList() {
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to update job:", error);
-      alert("Failed to update job. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update job. Please try again.");
       loadJobs();
     }
   };
@@ -146,36 +144,32 @@ export default function JobList() {
     
     try {
       await JobsAPI.delete(id);
-
       setJobs(jobs.filter((j) => j.id !== id));
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to delete job:", error);
-      alert("Failed to delete job. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete job. Please try again.");
     }
   };
 
   const archiveJob = async (id, reason = "") => {
     try {
-      const job = jobs.find(j => j.id === id);
       await JobsAPI.update(id, {archived: true, archive_reason: reason});
-
       setJobs(jobs.map(j => j.id === id ? { ...j, archived: true, archiveReason: reason } : j));
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to archive job:", error);
-      alert("Failed to archive job. Please try again.");
+      alert(error.response?.data?.detail || "Failed to archive job. Please try again.");
     }
   };
 
   const restoreJob = async (id) => {
     try {
       await JobsAPI.update(id, {archived: false, archive_reason: null});
-
       setJobs(jobs.map(j => j.id === id ? { ...j, archived: false, archiveReason: null } : j));
     } catch (error) {
       console.error("Failed to restore job:", error);
-      alert("Failed to restore job. Please try again.");
+      alert(error.response?.data?.detail || "Failed to restore job. Please try again.");
     }
   };
 

@@ -33,9 +33,8 @@ export default function EducationList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const uuid = localStorage.getItem('uuid') || '';
-
   const location = useLocation();
+  
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -49,10 +48,10 @@ export default function EducationList() {
   const loadEducation = async () => {
     try {
       setLoading(true);
-      const res = await EducationAPI.getAll();
+      const response = await EducationAPI.getAll();
+      const data = response.data;
       
-      // Transform backend data to frontend format
-      const transformedEntries = (res.data || []).map(entry => ({
+      const transformedEntries = (data || []).map(entry => ({
         id: entry._id,
         degree: entry.degree,
         institution: entry.institution_name,
@@ -76,16 +75,15 @@ export default function EducationList() {
 
   const addEntry = async (entry) => {
     try {
-      const res = await EducationAPI.add(entry);
+      const response = await EducationAPI.add(entry);
 
-      if (res.data && res.data.education_id) {
-        const newEntry = { ...entry, id: res.data.education_id };
+      if (response.data && response.data.education_id) {
+        const newEntry = { ...entry, id: response.data.education_id };
         setEntries([newEntry, ...entries]);
       }
       setShowForm(false);
     } catch (error) {
-      console.error("Failed to add education:", error);
-      alert("Failed to add education. Please try again.");
+      alert(error.response?.data?.detail || "Failed to add education. Please try again.");
     }
   };
 
@@ -97,8 +95,7 @@ export default function EducationList() {
       setEditEntry(null);
       setShowForm(false);
     } catch (error) {
-      console.error("Failed to update education:", error);
-      alert("Failed to update education. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update education. Please try again.");
     }
   };
 
@@ -107,11 +104,9 @@ export default function EducationList() {
     
     try {
       await EducationAPI.delete(id);
-
       setEntries(entries.filter((e) => e.id !== id));
     } catch (error) {
-      console.error("Failed to delete education:", error);
-      alert("Failed to delete education. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete education. Please try again.");
     }
   };
 

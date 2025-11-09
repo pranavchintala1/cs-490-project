@@ -44,18 +44,9 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
     }
 
     try {
-      const uuid = localStorage.getItem('uuid') || '';
-      const token = localStorage.getItem('session') || '';
-      const baseURL = 'http://localhost:8000';
-
       const res = await CertificationsAPI.getMedia(cert.media_id);
 
-      if (res.status != 200) {
-        console.error("Download failed:", res.status);
-        return alert("Failed to download file");
-      }
-
-      const blob = await res.data;
+      const blob = res.data;
       const url = URL.createObjectURL(blob);
 
       const link = document.createElement("a");
@@ -75,16 +66,7 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
     if (!window.confirm("Delete this document?")) return;
 
     try {
-      const uuid = localStorage.getItem('uuid') || '';
-      const token = localStorage.getItem('session') || '';
-      const baseURL = 'http://localhost:8000';
-
-      const res = await CertificationsAPI.deleteMedia(cert.media_id);
-
-      if (res.status != 200) {
-        throw new Error("Failed to delete document");
-      }
-
+      await CertificationsAPI.deleteMedia(cert.media_id);
       alert("Document deleted successfully");
       
       // Refresh the certifications list
@@ -93,7 +75,7 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
       }
     } catch (err) {
       console.error("Error deleting document:", err);
-      alert("Failed to delete document");
+      alert(err.response?.data?.detail || "Failed to delete document");
     }
   };
 
