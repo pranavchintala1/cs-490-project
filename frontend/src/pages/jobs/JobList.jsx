@@ -24,6 +24,22 @@ export default function JobList() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [reminderJob, setReminderJob] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  
+  // NEW: Bulk selection states
+  const [selectedJobIds, setSelectedJobIds] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  
+  // NEW: Auto-archive settings
+  const [autoArchiveDays, setAutoArchiveDays] = useState(
+    parseInt(localStorage.getItem('autoArchiveDays')) || 90
+  );
+  const [autoArchiveEnabled, setAutoArchiveEnabled] = useState(
+    localStorage.getItem('autoArchiveEnabled') === 'true'
+  );
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // NEW: Undo state
+  const [undoStack, setUndoStack] = useState([]);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,12 +57,18 @@ export default function JobList() {
     loadJobs();
   }, []);
 
+  // NEW: Auto-archive check on load and periodically
+  useEffect(() => {
+    if (autoArchiveEnabled) {
+      checkAutoArchive();
+    }
+  }, [jobs, autoArchiveEnabled, autoArchiveDays]);
+
   const loadJobs = async () => {
     try {
       setLoading(true);
       const res = await JobsAPI.getAll();
       
-      // Transform backend snake_case to frontend camelCase
       const transformedJobs = (res.data || []).map(job => ({
         id: job._id,
         title: job.title,
@@ -74,7 +96,8 @@ export default function JobList() {
         interview_notes: job.interview_notes,
         interviewNotes: job.interview_notes,
         archived: job.archived || false,
-        archiveReason: job.archive_reason
+        archiveReason: job.archive_reason,
+        archiveDate: job.archive_date
       }));
       
       setJobs(transformedJobs);
@@ -86,12 +109,37 @@ export default function JobList() {
     }
   };
 
+  // NEW: Auto-archive function
+  const checkAutoArchive = async () => {
+    const today = new Date();
+    const jobsToArchive = jobs.filter(job => {
+      if (job.archived) return false;
+      if (!job.updatedAt && !job.createdAt) return false;
+      
+      const lastUpdate = new Date(job.updatedAt || job.createdAt);
+      const daysSinceUpdate = Math.floor((today - lastUpdate) / (1000 * 60 * 60 * 24));
+      
+      return daysSinceUpdate >= autoArchiveDays;
+    });
+
+    if (jobsToArchive.length > 0) {
+      const shouldArchive = window.confirm(
+        `${jobsToArchive.length} job(s) haven't been updated in ${autoArchiveDays}+ days. Auto-archive them now?`
+      );
+      
+      if (shouldArchive) {
+        for (const job of jobsToArchive) {
+          await archiveJob(job.id, `Auto-archived after ${autoArchiveDays} days of inactivity`, true);
+        }
+      }
+    }
+  };
+
   const addJob = async (jobData) => {
     try {
       const res = await JobsAPI.add(jobData);
 
       if (res && res.data.job_id) {
-        // Optimistically add the job with the returned ID
         const newJob = {
           id: res.data.job_id,
           ...jobData,
@@ -139,25 +187,117 @@ export default function JobList() {
     }
   };
 
-  const deleteJob = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this job?")) return;
+  const restoreDeletedJob = async (job) => {
+    try {
+      const res = await JobsAPI.add({
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        salary: job.salary,
+        url: job.url,
+        deadline: job.deadline,
+        industry: job.industry,
+        job_type: job.jobType || job.job_type,
+        description: job.description,
+        status: job.status,
+        status_history: job.status_history,
+        notes: job.notes,
+        contacts: job.contacts,
+        salary_notes: job.salaryNotes || job.salary_notes,
+        interview_notes: job.interviewNotes || job.interview_notes
+      });
+
+      if (res && res.data.job_id) {
+        const restoredJob = {
+          ...job,
+          id: res.data.job_id,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        setJobs(prev => [...prev, restoredJob]);
+        
+        // Remove from undo stack
+        setUndoStack(prev => prev.filter(item => item.job?.id !== job.id));
+        
+        alert(`✅ Job "${job.title}" restored successfully`);
+      }
+    } catch (error) {
+      console.error("Failed to restore deleted job:", error);
+      alert("Failed to restore job. Please try again.");
+    }
+  };
+
+  const deleteJob = async (id, silent = false) => {
+    if (!silent && !window.confirm("Are you sure you want to delete this job?")) return;
     
     try {
+      const jobToDelete = jobs.find(j => j.id === id);
+      
       await JobsAPI.delete(id);
       setJobs(jobs.filter((j) => j.id !== id));
       setSelectedJob(null);
+      setSelectedJobIds(prev => prev.filter(jid => jid !== id));
+      
+      // Add to undo stack
+      if (!silent) {
+        setUndoStack(prev => [...prev, {
+          type: 'delete',
+          job: jobToDelete,
+          timestamp: Date.now()
+        }]);
+        
+        // Show notification with option to undo
+        setTimeout(() => {
+          if (!window.confirm(`✅ Job "${jobToDelete.title}" deleted.\n\nClick OK to continue\nClick Cancel to UNDO`)) {
+            restoreDeletedJob(jobToDelete);
+          }
+        }, 100);
+      }
     } catch (error) {
       console.error("Failed to delete job:", error);
       alert(error.response?.data?.detail || "Failed to delete job. Please try again.");
     }
   };
 
-  const archiveJob = async (id, reason = "") => {
+  // ENHANCED: Archive with undo capability
+  const archiveJob = async (id, reason = "", silent = false) => {
     try {
-      await JobsAPI.update(id, {archived: true, archive_reason: reason});
-      setJobs(jobs.map(j => j.id === id ? { ...j, archived: true, archiveReason: reason } : j));
+      const jobToArchive = jobs.find(j => j.id === id);
+      const archiveDate = new Date().toISOString();
+      
+      await JobsAPI.update(id, {
+        archived: true, 
+        archive_reason: reason,
+        archive_date: archiveDate
+      });
+      
+      setJobs(jobs.map(j => j.id === id ? { 
+        ...j, 
+        archived: true, 
+        archiveReason: reason,
+        archiveDate: archiveDate
+      } : j));
+      
       setSelectedJob(null);
-    } catch (error) {
+      setSelectedJobIds(prev => prev.filter(jid => jid !== id));
+      
+      // Add to undo stack
+      if (!silent) {
+  setUndoStack(prev => [...prev, {
+    type: 'archive',
+    job: jobToArchive,
+    timestamp: Date.now()
+  }]);
+  
+  // Show notification with option to undo
+  setTimeout(() => {
+    if (!window.confirm(`✅ Job "${jobToArchive.title}" archived.\n\nClick OK to continue\nClick Cancel to UNDO`)) {
+      restoreJob(id);
+    }
+  }, 100);
+}
+      } catch (error) {
       console.error("Failed to archive job:", error);
       alert(error.response?.data?.detail || "Failed to archive job. Please try again.");
     }
@@ -165,20 +305,102 @@ export default function JobList() {
 
   const restoreJob = async (id) => {
     try {
-      await JobsAPI.update(id, {archived: false, archive_reason: null});
-      setJobs(jobs.map(j => j.id === id ? { ...j, archived: false, archiveReason: null } : j));
+      await JobsAPI.update(id, {
+        archived: false, 
+        archive_reason: null,
+        archive_date: null
+      });
+      
+      setJobs(jobs.map(j => j.id === id ? { 
+        ...j, 
+        archived: false, 
+        archiveReason: null,
+        archiveDate: null
+      } : j));
+      
+      // Remove from undo stack if exists
+      setUndoStack(prev => prev.filter(item => item.job?.id !== id));
     } catch (error) {
       console.error("Failed to restore job:", error);
       alert(error.response?.data?.detail || "Failed to restore job. Please try again.");
     }
   };
 
-  const bulkArchive = async (jobIds, reason = "") => {
-    if (!window.confirm(`Archive ${jobIds.length} jobs?`)) return;
-
-    for (const id of jobIds) {
-      await archiveJob(id, reason);
+  // NEW: Bulk archive operations
+  const bulkArchive = async () => {
+    if (selectedJobIds.length === 0) {
+      alert("Please select jobs to archive");
+      return;
     }
+    
+    const reason = prompt(`Archive ${selectedJobIds.length} job(s)?\n\nOptional reason:`);
+    if (reason === null) return; // User cancelled
+    
+    try {
+      for (const id of selectedJobIds) {
+        await archiveJob(id, reason, true);
+      }
+      
+      alert(`✅ Successfully archived ${selectedJobIds.length} job(s)`);
+      window.location.reload();
+      setSelectedJobIds([]);
+      setShowBulkActions(false);
+    } catch (error) {
+      alert("Some jobs failed to archive. Please try again.");
+    }
+  };
+
+  // NEW: Bulk delete operations
+  const bulkDelete = async () => {
+    if (selectedJobIds.length === 0) {
+      alert("Please select jobs to delete");
+      return;
+    }
+    
+    if (!window.confirm(`Permanently delete ${selectedJobIds.length} job(s)? This cannot be undone!`)) {
+      return;
+    }
+    
+    try {
+      for (const id of selectedJobIds) {
+        await JobsAPI.delete(id);
+      }
+      
+      setJobs(jobs.filter(j => !selectedJobIds.includes(j.id)));
+      alert(`✅ Successfully deleted ${selectedJobIds.length} job(s)`);
+      setSelectedJobIds([]);
+      setShowBulkActions(false);
+    } catch (error) {
+      alert("Some jobs failed to delete. Please try again.");
+    }
+  };
+
+  // NEW: Toggle job selection
+  const toggleJobSelection = (id) => {
+    setSelectedJobIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(jid => jid !== id)
+        : [...prev, id]
+    );
+  };
+
+  // NEW: Select all visible jobs
+  const selectAllVisible = () => {
+    const visibleIds = sortedJobs.map(j => j.id);
+    setSelectedJobIds(visibleIds);
+  };
+
+  // NEW: Clear selection
+  const clearSelection = () => {
+    setSelectedJobIds([]);
+  };
+
+  // NEW: Save auto-archive settings
+  const saveAutoArchiveSettings = () => {
+    localStorage.setItem('autoArchiveDays', autoArchiveDays.toString());
+    localStorage.setItem('autoArchiveEnabled', autoArchiveEnabled.toString());
+    setShowSettings(false);
+    alert('✅ Auto-archive settings saved');
   };
 
   const handleDragStart = (event) => {
@@ -265,6 +487,10 @@ export default function JobList() {
         return a.company.localeCompare(b.company);
       case "title":
         return a.title.localeCompare(b.title);
+      case "archiveDate":
+        if (!a.archiveDate) return 1;
+        if (!b.archiveDate) return -1;
+        return new Date(b.archiveDate) - new Date(a.archiveDate);
       case "dateAdded":
       default:
         return new Date(b.createdAt) - new Date(a.createdAt);
@@ -292,9 +518,7 @@ export default function JobList() {
     borderRadius: "4px",
     border: "1px solid #ccc",
     fontSize: "14px",
-  };
-
-  if (loading) {
+  };if (loading) {
     return (
       <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto", textAlign: "center" }}>
         <h1 style={{ margin: 0, color: "#333" }}>Job Opportunities Tracker</h1>
@@ -326,21 +550,38 @@ export default function JobList() {
             </button>
           )}
           {view === "pipeline" && (
-            <button
-              onClick={() => setShowArchived(!showArchived)}
-              style={{
-                padding: "12px 24px",
-                background: showArchived ? "#ff5722" : "#607d8b",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontWeight: "bold",
-                fontSize: "14px"
-              }}
-            >
-              {showArchived ? "📂 Show Active" : "🗄️ Show Archived"}
-            </button>
+            <>
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                style={{
+                  padding: "12px 24px",
+                  background: showArchived ? "#ff5722" : "#607d8b",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "14px"
+                }}
+              >
+                {showArchived ? "📂 Show Active" : "🗄️ Show Archived"}
+              </button>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                style={{
+                  padding: "12px 24px",
+                  background: "#795548",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "14px"
+                }}
+              >
+                ⚙️ Settings
+              </button>
+            </>
           )}
           <button
             onClick={() => {
@@ -363,6 +604,109 @@ export default function JobList() {
         </div>
       </div>
 
+      {/* Settings Modal */}
+      {showSettings && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: "20px"
+          }}
+          onClick={() => setShowSettings(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "white",
+              borderRadius: "8px",
+              maxWidth: "500px",
+              width: "100%",
+              padding: "24px"
+            }}
+          >
+            <h2 style={{ marginTop: 0, color: "#333" }}>⚙️ Auto-Archive Settings</h2>
+            
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", marginBottom: "16px" }}>
+                <input 
+                  type="checkbox" 
+                  checked={autoArchiveEnabled} 
+                  onChange={(e) => setAutoArchiveEnabled(e.target.checked)}
+                  style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                />
+                <span style={{ fontSize: "14px", fontWeight: "600" }}>Enable automatic archiving</span>
+              </label>
+              
+              {autoArchiveEnabled && (
+                <div>
+                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", fontSize: "14px" }}>
+                    Auto-archive jobs after (days):
+                  </label>
+                  <input 
+                    type="number" 
+                    value={autoArchiveDays}
+                    onChange={(e) => setAutoArchiveDays(parseInt(e.target.value) || 90)}
+                    min="1"
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "4px",
+                      border: "1px solid #ccc",
+                      fontSize: "14px",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                  <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                    Jobs inactive for {autoArchiveDays} days will be suggested for archiving
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button 
+                onClick={() => setShowSettings(false)}
+                style={{
+                  padding: "10px 20px",
+                  background: "#999",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600"
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={saveAutoArchiveSettings}
+                style={{
+                  padding: "10px 20px",
+                  background: "#4f8ef7",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "600"
+                }}
+              >
+                💾 Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Deadline Widget and Calendar - show only in pipeline view for active jobs */}
       {view === "pipeline" && !showArchived && (
         <>
@@ -371,24 +715,109 @@ export default function JobList() {
         </>
       )}
 
-      {view === "pipeline" && (
-        <div style={{ background: "#f9f9f9", padding: "16px", borderRadius: "8px", marginBottom: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-            <h3 style={{ margin: 0, fontSize: "16px" }}>🔍 Search & Filters</h3>
+      {/* Bulk Actions Bar */}
+      {view === "pipeline" && selectedJobIds.length > 0 && (
+        <div style={{
+          background: "#4f8ef7",
+          color: "white",
+          padding: "16px",
+          borderRadius: "8px",
+          marginBottom: "20px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "10px"
+        }}>
+          <div style={{ fontWeight: "bold", fontSize: "16px" }}>
+            {selectedJobIds.length} job(s) selected
+          </div>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
-              onClick={clearAllFilters}
+              onClick={bulkArchive}
               style={{
-                padding: "6px 12px",
-                background: "#ff3b30",
+                padding: "8px 16px",
+                background: "#607d8b",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
                 cursor: "pointer",
-                fontSize: "12px",
+                fontWeight: "600",
+                fontSize: "14px"
               }}
             >
-              Clear All
+              🗄️ Archive Selected
             </button>
+            <button
+              onClick={bulkDelete}
+              style={{
+                padding: "8px 16px",
+                background: "#f44336",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "14px"
+              }}
+            >
+              🗑️ Delete Selected
+            </button>
+            <button
+              onClick={clearSelection}
+              style={{
+                padding: "8px 16px",
+                background: "rgba(255,255,255,0.2)",
+                color: "white",
+                border: "1px solid white",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "14px"
+              }}
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      )}
+
+      {view === "pipeline" && !showCalendar && (
+        <div style={{ background: "#f9f9f9", padding: "16px", borderRadius: "8px", marginBottom: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <h3 style={{ margin: 0, fontSize: "16px" }}>🔍 Search & Filters</h3>
+            <div style={{ display: "flex", gap: "10px" }}>
+              {!showArchived && (
+                <button
+                  onClick={selectAllVisible}
+                  style={{
+                    padding: "6px 12px",
+                    background: "#4f8ef7",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                  }}
+                >
+                  ☑️ Select All Visible
+                </button>
+              )}
+              <button
+                onClick={clearAllFilters}
+                style={{
+                  padding: "6px 12px",
+                  background: "#ff3b30",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                }}
+              >
+                Clear All
+              </button>
+            </div>
           </div>
 
           <div style={{ marginBottom: "12px" }}>
@@ -447,8 +876,22 @@ export default function JobList() {
               <option value="deadline">Sort: Deadline</option>
               <option value="company">Sort: Company</option>
               <option value="title">Sort: Title</option>
+              {showArchived && <option value="archiveDate">Sort: Archive Date</option>}
             </select>
           </div>
+          
+          {showArchived && (
+            <div style={{ 
+              marginTop: "12px", 
+              padding: "12px", 
+              background: "#fff3cd", 
+              borderRadius: "4px",
+              fontSize: "14px",
+              color: "#856404"
+            }}>
+              📦 Viewing archived jobs ({sortedJobs.length} total)
+            </div>
+          )}
         </div>
       )}
 
@@ -463,7 +906,7 @@ export default function JobList() {
         />
       )}
 
-      {view === "pipeline" && (
+      {view === "pipeline" && !showCalendar && (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -493,7 +936,10 @@ export default function JobList() {
                       }}
                       onDelete={deleteJob}
                       onArchive={archiveJob}
+                      onRestore={restoreJob}
                       activeId={activeId}
+                      onSelect={!showArchived ? toggleJobSelection : null}
+                      selectedJobIds={selectedJobIds}
                     />
                   </div>
                 ))}
@@ -503,7 +949,13 @@ export default function JobList() {
           <DragOverlay>
             {activeJob && (
               <div style={{ cursor: "grabbing", width: "300px" }}>
-                <JobCard job={activeJob} onView={() => {}} onEdit={() => {}} onDelete={() => {}} isOverlay={true} />
+                <JobCard 
+                  job={activeJob} 
+                  onView={() => {}} 
+                  onEdit={() => {}} 
+                  onDelete={() => {}} 
+                  isOverlay={true} 
+                />
               </div>
             )}
           </DragOverlay>
@@ -688,8 +1140,17 @@ export default function JobList() {
             
             {selectedJob.archived && (
               <div style={{ marginBottom: "16px", background: "#ffebee", padding: "12px", borderRadius: "4px", color: "#000" }}>
-                <strong>Archived</strong>
-                {selectedJob.archiveReason && <div style={{ marginTop: "4px", fontSize: "13px" }}>Reason: {selectedJob.archiveReason}</div>}
+                <strong>📦 Archived</strong>
+                {selectedJob.archiveDate && (
+                  <div style={{ marginTop: "4px", fontSize: "13px" }}>
+                    Date: {new Date(selectedJob.archiveDate).toLocaleDateString()}
+                  </div>
+                )}
+                {selectedJob.archiveReason && (
+                  <div style={{ marginTop: "4px", fontSize: "13px" }}>
+                    Reason: {selectedJob.archiveReason}
+                  </div>
+                )}
               </div>
             )}
             
