@@ -1,20 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ProfilesApi from '../api/profiles';
+import AuthApi from '../api/authentication';
+import { useFlash } from '../context/flashContext';
 
-async function deleteCurrentUser() {
-  // try {
-  //   const response = await apiRequest("api/users/me", {
-  //     method: "DELETE",
-  //   });
-
-  //   console.log("User deleted:", response);
-  //   // Optionally clear local storage and redirect after delete
-  //   localStorage.clear();
-  //   window.location.href = "/login?deleted=true";
-  // } catch (err) {
-  //   console.error("Failed to delete user:", err);
-  // }
-}
 
 
 
@@ -22,6 +11,7 @@ const DeleteAccount = () => {
   const navigate = useNavigate();
   const [showWarning, setShowWarning] = useState(false);
   const [password, setPassword] = useState('');
+  const { flash, showFlash } = useFlash();
 
   const handleDeleteClick = () => {
     setShowWarning(true);
@@ -32,37 +22,45 @@ const DeleteAccount = () => {
     setPassword('');
   };
 
-  // const handleSubmit = async () => {
-  //   if (password.trim()) {
-  //     try {
-  //       const result = await ProfileApi.delete({ password: password });
+  const handleSubmit = async () => {
+    if (password.trim()) {
+      try {
+        console.log({ password: password })
+        const response = await ProfilesApi.deleteAllData({ password: password });
         
-  //       if (result === true) {
-  //         // Delete successful, now logout
-  //         try {
-  //           await AuthAPI.logout();
-  //           showFlash("Successfully Logged out", "success");
-  //         } catch (error) {
-  //           showFlash(error.detail, "error");
-  //           console.error("Logout failed:", error);
-  //         }
-          
-  //         localStorage.removeItem("uuid");
-  //         localStorage.removeItem("session");
-  //         navigate("/");
-  //       } else {
-  //         // Delete failed - invalid password
-  //         setPassword('');
-  //         showFlash("Invalid password", "error");
-  //       }
-  //     } catch (error) {
-  //       // Handle any errors from the delete call
-  //       setPassword('');
-  //       showFlash("Invalid password", "error");
-  //       console.error("Delete failed:", error);
-  //     }
-  //   }
-  // };
+        
+        // If we get here, it was successful (200)
+        if (response.status === 200) {
+          // Delete successful, now logout          
+          localStorage.removeItem("uuid");
+          localStorage.removeItem("session");
+          navigate("/");
+        }
+      } catch (error) {
+        // Handle different error codes
+        if (error.response) {
+          if (error.response.status === 401) {
+            // Wrong password
+            setPassword('');
+            showFlash("Invalid password. Please try again.", "error");
+          } else if (error.response.status === 500) {
+            // Server error
+            setPassword('');
+            showFlash("Server error occurred. Please try again later.", "error");
+          } else {
+            // Other error
+            setPassword('');
+            showFlash("An unexpected error occurred. Please try again.", "error");
+          }
+        } else {
+          // Network error or no response
+          setPassword('');
+          showFlash("Unable to connect to server. Please check your connection.", "error");
+        }
+        console.error("Delete failed:", error);
+      }
+    }
+  };
 
   if (!showWarning) {
     return (
@@ -200,7 +198,7 @@ const DeleteAccount = () => {
         </button>
         
         <button
-          // onClick={handleSubmit}
+          onClick={handleSubmit}
           disabled={!password.trim()}
           style={{
             backgroundColor: password.trim() ? '#E53935' : '#D1D5DB',
