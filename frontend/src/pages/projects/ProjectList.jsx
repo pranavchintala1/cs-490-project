@@ -15,11 +15,8 @@ export default function ProjectsList() {
   const [loading, setLoading] = useState(true);
   const [expandedCardId, setExpandedCardId] = useState(null);
 
-  const uuid = localStorage.getItem('uuid') || '';
-  const token = localStorage.getItem('session') || '';
-  const baseURL = 'http://localhost:8000';
-
   const location = useLocation();
+  
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -43,21 +40,19 @@ export default function ProjectsList() {
           const idsRes = await ProjectsAPI.getMediaIds(project._id);
           const mediaIds = idsRes.data.media_id_list || [];
 
-          
           if (mediaIds.length > 0) {
             const mediaMetadata = await Promise.all(
               mediaIds.map(async (mediaId) => {
                 try {
-                  // Fetch media metadata directly from the API
                   const metaRes = await ProjectsAPI.getMedia(mediaId);
 
-                  if (metaRes.status == 200) {
-                    const contentType = metaRes.headers["Content-Type"];
+                  if (metaRes.status === 200) {
+                    const contentType = metaRes.headers["content-type"];
                     const blob = metaRes.data;
                     const url = URL.createObjectURL(blob);
                     
                     let filename = `file_${mediaId}`;
-                    const contentDisposition = metaRes.headers["Content-Disposition"];
+                    const contentDisposition = metaRes.headers["content-disposition"];
 
                     if (contentDisposition) {
                       const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
@@ -140,12 +135,11 @@ export default function ProjectsList() {
 
         // Upload media files if any
         if (mediaFiles && mediaFiles.length > 0) {
-
           for (const file of mediaFiles) {
             try {
               const mediaRes = await ProjectsAPI.uploadMedia(projectId, file);
 
-              if (mediaRes.status != 200) {
+              if (mediaRes.status !== 200) {
                 console.error("Failed to upload file:", file.name);
               }
             } catch (error) {
@@ -159,7 +153,7 @@ export default function ProjectsList() {
       setShowForm(false);
     } catch (error) {
       console.error("Failed to add project:", error);
-      alert("Failed to add project. Please try again.");
+      alert(error.response?.data?.detail || "Failed to add project. Please try again.");
     }
   };
 
@@ -172,7 +166,7 @@ export default function ProjectsList() {
           try {
             const uploadRes = await ProjectsAPI.uploadMedia(editProject.id, file);
 
-            if (uploadRes.status != 200) {
+            if (uploadRes.status !== 200) {
               console.error("Failed to upload file:", file.name);
             }
           } catch (error) {
@@ -186,7 +180,7 @@ export default function ProjectsList() {
       setShowForm(false);
     } catch (error) {
       console.error("Failed to update project:", error);
-      alert("Failed to update project. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update project. Please try again.");
     }
   };
 
@@ -202,7 +196,7 @@ export default function ProjectsList() {
       }
     } catch (error) {
       console.error("Failed to delete project:", error);
-      alert("Failed to delete project. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete project. Please try again.");
     }
   };
 
