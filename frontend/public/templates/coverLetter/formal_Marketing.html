@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formal Cover Letter - Marketing</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 28px;
+            margin: 0;
+        }
+        header p {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+        .address {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .address p {
+            margin: 5px 0;
+        }
+        main {
+            margin-bottom: 30px;
+        }
+        main p {
+            margin: 15px 0;
+        }
+        .signature {
+            text-align: left;
+            margin-top: 30px;
+        }
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            margin-top: 30px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 20px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{name}}</h1>
+            <p>Marketing Professional</p>
+        </header>
+        <div class="address">
+            <p>123 Marketing Lane</p>
+            <p>City, State, ZIP Code</p>
+            <p>(123) 456-7890 | {{name}}@email.com</p>
+        </div>
+        <main>
+            <p><strong>{{date}}</strong></p>
+            <p>Hiring Manager<br>
+            {{company}}<br>
+            Industry City, State, ZIP Code</p>
+            <p>Dear Hiring Manager,</p>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in marketing and a passion for driving brand growth, I am confident in my ability to contribute to your team's success.</p>
+            <div class="section-title">Professional Summary</div>
+            <p>{{summary}} With a proven track record of delivering high-impact campaigns, I am eager to bring my skills to {{company}}.</p>
+            <div class="section-title">Key Skills</div>
+            <p>{{skills}} Expertise in digital marketing, SEO, content strategy, and data analysis.</p>
+            <div class="section-title">Professional Experience</div>
+            <p>{{experience}} Led a team to increase brand engagement by 40% through targeted social media campaigns.</p>
+        </main>
+        <div class="signature">
+            <p>Sincerely,</p>
+            <p>{{name}}</p>
+        </div>
+        <footer>
+            <p>Enclosure: Resume</p>
+        </footer>
+    </div>
+</body>
+</html>

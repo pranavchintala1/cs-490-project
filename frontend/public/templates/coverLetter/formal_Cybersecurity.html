@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formal Cover Letter - Cybersecurity</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 28px;
+            margin: 0;
+        }
+        header p {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+        .address {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .address p {
+            margin: 5px 0;
+        }
+        main {
+            margin-bottom: 30px;
+        }
+        main p {
+            margin: 15px 0;
+        }
+        .skills, .experience, .summary {
+            margin-bottom: 20px;
+        }
+        .skills h2, .experience h2, .summary h2 {
+            font-size: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        footer {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{name}}</h1>
+            <p>Cybersecurity Professional</p>
+        </header>
+        <div class="address">
+            <p>123 Secure Lane</p>
+            <p>Safe City, SC 12345</p>
+            <p>(555) 123-4567 | {{name}}@email.com</p>
+        </div>
+        <main>
+            <p>{{date}}</p>
+            <p>Hiring Manager<br>
+            {{company}}<br>
+            456 Protected Street<br>
+            Secure Town, ST 67890</p>
+            <p>Dear Hiring Manager,</p>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in cybersecurity and a passion for protecting digital assets, I am confident in my ability to contribute to your team's success.</p>
+            <div class="skills">
+                <h2>Key Skills</h2>
+                <p>{{skills}}<br>
+                - Penetration Testing<br>
+                - Network Security<br>
+                - Incident Response<br>
+                - Risk Assessment</p>
+            </div>
+            <div class="experience">
+                <h2>Professional Experience</h2>
+                <p>{{experience}}<br>
+                <strong>Cybersecurity Analyst, SecureCorp</strong><br>
+                2020 - Present<br>
+                - Conducted regular vulnerability assessments and penetration tests.<br>
+                - Implemented security protocols to safeguard sensitive data.<br>
+                - Responded to and mitigated security incidents effectively.</p>
+            </div>
+            <div class="summary">
+                <h2>Summary</h2>
+                <p>{{summary}}<br>
+                As a dedicated cybersecurity professional, I bring a proven track record of enhancing organizational security postures. My expertise in threat detection, incident response, and security architecture positions me as a valuable asset to {{company}}.</p>
+            </div>
+            <p>I would welcome the opportunity to discuss how my skills and experiences align with the needs of {{company}}. Thank you for considering my application. I look forward to the possibility of contributing to your cybersecurity initiatives.</p>
+            <p>Sincerely,<br>
+            {{name}}</p>
+        </main>
+        <footer>
+            <p>&copy; {{year}} {{name}}. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

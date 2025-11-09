@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casual Healthcare Cover Letter</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    header, main, footer {
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 800px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    header {
+      text-align: center;
+      background-color: #e3f2fd;
+      color: #1a73e8;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5em;
+      font-weight: 400;
+    }
+    h2 {
+      font-size: 1.8em;
+      font-weight: 300;
+      color: #555;
+      border-bottom: 2px solid #1a73e8;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+    p {
+      font-size: 1.1em;
+      margin: 10px 0;
+    }
+    .summary {
+      background-color: #f1f8ff;
+      padding: 15px;
+      border-left: 4px solid #1a73e8;
+      margin: 20px 0;
+    }
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .skill {
+      background-color: #1a73e8;
+      color: #fff;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9em;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.9em;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{name}}</h1>
+    <p>Application for {{position}} at {{company}}</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Dear Hiring Manager,</h2>
+      <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in healthcare and a passion for improving patient outcomes, I am confident in my ability to contribute to your team.</p>
+    </section>
+
+    <section class="summary">
+      <h2>Summary</h2>
+      <p>{{summary}}</p>
+    </section>
+
+    <section>
+      <h2>Skills</h2>
+      <div class="skills">
+        <span class="skill">{{skills}}</span>
+        <span class="skill">Patient Care</span>
+        <span class="skill">Medical Documentation</span>
+        <span class="skill">Team Collaboration</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Experience</h2>
+      <p>{{experience}}</p>
+    </section>
+
+    <section>
+      <p>I am eager to bring my skills and experience to {{company}} and contribute to your mission of providing exceptional healthcare services. Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
+      <p>Sincerely,</p>
+      <p>{{name}}</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2023 {{name}}. All rights reserved.</p>
+  </footer>
+</body>
+</html>

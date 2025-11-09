@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
-import AuthAPI from "../api/authentication";
+import { getData, updateData } from "../tools/db_commands";
 
 const ResetPassword = () => {
   const { token } = useParams(); // assuming your URL param is called "token"
@@ -16,12 +16,12 @@ const ResetPassword = () => {
   useEffect(() => {
   const fetchData = async () => {
     try {
-      const res = await AuthAPI.resetPassword(token)
-      if (!res) {
+      const response = await getData(token, "/api/auth/resetpassword");
+      if (!response) {
         setRes(null);
         return;
       }
-      const json = await res.json();
+      const json = await response.json();
       setRes(json);
     } catch (err) {
       console.error(err);
@@ -43,19 +43,20 @@ const ResetPassword = () => {
   const onSubmit = async (data) => {
     try {
         
-      const res = await AuthAPI.updatePassword(data);
-      if (!res) {
+      const response = await updateData(data, "/api/user/updatepassword");
+      if (!response) {
         showFlash("Something went wrong", "error");
         return;
       }
+      const json = await response.json();
 
-      if (res.status !== 200) {
-        showFlash(res.data.detail || "Error", "error");
+      if (response.status !== 200) {
+        showFlash(json.content || "Error", "error");
         return;
       }
 
-      localStorage.setItem("session", res.data.session_token);
-      localStorage.setItem("uuid", res.data.uuid);
+      localStorage.setItem("session", json.session_token);
+      localStorage.setItem("user_id", json.uuid);
 
       navigate(`/profile`);
     } catch (err) {

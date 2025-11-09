@@ -1,75 +1,73 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
-export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
-  const [institution, setInstitution] = useState("");
-  const [degree, setDegree] = useState("");
-  const [fieldOfStudy, setFieldOfStudy] = useState("");
-  const [graduationDate, setGraduationDate] = useState("");
-  const [currentlyEnrolled, setCurrentlyEnrolled] = useState(false);
-  const [gpa, setGpa] = useState("");
-  const [gpaPrivate, setGpaPrivate] = useState(false);
-  const [achievements, setAchievements] = useState("");
-  const [id, setId] = useState(null);
-
-  const resetForm = () => {
-    setInstitution("");
-    setDegree("");
-    setFieldOfStudy("");
-    setGraduationDate("");
-    setCurrentlyEnrolled(false);
-    setGpa("");
-    setGpaPrivate(false);
-    setAchievements("");
-    setId(null);
-  };
+export default function EmploymentForm({ onAdded, editEntry, cancelEdit }) {
+  const [f, setF] = useState({
+    title: "",
+    company: "",
+    location: "",
+    start_date: "",
+    end_date: "",
+    description: "",
+  });
+  const [ongoing, setOngoing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     if (editEntry) {
-      setInstitution(editEntry.institution_name);
-      setDegree(editEntry.degree || "");
-      setFieldOfStudy(editEntry.field_of_study);
-      setGraduationDate(editEntry.graduation_date || "");
-      setCurrentlyEnrolled(editEntry.graduation_date === null || editEntry.currently_enrolled);
-      setGpa(editEntry.gpa || "");
-      setGpaPrivate(editEntry.gpa_private || false);
-      setAchievements(editEntry.achievements || "");
-      setId(editEntry.id);
-    } else {
-      resetForm();
+      setF({
+        title: editEntry.title || "",
+        company: editEntry.company || "",
+        location: editEntry.location || "",
+        start_date: editEntry.start_date || "",
+        end_date: editEntry.end_date || "",
+        description: editEntry.description || "",
+      });
+      setOngoing(!editEntry.end_date);
     }
   }, [editEntry]);
 
-  const handleSubmit = (e) => {
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setF((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetForm = () => {
+    setF({
+      title: "",
+      company: "",
+      location: "",
+      start_date: "",
+      end_date: "",
+      description: "",
+    });
+    setOngoing(false);
+    setErr("");
+  };
+
+  const submit = (e) => {
     e.preventDefault();
+    setErr("");
+    if (!f.title.trim()) return setErr("Title is required.");
+    if (!f.start_date) return setErr("Start date is required.");
 
-    if (!institution.trim() || !degree.trim() || !fieldOfStudy.trim()) {
-      return alert("Please fill in all required fields.");
-    }
-
-    if (!currentlyEnrolled && !graduationDate) {
-      return alert(
-        "Please provide a graduation date or mark as currently enrolled."
-      );
-    }
-
-    const entryData = {
-      id,
-      institution_name: institution,
-      degree,
-      field_of_study: fieldOfStudy,
-      graduation_date: currentlyEnrolled ? null : graduationDate,
-      gpa: gpa || null,
-      gpa_private: gpaPrivate,
-      achievements: achievements || null,
+    setSaving(true);
+    
+    const employmentData = {
+      id: editEntry?.id,
+      title: f.title.trim(),
+      company: f.company || "",
+      location: f.location || "",
+      start_date: f.start_date,
+      end_date: ongoing ? null : f.end_date || "",
+      description: f.description || "",
     };
 
-    if (editEntry) {
-      editEntry.submit(entryData);
-    } else {
-      addEntry(entryData);
-    }
+    onAdded?.(employmentData);
 
     resetForm();
+    setSaving(false);
+    cancelEdit && cancelEdit();
   };
 
   const inputStyle = {
@@ -106,108 +104,78 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
       marginBottom: "24px"
     }}>
       <h2 style={{ marginTop: 0, color: "#333" }}>
-        {editEntry ? "✏️ Edit Education" : "🎓 Add Education"}
+        {editEntry ? "✏️ Edit Employment" : "💼 Add Employment"}
       </h2>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={submit}>
         {/* Basic Information */}
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
-            📋 Basic Information
+            📋 Position Details
           </h3>
-          
-          <label style={labelStyle}>Institution Name *</label>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div>
+              <label style={labelStyle}>Job Title *</label>
+              <input
+                style={inputStyle}
+                name="title"
+                placeholder="e.g., Software Engineer"
+                value={f.title}
+                onChange={onChange}
+                required
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Company</label>
+              <input
+                style={inputStyle}
+                name="company"
+                placeholder="e.g., Tech Corp Inc."
+                value={f.company}
+                onChange={onChange}
+              />
+            </div>
+          </div>
+
+          <label style={labelStyle}>Location</label>
           <input
             style={inputStyle}
-            placeholder="e.g., University of Technology"
-            value={institution}
-            onChange={(e) => setInstitution(e.target.value)}
-            required
-          />
-
-          <label style={labelStyle}>Degree/Education Level *</label>
-          <select
-            style={inputStyle}
-            value={degree}
-            onChange={(e) => setDegree(e.target.value)}
-            required
-          >
-            <option value="" disabled>Select Education Level</option>
-            <option value="High School Degree">🏫 High School</option>
-            <option value="Associate Degree">📘 Associate Degree</option>
-            <option value="Bachelor's Degree">🎓 Bachelor's Degree</option>
-            <option value="Master's Degree">📚 Master's Degree</option>
-            <option value="PhD/Doctorate">🔬 PhD / Doctorate</option>
-            <option value="Certificate">📜 Certificate</option>
-            <option value="Bootcamp">💻 Bootcamp</option>
-          </select>
-
-          <label style={labelStyle}>Field of Study *</label>
-          <input
-            style={inputStyle}
-            placeholder="e.g., Computer Science, Business Administration"
-            value={fieldOfStudy}
-            onChange={(e) => setFieldOfStudy(e.target.value)}
-            required
+            name="location"
+            placeholder="e.g., New York, NY or Remote"
+            value={f.location}
+            onChange={onChange}
           />
         </div>
 
-        {/* Timeline & Status */}
+        {/* Timeline */}
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
-            📅 Timeline & Status
+            📅 Employment Timeline
           </h3>
 
-          <label style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            marginBottom: "12px",
-            cursor: "pointer",
-            fontSize: "14px",
-            fontWeight: "600",
-            color: "#333"
-          }}>
-            <input
-              type="checkbox"
-              checked={currentlyEnrolled}
-              onChange={(e) => setCurrentlyEnrolled(e.target.checked)}
-              style={{ width: "18px", height: "18px", cursor: "pointer" }}
-            />
-            Currently Enrolled
-          </label>
+          <label style={labelStyle}>Start Date *</label>
+          <input
+            style={inputStyle}
+            type="date"
+            name="start_date"
+            value={f.start_date}
+            onChange={onChange}
+            required
+          />
 
-          {!currentlyEnrolled && (
+          {!ongoing && (
             <>
-              <label style={labelStyle}>Graduation Date *</label>
+              <label style={labelStyle}>End Date</label>
               <input
                 style={inputStyle}
                 type="date"
-                value={graduationDate}
-                onChange={(e) => setGraduationDate(e.target.value)}
-                required={!currentlyEnrolled}
+                name="end_date"
+                value={f.end_date}
+                onChange={onChange}
               />
             </>
           )}
-        </div>
-
-        {/* Academic Performance */}
-        <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
-            📊 Academic Performance
-          </h3>
-
-          <label style={labelStyle}>GPA (Optional)</label>
-          <input
-            style={inputStyle}
-            placeholder="e.g., 3.8"
-            type="number"
-            step="0.01"
-            min="0"
-            max="4"
-            value={gpa}
-            onChange={(e) => setGpa(e.target.value)}
-          />
 
           <label style={{
             display: "flex",
@@ -221,33 +189,59 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
           }}>
             <input
               type="checkbox"
-              checked={gpaPrivate}
-              onChange={(e) => setGpaPrivate(e.target.checked)}
+              checked={ongoing}
+              onChange={(e) => {
+                setOngoing(e.target.checked);
+                if (e.target.checked) {
+                  setF(prev => ({ ...prev, end_date: "" }));
+                }
+              }}
               style={{ width: "18px", height: "18px", cursor: "pointer" }}
             />
-            Keep GPA Private
+            Currently Working Here
           </label>
+        </div>
 
-          <label style={labelStyle}>Achievements / Honors (Optional)</label>
+        {/* Description */}
+        <div style={sectionStyle}>
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+            📝 Job Description
+          </h3>
+
+          <label style={labelStyle}>Responsibilities & Achievements</label>
           <textarea
-            style={{ 
-              ...inputStyle, 
-              minHeight: "100px", 
-              resize: "vertical", 
-              fontFamily: "inherit" 
+            style={{
+              ...inputStyle,
+              minHeight: "120px",
+              resize: "vertical",
+              fontFamily: "inherit"
             }}
-            placeholder="e.g., Dean's List, Summa Cum Laude, Research Assistant, Published papers..."
-            value={achievements}
-            onChange={(e) => setAchievements(e.target.value)}
+            name="description"
+            placeholder="Describe your key responsibilities, achievements, and impact..."
+            value={f.description}
+            onChange={onChange}
           />
         </div>
+
+        {err && (
+          <div style={{
+            color: "#ff3b30",
+            background: "#ffebee",
+            padding: "12px",
+            borderRadius: "6px",
+            marginBottom: "16px",
+            fontSize: "14px"
+          }}>
+            {err}
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
           <button
             type="button"
             onClick={() => {
-              cancelEdit && cancelEdit();
               resetForm();
+              cancelEdit && cancelEdit();
             }}
             style={{
               padding: "12px 24px",
@@ -264,6 +258,7 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
           </button>
           <button
             type="submit"
+            disabled={saving}
             style={{
               padding: "12px 24px",
               background: "#4f8ef7",
@@ -272,10 +267,11 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
               borderRadius: "4px",
               cursor: "pointer",
               fontSize: "14px",
-              fontWeight: "600"
+              fontWeight: "600",
+              opacity: saving ? 0.6 : 1
             }}
           >
-            {editEntry ? "💾 Save Changes" : "➕ Add Education"}
+            {saving ? "Saving..." : editEntry ? "💾 Save Changes" : "➕ Add Employment"}
           </button>
         </div>
       </form>

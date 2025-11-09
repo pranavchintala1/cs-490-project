@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Cover Letter - Software Development</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        header {
+            text-align: center;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 30px 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+        }
+        main {
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        main section {
+            margin-bottom: 20px;
+        }
+        main h2 {
+            color: #4CAF50;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+            font-size: 1.8em;
+        }
+        main p {
+            font-size: 1.1em;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .skills-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills-list li {
+            background-color: #e8f5e9;
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Applying for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the <strong>{{position}}</strong> role at <strong>{{company}}</strong>. With a passion for software development and a strong background in <strong>{{skills}}</strong>, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section>
+            <h2>About Me</h2>
+            <p>{{summary}}</p>
+        </section>
+        <section>
+            <h2>Skills</h2>
+            <ul class="skills-list">
+                <li>JavaScript</li>
+                <li>Python</li>
+                <li>React</li>
+                <li>Node.js</li>
+                <li>SQL</li>
+                <li>Git</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Experience</h2>
+            <p>{{experience}}</p>
+        </section>
+        <section>
+            <h2>Why I'm a Fit</h2>
+            <p>I am particularly drawn to {{company}} because of its innovative approach to software development. My experience in {{skills}} aligns perfectly with the requirements of the {{position}} role, and I am eager to bring my unique perspective to your team.</p>
+        </section>
+        <section>
+            <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to {{company}}.</p>
+            <p>Best regards,<br>{{name}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import ProfilesAPI from "../api/profiles";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { getMe, updateMe, profileImageDataUrl } from "../tools/api";
 import DeleteAccount from "../components/DeleteAccount";
 
 export default function Profile() {
-  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({
     username: "",
     email: "",
@@ -27,8 +27,8 @@ export default function Profile() {
   useEffect(() => {
     (async () => {
       try {
-        const meRes = await ProfilesAPI.get();
-        const me = meRes.data;
+        const me = await getMe();
+        setProfile(me);
         setForm({
           username: me.username ?? "",
           email: me.email ?? "",
@@ -40,30 +40,18 @@ export default function Profile() {
           industry: me.industry ?? "",
           experience_level: me.experience_level ?? "",
         });
-
-        // Load avatar
-        const res = await ProfilesAPI.getAvatar();
-        const blob = res.data;
-        const url = URL.createObjectURL(blob);
-        if (url) {
-          setAvatarUrl(url);
-        }
       } catch (e) {
-        // setErr("Failed to load profile: " + (e.message || "Unknown error"));
+        // If profile fails to load (e.g., backend returning binary image data),
+        // continue with empty form so user can still update their profile
+        setErr("Note: Profile picture support not yet fully implemented. You can still update other fields.");
+        setProfile({});
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  // Cleanup blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      if (avatarUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(avatarUrl);
-      }
-    };
-  }, [avatarUrl]);
+  const imgSrc = useMemo(() => profileImageDataUrl(profile), [profile]);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -93,8 +81,9 @@ export default function Profile() {
     setMsg("");
 
     try {
-
-      const data = {
+      //send on teh single endpoints
+      await updateMe(
+        {
           username: form.username || null,
           email: form.email || null,
           full_name: form.full_name || null,
@@ -104,36 +93,20 @@ export default function Profile() {
           biography: form.biography || "",
           industry: form.industry || "",
           experience_level: form.experience_level || null,
-      };
-      await ProfilesAPI.update(data);
-      if (selectedFile) {
-        await ProfilesAPI.uploadAvatar(selectedFile);
-      }
+        },
+        selectedFile
+      );
 
-      setMsg("Profile updated successfully!");
-
-      // If user uploaded a new avatar, fetch it from backend
-      if (selectedFile) {
-        const res = await ProfilesAPI.getAvatar();
-        const blob = res.data;
-        const newAvatarUrl = URL.createObjectURL(blob);
-        if (newAvatarUrl) {
-          // Revoke old blob URL if it exists
-          if (avatarUrl?.startsWith("blob:")) {
-            URL.revokeObjectURL(avatarUrl);
-          }
-          setAvatarUrl(newAvatarUrl);
-        }
-      }
-
-      // Clear file selection UI after brief delay so save completes visually
-      setTimeout(() => {
-        setSelectedFile(null);
-        setPreviewUrl(null);
-        if (fileRef.current) fileRef.current.value = "";
-      }, 500);
+      // Refetch the full profile to get the updated data
+      const updatedProfile = await getMe();
+      setProfile(updatedProfile);
+      setMsg("Profile updated.");
+      // Only clear preview/selected file after successful save
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileRef.current) fileRef.current.value = "";
     } catch (e) {
-      setErr(e.message || "Failed to save profile.");
+      setErr(e.message || "Failed to save.");
     } finally {
       setSaving(false);
     }
@@ -165,18 +138,26 @@ export default function Profile() {
               alt="preview"
               style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
             />
-          ) : avatarUrl ? (
+          ) : imgSrc ? (
             <img
-              src={avatarUrl}
+              src={imgSrc}
               alt="pfp"
               style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
             />
           ) : (
-            <img
-              src="/default.png"
-              alt="default profile"
-              style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
-            />
+            <div
+              style={{
+                width: 160,
+                height: 160,
+                background: "#eee",
+                borderRadius: 12,
+                display: "grid",
+                placeItems: "center",
+                color: "#666",
+              }}
+            >
+              No picture
+            </div>
           )}
         </div>
         <div>

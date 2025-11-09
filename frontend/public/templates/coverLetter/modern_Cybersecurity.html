@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Cybersecurity Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 4px solid #007bff;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #007bff;
+        }
+        header p {
+            margin: 5px 0;
+            font-size: 1.2em;
+            color: #555;
+        }
+        main {
+            padding: 30px;
+        }
+        main h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        main p {
+            margin: 10px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 2px solid #007bff;
+        }
+        .skills-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills-list li {
+            background: #e7f3ff;
+            margin: 5px 0;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+        }
+        .experience-item {
+            margin-bottom: 20px;
+        }
+        .experience-item h3 {
+            margin: 0;
+            color: #007bff;
+        }
+        .experience-item p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{position}} | Cybersecurity Specialist</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager at {{company}},</h2>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in cybersecurity and a passion for protecting digital assets, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section>
+            <h2>Skills</h2>
+            <ul class="skills-list">
+                <li>{{skills}}: Penetration Testing, Network Security, Incident Response, SIEM Tools, Encryption Protocols</li>
+                <li>Proficient in Python, Bash, and PowerShell for automation and scripting.</li>
+                <li>Certified in CISSP, CEH, and CompTIA Security+.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Experience</h2>
+            <div class="experience-item">
+                <h3>Cybersecurity Analyst | {{experience}}</h3>
+                <p><strong>TechSecure Solutions</strong> | 2020–Present</p>
+                <p>Conducted regular vulnerability assessments and penetration tests to identify and mitigate security risks. Implemented and managed SIEM solutions to monitor and respond to security incidents.</p>
+            </div>
+            <div class="experience-item">
+                <h3>IT Security Specialist</h3>
+                <p><strong>GlobalNet Inc.</strong> | 2018–2020</p>
+                <p>Developed and enforced security policies and procedures to ensure compliance with industry standards. Trained staff on cybersecurity best practices and incident response protocols.</p>
+            </div>
+        </section>
+        <section>
+            <h2>Summary</h2>
+            <p>{{summary}}: A dedicated cybersecurity professional with over 5 years of experience in safeguarding digital infrastructures. Proven expertise in threat detection, incident response, and security policy development. Eager to bring my skills and passion to {{company}} and contribute to a safer digital environment.</p>
+        </section>
+    </main>
+    <footer>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to {{company}}’s cybersecurity initiatives.</p>
+        <p>Sincerely,<br>{{name}}</p>
+    </footer>
+</body>
+</html>

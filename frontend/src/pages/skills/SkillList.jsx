@@ -11,7 +11,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import SkillItem from "./SkillItem";
-import SkillsAPI from "../../api/skills";
+import { apiRequest } from "../../api";
 
 export default function SkillList() {
   const [skills, setSkills] = useState([]);
@@ -22,6 +22,7 @@ export default function SkillList() {
 
   const categories = ["Technical", "Soft Skills", "Languages", "Industry-Specific"];
 
+  // Load all skills on mount
   useEffect(() => {
     loadSkills();
   }, []);
@@ -29,8 +30,8 @@ export default function SkillList() {
   const loadSkills = async () => {
     try {
       setLoading(true);
-      const res = await SkillsAPI.getAll();
-      const transformedSkills = (res.data || []).map(skill => ({
+      const data = await apiRequest("/api/skills/me?uuid=", "");
+      const transformedSkills = (data || []).map(skill => ({
         id: skill._id,
         name: skill.name,
         category: skill.category || "Technical",
@@ -58,28 +59,34 @@ export default function SkillList() {
         position: newPosition
       };
 
-      const res = await SkillsAPI.add(skillData);
+      const response = await apiRequest("/api/skills?uuid=", "", {
+        method: "POST",
+        body: JSON.stringify(skillData)
+      });
 
-      if (res && res.data.skill_id) {
-        const newSkill = { ...skillData, id: res.data.skill_id };
+      if (response && response.skill_id) {
+        const newSkill = { ...skillData, id: response.skill_id };
         setSkills([...skills, newSkill]);
       }
     } catch (error) {
       console.error("Failed to add skill:", error);
-      alert(error.response?.data?.detail || "Failed to add skill. Please try again.");
+      alert("Failed to add skill. Please try again.");
     }
   };
 
   const updateSkill = async (id, updatedFields) => {
     try {
-      await SkillsAPI.update(id, updatedFields);
+      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify(updatedFields)
+      });
 
       setSkills((prev) =>
         prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s))
       );
     } catch (error) {
       console.error("Failed to update skill:", error);
-      alert(error.response?.data?.detail || "Failed to update skill. Please try again.");
+      alert("Failed to update skill. Please try again.");
     }
   };
 
@@ -87,12 +94,14 @@ export default function SkillList() {
     if (!window.confirm("Remove this skill?")) return;
     
     try {
-      await SkillsAPI.delete(id);
+      await apiRequest(`/api/skills?skill_id=${id}&uuid=`, "", {
+        method: "DELETE"
+      });
 
       setSkills((prev) => prev.filter((s) => s.id !== id));
     } catch (error) {
       console.error("Failed to delete skill:", error);
-      alert(error.response?.data?.detail || "Failed to delete skill. Please try again.");
+      alert("Failed to delete skill. Please try again.");
     }
   };
 
@@ -151,7 +160,13 @@ export default function SkillList() {
     setSkills(updatedSkills);
 
     try {
-      await SkillsAPI.update(activeSkill.id, {category: newCategory, position: newPosition});
+      await apiRequest(`/api/skills?skill_id=${activeSkill.id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify({
+          category: newCategory,
+          position: newPosition
+        })
+      });
 
       const affectedSkills = updatedSkills.filter(s => 
         s.id !== activeSkill.id && 
@@ -160,7 +175,10 @@ export default function SkillList() {
 
       await Promise.all(
         affectedSkills.map(skill =>
-          SkillsAPI.update(skill.id, {position: skill.position})
+          apiRequest(`/api/skills?skill_id=${skill.id}&uuid=`, "", {
+            method: "PUT",
+            body: JSON.stringify({ position: skill.position })
+          })
         )
       );
     } catch (error) {
@@ -223,7 +241,7 @@ export default function SkillList() {
         <SortableContext items={skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div style={{ 
             display: "grid", 
-            gridTemplateColumns: "repeat(2, 1fr)",
+            gridTemplateColumns: "repeat(2, 1fr)", // 2 columns per category
             gap: "16px",
             marginBottom: "20px"
           }}>

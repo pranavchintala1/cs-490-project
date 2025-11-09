@@ -1,43 +1,30 @@
 import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
-import EducationAPI from "../../api/education";
-import { useLocation } from "react-router-dom";
+import { apiRequest } from "../../api";
 
 const degreeEmojis = {
-  "High School Degree": "🏫",
-  "Associate Degree": "📘",
-  "Bachelor's Degree": "🎓",
-  "Master's Degree": "📚",
-  "PhD/Doctorate": "🔬",
+  "High School": "🏫",
+  "Associate": "📘",
+  "Bachelor's": "🎓",
+  "Master's": "📚",
+  "PhD": "🔬",
 };
 
 const degreeColors = {
-  "High School Degree": "#9e9e9e",
-  "Associate Degree": "#2196f3",
-  "Bachelor's Degree": "#4caf50",
-  "Master's Degree": "#ff9800",
-  "PhD/Doctorate": "#af52de",
+  "High School": "#9e9e9e",
+  "Associate": "#2196f3",
+  "Bachelor's": "#4caf50",
+  "Master's": "#ff9800",
+  "PhD": "#af52de",
+  "Certificate": "#34c759",
+  "Bootcamp": "#ff3b30"
 };
 
+// Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
-};
-
-const normalizeEntry = (entry) => {
-  return {
-    id: entry._id || entry.id,
-    degree: entry.degree,
-    institution: entry.institution || entry.institution_name,
-    institution_name: entry.institution || entry.institution_name,
-    field_of_study: entry.field_of_study,
-    graduation_date: entry.graduation_date,
-    gpa: entry.gpa,
-    gpa_private: entry.gpa_private || false,
-    achievements: entry.achievements,
-    currently_enrolled: !entry.graduation_date
-  };
 };
 
 export default function EducationList() {
@@ -46,14 +33,6 @@ export default function EducationList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const location = useLocation();
-  
-  useEffect(() => {
-    if (location.state?.showForm) {
-      setShowForm(true);
-    }
-  }, [location.state]);
-
   useEffect(() => {
     loadEducation();
   }, []);
@@ -61,10 +40,21 @@ export default function EducationList() {
   const loadEducation = async () => {
     try {
       setLoading(true);
-      const response = await EducationAPI.getAll();
-      const data = response.data;
+      const data = await apiRequest("/api/education/me?uuid=", "");
       
-      const transformedEntries = (data || []).map(normalizeEntry);
+      // Transform backend data to frontend format
+      const transformedEntries = (data || []).map(entry => ({
+        id: entry._id,
+        degree: entry.degree,
+        institution: entry.institution_name,
+        institution_name: entry.institution_name,
+        field_of_study: entry.field_of_study,
+        graduation_date: entry.graduation_date,
+        gpa: entry.gpa,
+        gpa_private: entry.gpa_private || false,
+        achievements: entry.achievements,
+        currently_enrolled: !entry.graduation_date
+      }));
       
       setEntries(transformedEntries);
     } catch (error) {
@@ -77,32 +67,35 @@ export default function EducationList() {
 
   const addEntry = async (entry) => {
     try {
-      const response = await EducationAPI.add(entry);
+      const response = await apiRequest("/api/education?uuid=", "", {
+        method: "POST",
+        body: JSON.stringify(entry)
+      });
 
-      if (response.data && response.data.education_id) {
-        const newEntry = normalizeEntry({ 
-          ...entry, 
-          id: response.data.education_id,
-          _id: response.data.education_id
-        });
+      if (response && response.education_id) {
+        const newEntry = { ...entry, id: response.education_id };
         setEntries([newEntry, ...entries]);
       }
       setShowForm(false);
     } catch (error) {
-      alert(error.response?.data?.detail || "Failed to add education. Please try again.");
+      console.error("Failed to add education:", error);
+      alert("Failed to add education. Please try again.");
     }
   };
 
   const submitEdit = async (updatedEntry) => {
     try {
-      await EducationAPI.update(updatedEntry.id, updatedEntry);
+      await apiRequest(`/api/education?education_id=${updatedEntry.id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify(updatedEntry)
+      });
 
-      const normalizedEntry = normalizeEntry(updatedEntry);
-      setEntries(entries.map((e) => (e.id === normalizedEntry.id ? normalizedEntry : e)));
+      setEntries(entries.map((e) => (e.id === updatedEntry.id ? updatedEntry : e)));
       setEditEntry(null);
       setShowForm(false);
     } catch (error) {
-      alert(error.response?.data?.detail || "Failed to update education. Please try again.");
+      console.error("Failed to update education:", error);
+      alert("Failed to update education. Please try again.");
     }
   };
 
@@ -110,10 +103,14 @@ export default function EducationList() {
     if (!window.confirm("Delete this education entry?")) return;
     
     try {
-      await EducationAPI.delete(id);
+      await apiRequest(`/api/education?education_id=${id}&uuid=`, "", {
+        method: "DELETE"
+      });
+
       setEntries(entries.filter((e) => e.id !== id));
     } catch (error) {
-      alert(error.response?.data?.detail || "Failed to delete education. Please try again.");
+      console.error("Failed to delete education:", error);
+      alert("Failed to delete education. Please try again.");
     }
   };
 
@@ -178,6 +175,7 @@ export default function EducationList() {
         />
       )}
 
+      {/* Only show the education entries if we're not showing the form */}
       {!showForm && (
         <>
           {sortedEntries.length === 0 ? (
@@ -194,6 +192,7 @@ export default function EducationList() {
             </div>
           ) : (
             <div style={{ position: "relative", marginTop: "40px" }}>
+              {/* Timeline vertical line */}
               <div
                 style={{
                   position: "absolute",
@@ -227,6 +226,7 @@ export default function EducationList() {
                       zIndex: 1
                     }}
                   >
+                    {/* Timeline dot */}
                     <div
                       style={{
                         width: "60px",
@@ -252,6 +252,7 @@ export default function EducationList() {
                       />
                     </div>
 
+                    {/* Year label */}
                     <div
                       style={{
                         width: "80px",
@@ -267,6 +268,7 @@ export default function EducationList() {
                       {yearLabel}
                     </div>
 
+                    {/* Content card */}
                     <div
                       style={{
                         border: "2px solid #ddd",

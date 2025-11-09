@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 40px 20px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+        }
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 5px;
+            font-size: 1.5em;
+        }
+        .section p {
+            margin: 10px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .skills-list {
+            columns: 2;
+            -webkit-columns: 2;
+            -moz-columns: 2;
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills-list li {
+            margin-bottom: 5px;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Software Developer | <a href="mailto:{{email}}" style="color: #ecf0f1;">{{email}}</a> | <a href="{{linkedin}}" style="color: #ecf0f1;">LinkedIn</a></p>
+    </header>
+    <main>
+        <section class="section">
+            <h2>Dear Hiring Manager at {{company}},</h2>
+            <p>I am excited to apply for the <span class="highlight">{{position}}</span> role at {{company}}. With a strong foundation in software development and a passion for creating efficient, scalable solutions, I am confident in my ability to contribute to your team’s success.</p>
+        </section>
+        <section class="section">
+            <h2>Skills</h2>
+            <ul class="skills-list">
+                <li>{{skills}}</li>
+                <li>JavaScript (React, Node.js)</li>
+                <li>Python (Django, Flask)</li>
+                <li>Database Management (SQL, MongoDB)</li>
+                <li>Version Control (Git)</li>
+                <li>Agile Methodologies</li>
+            </ul>
+        </section>
+        <section class="section">
+            <h2>Experience</h2>
+            <p><strong>Senior Software Developer</strong> - {{experience}}</p>
+            <p>Developed and maintained web applications using modern technologies, ensuring high performance and responsiveness. Collaborated with cross-functional teams to deliver projects on time and within scope.</p>
+        </section>
+        <section class="section">
+            <h2>Summary</h2>
+            <p>{{summary}}</p>
+            <p>I am particularly drawn to {{company}} because of its commitment to innovation and excellence in software development. I am eager to bring my technical expertise and collaborative spirit to your team.</p>
+        </section>
+        <section class="section">
+            <p>Thank you for considering my application. I look forward to the opportunity to discuss how my skills and experiences align with the goals of {{company}}.</p>
+            <p>Sincerely,<br>{{name}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

@@ -12,7 +12,7 @@ import JobForm from "./JobForm";
 import JobPipeline from "./JobPipeline";
 import JobCard from "./JobCard";
 import { DeadlineWidget, DeadlineCalendar, DeadlineReminderModal } from "./DeadlineComponents";
-import JobsAPI from "../../api/jobs";
+import { apiRequest } from "../../api";
 
 export default function JobList() {
   const [jobs, setJobs] = useState([]);
@@ -44,10 +44,10 @@ export default function JobList() {
   const loadJobs = async () => {
     try {
       setLoading(true);
-      const res = await JobsAPI.getAll();
+      const data = await apiRequest("/api/jobs/me?uuid=", "");
       
       // Transform backend snake_case to frontend camelCase
-      const transformedJobs = (res.data || []).map(job => ({
+      const transformedJobs = (data || []).map(job => ({
         id: job._id,
         title: job.title,
         company: job.company,
@@ -88,12 +88,18 @@ export default function JobList() {
 
   const addJob = async (jobData) => {
     try {
-      const res = await JobsAPI.add(jobData);
+      const response = await apiRequest("/api/jobs?uuid=", "", {
+        method: "POST",
+        body: JSON.stringify(jobData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (res && res.data.job_id) {
-        // Optimistically add the job with the returned ID
+      if (response && response.job_id) {
+        // Optimistically add the job with the returned ID instead of reloading
         const newJob = {
-          id: res.data.job_id,
+          id: response.job_id,
           ...jobData,
           jobType: jobData.job_type,
           salaryNotes: jobData.salary_notes,
@@ -108,7 +114,7 @@ export default function JobList() {
       }
     } catch (error) {
       console.error("Failed to add job:", error);
-      alert(error.response?.data?.detail || "Failed to add job. Please try again.");
+      alert("Failed to add job. Please try again.");
     }
   };
 
@@ -116,8 +122,15 @@ export default function JobList() {
     try {
       const { id, createdAt, updatedAt, statusHistory, jobType, salaryNotes, interviewNotes, ...backendData } = jobData;
       
-      await JobsAPI.update(id, backendData);
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify(backendData),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
+      // Optimistically update the job in state
       setJobs(prev => prev.map(job => {
         if (job.id === id) {
           return {
@@ -134,7 +147,8 @@ export default function JobList() {
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to update job:", error);
-      alert(error.response?.data?.detail || "Failed to update job. Please try again.");
+      alert("Failed to update job. Please try again.");
+      // Reload on error to ensure consistency
       loadJobs();
     }
   };
@@ -143,33 +157,57 @@ export default function JobList() {
     if (!window.confirm("Are you sure you want to delete this job?")) return;
     
     try {
-      await JobsAPI.delete(id);
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+        method: "DELETE"
+      });
+
       setJobs(jobs.filter((j) => j.id !== id));
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to delete job:", error);
-      alert(error.response?.data?.detail || "Failed to delete job. Please try again.");
+      alert("Failed to delete job. Please try again.");
     }
   };
 
   const archiveJob = async (id, reason = "") => {
     try {
-      await JobsAPI.update(id, {archived: true, archive_reason: reason});
+      const job = jobs.find(j => j.id === id);
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify({
+          archived: true,
+          archive_reason: reason
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
       setJobs(jobs.map(j => j.id === id ? { ...j, archived: true, archiveReason: reason } : j));
       setSelectedJob(null);
     } catch (error) {
       console.error("Failed to archive job:", error);
-      alert(error.response?.data?.detail || "Failed to archive job. Please try again.");
+      alert("Failed to archive job. Please try again.");
     }
   };
 
   const restoreJob = async (id) => {
     try {
-      await JobsAPI.update(id, {archived: false, archive_reason: null});
+      await apiRequest(`/api/jobs?job_id=${id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify({
+          archived: false,
+          archive_reason: null
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
       setJobs(jobs.map(j => j.id === id ? { ...j, archived: false, archiveReason: null } : j));
     } catch (error) {
       console.error("Failed to restore job:", error);
-      alert(error.response?.data?.detail || "Failed to restore job. Please try again.");
+      alert("Failed to restore job. Please try again.");
     }
   };
 
@@ -217,8 +255,18 @@ export default function JobList() {
       
       setJobs(jobs.map((j) => (j.id === activeJob.id ? updatedJob : j)));
 
+      // Update in backend
       try {
-        await JobsAPI.update(activeJob.id, {status: newStatus, status_history: updatedStatusHistory});
+        await apiRequest(`/api/jobs?job_id=${activeJob.id}&uuid=`, "", {
+          method: "PUT",
+          body: JSON.stringify({
+            status: newStatus,
+            status_history: updatedStatusHistory
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
       } catch (error) {
         console.error("Failed to update job status:", error);
         loadJobs();
@@ -227,6 +275,7 @@ export default function JobList() {
   };
 
   const filteredJobs = jobs.filter((job) => {
+    // Filter archived/active jobs based on view
     if (showArchived && !job.archived) return false;
     if (!showArchived && job.archived) return false;
 

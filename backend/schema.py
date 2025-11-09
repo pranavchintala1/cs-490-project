@@ -100,8 +100,17 @@ class Job(BaseModel):
     archive_reason: Optional[str] = None
     archive_date: Optional[str] = None
 
-class CoverLetter(BaseModel):
-    title: Optional[str] = None
-    company: Optional[str] = None
-    position: Optional[str] = None
-    content: Optional[str] = None
+class CoverLetterIn(BaseModel):
+    title: str
+    company: str
+    position: str
+    content: str
+
+class CoverLetterOut(BaseModel):
+    id: str
+    user_id: str
+    title: str
+    company: str
+    position: str
+    content: str
+    created_at: str

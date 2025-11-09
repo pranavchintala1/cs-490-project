@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header {
+            background-color: #ff6f61;
+            color: #fff;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        header p {
+            margin: 0.5rem 0 0;
+            font-size: 1.2rem;
+        }
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: -50px auto 2rem;
+            background-color: #fff;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .section {
+            margin-bottom: 2rem;
+        }
+        .section h2 {
+            color: #ff6f61;
+            border-bottom: 2px solid #ff6f61;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        .section p {
+            margin: 0;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #333;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        .highlight {
+            color: #ff6f61;
+            font-weight: bold;
+        }
+        .signature {
+            margin-top: 2rem;
+            font-style: italic;
+        }
+        @media (max-width: 768px) {
+            main {
+                margin: -30px 1rem 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Applying for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section class="section">
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to submit my application for the <span class="highlight">{{position}}</span> role at <span class="highlight">{{company}}</span>. With a strong background in <span class="highlight">{{experience}}</span>, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section class="section">
+            <h2>Professional Summary</h2>
+            <p>{{summary}}</p>
+        </section>
+        <section class="section">
+            <h2>Key Skills</h2>
+            <p>{{skills}}</p>
+        </section>
+        <section class="section">
+            <h2>Why I'm a Great Fit</h2>
+            <p>With my <span class="highlight">{{experience}}</span> in diverse industries, I bring a unique perspective to problem-solving and innovation. I am passionate about leveraging my skills to drive impactful results for <span class="highlight">{{company}}</span>.</p>
+        </section>
+        <p class="signature">Sincerely,<br>{{name}}</p>
+    </main>
+    <footer>
+        &copy; 2023 {{name}}. All rights reserved.
+    </footer>
+</body>
+</html>
