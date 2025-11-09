@@ -3,7 +3,6 @@ import ProfilesAPI from "../api/profiles";
 import DeleteAccount from "../components/DeleteAccount";
 
 export default function Profile() {
-  const [profile, setProfile] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [form, setForm] = useState({
     username: "",
@@ -30,7 +29,6 @@ export default function Profile() {
       try {
         const meRes = await ProfilesAPI.get();
         const me = meRes.data;
-        setProfile(me);
         setForm({
           username: me.username ?? "",
           email: me.email ?? "",
@@ -52,7 +50,6 @@ export default function Profile() {
         }
       } catch (e) {
         // setErr("Failed to load profile: " + (e.message || "Unknown error"));
-        setProfile({});
       } finally {
         setLoading(false);
       }
@@ -112,11 +109,6 @@ export default function Profile() {
       if (selectedFile) {
         await ProfilesAPI.uploadAvatar(selectedFile);
       }
-
-      // Refetch the full profile to get the updated data
-      const getRes = await ProfilesAPI.get();
-      const updatedProfile = getRes.data;
-      setProfile(updatedProfile);
 
       setMsg("Profile updated successfully!");
 
@@ -180,19 +172,11 @@ export default function Profile() {
               style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
             />
           ) : (
-            <div
-              style={{
-                width: 160,
-                height: 160,
-                background: "#eee",
-                borderRadius: 12,
-                display: "grid",
-                placeItems: "center",
-                color: "#666",
-              }}
-            >
-              No picture
-            </div>
+            <img
+              src="/default.png"
+              alt="default profile"
+              style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
+            />
           )}
         </div>
         <div>
