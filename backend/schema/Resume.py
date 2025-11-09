@@ -1,9 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional
 
-from Employment import Employment
-from Education import Education
-from Skill import Skill
+from schema.Employment import Employment
+from schema.Education import Education
+from schema.Skill import Skill
 
 class ContactInfo(BaseModel): # related to Resume
     name: Optional[str] = None
