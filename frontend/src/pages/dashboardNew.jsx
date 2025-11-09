@@ -4,11 +4,18 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
 import BarChart from '../components/BarChart';
-import { apiRequest } from "../api";
+// import { apiRequest } from "../api";
 import CareerTimeline from '../components/Timeline';
 import './Dashboard.css';
 import { Link } from "react-router-dom";
 import RecentChanges from '../components/RecentChanges';
+import ProfileApi from '../api/profiles';
+import EmploymentApi from '../api/employment';
+import SkillsApi from '../api/skills';
+import EducationApi from '../api/education';
+import ProjectsApi from '../api/projects';
+import CertificationsApi from '../api/certifications';
+
 
 // Helper function to format ISO date to readable format
 function formatDate(isoDate) {
@@ -307,8 +314,28 @@ function filterBySchema(data, schemaName) {
     }
 }
 
-const fetchDataFromAPI = async (endpoint, schemaName) => {
-  const apidata = await apiRequest(`${endpoint}?uuid=`);
+function axiosCall(schemaName) {
+    switch(schemaName) {
+        case 'Profile':
+            return ProfileApi.get();
+        case 'Skill':
+            return SkillsApi.get();
+        case 'Employment':
+            return EmploymentApi.get();
+        case 'Education':
+            return EducationApi.get();
+        case 'Project':
+            return ProjectsApi.get();
+        case 'Certification':
+            return CertificationsApi.get();
+        default:
+            throw new Error(`Unknown schema: ${schemaName}`);
+    }
+}
+
+const fetchDataFromAPI = async (schemaName) => {
+  
+  const apidata = axiosCall(schemaName);
 
   function transformData(data) {
     const arr = Array.isArray(data)
@@ -354,12 +381,12 @@ const Dashboard = () => {
         setLoading(true);
         
         const [profileResult, employmentResult, skillsResult, educationResult, projectsResult, certResult] = await Promise.all([
-          fetchDataFromAPI('/api/users/me',"Profile"),
-          fetchDataFromAPI('/api/employment/me',"Employment"),
-          fetchDataFromAPI('/api/skills/me',"Skill"),
-          fetchDataFromAPI('/api/education/me',"Education"),
-          fetchDataFromAPI('/api/projects/me',"Project"),
-          fetchDataFromAPI('/api/certifications/me',"Certification")
+          fetchDataFromAPI("Profile"),
+          fetchDataFromAPI("Employment"),
+          fetchDataFromAPI("Skill"),
+          fetchDataFromAPI("Education"),
+          fetchDataFromAPI("Project"),
+          fetchDataFromAPI("Certification")
         ]);
 
         // Set the filtered data

@@ -1,5 +1,5 @@
 import React from "react";
-import { apiRequest } from "../../api";
+// import { apiRequest } from "../../api";
 
 export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelete }) {
   // Helper function to parse date string as local date without timezone issues
