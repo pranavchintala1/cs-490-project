@@ -23,3 +23,6 @@ class Job(BaseModel):
     archived: Optional[bool] = False
     archive_reason: Optional[str] = None
     archive_date: Optional[str] = None
+
+class UrlBody(BaseModel):
+    url: str
