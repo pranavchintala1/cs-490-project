@@ -104,7 +104,7 @@ async def download_media(media_id, download: bool = False, uuid: str = Depends(a
         BytesIO(media["contents"]),
         media_type = media["content_type"],
         headers = {
-            "Content-Disposition": f"{"attachment" if download else "inline"}; filename=\"{media['filename']}\""
+            "Content-Disposition": f"{'attachment' if download else 'inline'}; filename=\"{media['filename']}\""
         }
     )
 
