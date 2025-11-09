@@ -11,6 +11,9 @@ class RegistInfo(BaseModel):
     email: str
     full_name: str
 
+class DeletePassword(BaseModel):
+    password: str
+
 # NOTE: anything noted as required for creation should be validated in the endpoints
 
 class Profile(BaseModel):
