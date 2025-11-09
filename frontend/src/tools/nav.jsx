@@ -102,9 +102,13 @@ const logout = async () => {
                   Jobs
                 </BootstrapNav.Link>
 
-                <Button 
-                  variant="outline-light" 
-                  onClick={logout} 
+                <BootstrapNav.Link as={NavLink} to="/resumes" className="mx-3">
+                  Resumes
+                </BootstrapNav.Link>
+
+                <Button
+                  variant="outline-light"
+                  onClick={logout}
                   className="ms-2"
                 >
                   Logout

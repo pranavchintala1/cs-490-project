@@ -32,3 +32,26 @@ class Resume(BaseModel):
     fonts: Optional[Fonts] = None
     sections: Optional[list[str]] = None
     default_resume: Optional[bool] = False
+
+# RESUME VERSION SCHEMA
+class ResumeVersion(BaseModel):
+    resume_id: Optional[str] = None # Reference to parent resume
+    name: Optional[str] = None # Version name
+    description: Optional[str] = None # Version description
+    resume_data: Optional[dict] = None # Full resume snapshot
+    job_linked: Optional[str] = None # Linked job ID (optional)
+
+# RESUME FEEDBACK SCHEMA
+class ResumeFeedback(BaseModel):
+    resume_id: Optional[str] = None # Reference to parent resume
+    reviewer: Optional[str] = None # Reviewer name
+    email: Optional[str] = None # Reviewer email
+    comment: Optional[str] = None # Feedback comment
+    resolved: Optional[bool] = False # Whether feedback has been addressed
+
+# RESUME SHARE SCHEMA
+class ResumeShare(BaseModel):
+    resume_id: Optional[str] = None # Reference to parent resume
+    can_comment: Optional[bool] = True # Allow reviewers to comment
+    can_download: Optional[bool] = True # Allow reviewers to download
+    expiration_days: Optional[int] = 30 # Number of days before link expires
