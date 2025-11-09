@@ -29,9 +29,9 @@ class ProjectsAPI {
         return api.post(`${BASE_URL}/media?project_id=${projectId}`, formData);
     }
 
-    getMedia(mediaId, download) { 
+    getMedia(mediaId) { 
         // "download" determines whether to immediately download the file or send it as a blob
-        return api.get(`${BASE_URL}/media`, {params: {download, media_id: mediaId}, responseType: "blob"});
+        return api.get(`${BASE_URL}/media`, {params: {download: false, media_id: mediaId}, responseType: "blob"});
     }
 
     getMediaIds(mediaId) {
