@@ -91,7 +91,7 @@ async def upload_media(project_id: str, media: UploadFile = File(...), uuid: str
     return {"detail": "Sucessfully uploaded file", "media_id": media_id}
 
 @projects_router.get('/media', tags = "projects")
-async def download_media(media_id, download: bool = False, uuid: str = Depends(authorize)):
+async def download_media(media_id, uuid: str = Depends(authorize)):
     try:
         media = await media_dao.get_media(media_id)
     except Exception as e:
@@ -104,7 +104,7 @@ async def download_media(media_id, download: bool = False, uuid: str = Depends(a
         BytesIO(media["contents"]),
         media_type = media["content_type"],
         headers = {
-            "Content-Disposition": f"{"attachment" if download else "inline"}; filename=\"{media['filename']}\""
+            "Content-Disposition": f"inline; filename=\"{media['filename']}\""
         }
     )
 

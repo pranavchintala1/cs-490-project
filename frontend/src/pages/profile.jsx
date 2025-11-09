@@ -51,7 +51,7 @@ export default function Profile() {
           setAvatarUrl(url);
         }
       } catch (e) {
-        setErr("Failed to load profile: " + (e.message || "Unknown error"));
+        // setErr("Failed to load profile: " + (e.message || "Unknown error"));
         setProfile({});
       } finally {
         setLoading(false);
