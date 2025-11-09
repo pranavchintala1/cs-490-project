@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background-color: #6200ea;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        header p {
+            margin: 0.5rem 0 0;
+            font-size: 1.2rem;
+        }
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: -50px auto 2rem;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+        .contact-info p {
+            margin: 0;
+        }
+        .contact-info a {
+            color: #6200ea;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        .greeting {
+            margin-bottom: 2rem;
+        }
+        .greeting p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .summary {
+            margin-bottom: 2rem;
+        }
+        .summary h2 {
+            color: #6200ea;
+            border-bottom: 2px solid #6200ea;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .summary p {
+            margin: 0;
+            font-size: 1rem;
+        }
+        .skills {
+            margin-bottom: 2rem;
+        }
+        .skills h2 {
+            color: #6200ea;
+            border-bottom: 2px solid #6200ea;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .skills ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li {
+            background-color: #f4f4f9;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .closing {
+            text-align: left;
+        }
+        .closing p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #6200ea;
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 2rem;
+        }
+        footer p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{title}}</p>
+    </header>
+    <main>
+        <div class="contact-info">
+            <p>{{address}}</p>
+            <p><a href="mailto:{{email}}">{{email}}</a> | <a href="tel:{{phone}}">{{phone}}</a></p>
+        </div>
+        <section class="greeting">
+            <p>Dear Hiring Manager,</p>
+        </section>
+        <section class="summary">
+            <h2>Professional Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+        <section class="skills">
+            <h2>Key Skills</h2>
+            <ul>
+                <li>{{skills}}</li>
+            </ul>
+        </section>
+        <section class="closing">
+            <p>I am excited about the opportunity to contribute to your team and would welcome the chance to discuss how my skills align with your needs. Thank you for considering my application.</p>
+            <p>Sincerely,</p>
+            <p>{{name}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

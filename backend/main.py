@@ -9,7 +9,8 @@ from routes.employment import employment_router
 from routes.certifications import certifications_router
 from routes.education import education_router
 from routes.jobs import jobs_router
-from routes.cover_letters import cover_letters_router
+from routes.coverLetter import coverletter_router
+from routes.user_data import user_router
 from routes.resumes import resumes_router
 
 app = FastAPI()
@@ -48,7 +49,8 @@ app.include_router(education_router, prefix = api_prefix)
 app.include_router(employment_router, prefix = api_prefix)
 app.include_router(certifications_router, prefix = api_prefix)
 app.include_router(jobs_router, prefix = api_prefix)
-app.include_router(cover_letters_router, prefix = api_prefix)
+app.include_router(coverletter_router)
+app.include_router(user_router,prefix=api_prefix)
 app.include_router(resumes_router, prefix = api_prefix)
 
 # TODO: add user deletion services (deletes all data, requires password authentication)

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            background-color: #ffe0b2;
+            color: #555;
+        }
+        main {
+            background-color: #fff3e0;
+        }
+        footer {
+            text-align: center;
+            background-color: #ffe0b2;
+            font-size: 0.9em;
+        }
+        h1, h2, h3 {
+            color: #555;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 0;
+        }
+        h2 {
+            font-size: 1.8em;
+            margin-top: 0;
+        }
+        p {
+            margin: 10px 0;
+        }
+        .summary {
+            font-style: italic;
+            color: #666;
+        }
+        .skills {
+            margin-top: 20px;
+        }
+        .skills ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li {
+            background-color: #fff8e1;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .contact-info {
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p class="contact-info">
+            {{address}} | {{email}} | {{phone}}
+        </p>
+    </header>
+
+    <main>
+        <h2>Application for {{title}}</h2>
+        <p>Dear Hiring Manager,</p>
+        
+        <p class="summary">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        </p>
+
+        <div class="skills">
+            <h3>Skills</h3>
+            <ul>
+                <li>{{skills}}</li>
+            </ul>
+        </div>
+
+        <h3>Experience</h3>
+        <p><strong>{{latest_title}}</strong> at {{latest_company}} ({{latest_location}})</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+
+        <h3>Education</h3>
+        <p><strong>{{top_degree}}</strong> in {{top_field}} from {{top_institution}}</p>
+
+        <h3>Certifications</h3>
+        <p>{{certifications}}</p>
+    </main>
+
+    <footer>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
+        <p>Best regards,<br>{{name}}</p>
+    </footer>
+</body>
+</html>
