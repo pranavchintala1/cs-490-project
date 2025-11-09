@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { listSkills, createSkill } from '../../tools/api';
 import '../../styles/resumes.css';
 
 /**
@@ -9,13 +10,55 @@ import '../../styles/resumes.css';
 export default function SkillsManager({ skills, onUpdate }) {
   const [items, setItems] = useState(skills || []);
   const [newSkill, setNewSkill] = useState('');
+  const [availableSkills, setAvailableSkills] = useState([]);
+  const [loadingSkills, setLoadingSkills] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleAddSkill = () => {
-    if (newSkill.trim()) {
-      const updatedItems = [...items, newSkill.trim()];
-      setItems(updatedItems);
-      onUpdate(updatedItems);
+  // Load user's skills from profile
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        setLoadingSkills(true);
+        setError(null);
+        const data = await listSkills();
+        setAvailableSkills(data);
+      } catch (err) {
+        setError('Failed to load skills');
+        console.error('Error loading skills:', err);
+      } finally {
+        setLoadingSkills(false);
+      }
+    };
+    fetchSkills();
+  }, []);
+
+  const handleAddSkill = async () => {
+    if (!newSkill.trim()) return;
+
+    try {
+      const skillName = newSkill.trim();
+
+      // Check if skill already exists in profile
+      const skillExists = availableSkills.some(s => s.name === skillName);
+
+      // If skill doesn't exist, create it
+      if (!skillExists) {
+        await createSkill({ name: skillName });
+        // Add to available skills
+        setAvailableSkills([...availableSkills, { name: skillName }]);
+      }
+
+      // Add skill to resume (if not already added)
+      if (!items.includes(skillName)) {
+        const updatedItems = [...items, skillName];
+        setItems(updatedItems);
+        onUpdate(updatedItems);
+      }
+
       setNewSkill('');
+    } catch (err) {
+      setError('Failed to add skill');
+      console.error('Error adding skill:', err);
     }
   };
 
@@ -97,6 +140,47 @@ export default function SkillsManager({ skills, onUpdate }) {
           Tip: Reorder skills by relevance to the job. Add skills that match job requirements for better ATS compatibility.
         </small>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-danger mt-3">{error}</div>
+      )}
+
+      {/* Available Skills Section */}
+      {availableSkills.length > 0 && (
+        <div className="available-skills mt-4 pt-4 border-top">
+          <h4>Quick Add from Profile</h4>
+          <p className="text-muted">Click to add existing skills to your resume</p>
+          <div className="skills-quick-add">
+            {availableSkills.map((skill) => (
+              <button
+                key={skill._id || skill.name}
+                onClick={() => {
+                  if (!items.includes(skill.name)) {
+                    const updatedItems = [...items, skill.name];
+                    setItems(updatedItems);
+                    onUpdate(updatedItems);
+                  }
+                }}
+                disabled={items.includes(skill.name)}
+                className={`btn btn-sm ${
+                  items.includes(skill.name)
+                    ? 'btn-success'
+                    : 'btn-outline-success'
+                }`}
+                title={items.includes(skill.name) ? 'Already added' : 'Click to add'}
+              >
+                {skill.name}
+                {items.includes(skill.name) && ' ✓'}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {loadingSkills && (
+        <div className="alert alert-info mt-3">Loading skills from profile...</div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { listEmployment } from '../../tools/api';
 import '../../styles/resumes.css';
 
 /**
@@ -10,6 +11,24 @@ export default function ExperienceEditor({ experience, onUpdate }) {
   const [items, setItems] = useState(experience || []);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({});
+  const [availableEmployment, setAvailableEmployment] = useState([]);
+  const [loadingEmployment, setLoadingEmployment] = useState(false);
+
+  // Load user's employment history
+  useEffect(() => {
+    const fetchEmployment = async () => {
+      try {
+        setLoadingEmployment(true);
+        const data = await listEmployment();
+        setAvailableEmployment(data);
+      } catch (err) {
+        console.error('Error loading employment:', err);
+      } finally {
+        setLoadingEmployment(false);
+      }
+    };
+    fetchEmployment();
+  }, []);
 
   const handleAddExperience = () => {
     const newId = Math.max(...items.map((e) => e.id), 0) + 1;
@@ -54,6 +73,21 @@ export default function ExperienceEditor({ experience, onUpdate }) {
 
   const handleFormChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
+  };
+
+  const handleAddFromProfile = (employment) => {
+    const newId = Math.max(...items.map((e) => e.id || 0), 0) + 1;
+    const newExperience = {
+      id: newId,
+      company: employment.company || '',
+      position: employment.title || '',
+      startDate: employment.start_date || '',
+      endDate: employment.end_date || '',
+      description: employment.description || '',
+      skills: [],
+    };
+    setItems([...items, newExperience]);
+    onUpdate([...items, newExperience]);
   };
 
   return (
@@ -164,6 +198,41 @@ export default function ExperienceEditor({ experience, onUpdate }) {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Available Employment Section */}
+      {availableEmployment.length > 0 && (
+        <div className="available-employment mt-4">
+          <h4>Quick Add from Profile</h4>
+          <p className="text-muted">Click to add employment entries from your profile</p>
+          <div className="employment-quick-add">
+            {availableEmployment.map((emp) => (
+              <div key={emp._id} className="quick-add-card">
+                <div className="quick-add-info">
+                  <p className="position-title">
+                    <strong>{emp.title || 'No title'}</strong> at {emp.company || 'N/A'}
+                  </p>
+                  {emp.start_date && (
+                    <p className="date-range">
+                      {emp.start_date} {emp.end_date ? `- ${emp.end_date}` : '- Present'}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleAddFromProfile(emp)}
+                  className="btn btn-sm btn-outline-success"
+                  title="Add this employment to resume"
+                >
+                  + Add
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {loadingEmployment && (
+        <div className="alert alert-info mt-3">Loading employment data...</div>
       )}
     </div>
   );

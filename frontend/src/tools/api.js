@@ -287,3 +287,54 @@ export const deleteResumeFeedback = async (resumeId, feedbackId) => {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
+
+
+// ==================== SKILLS API ====================
+
+export const listSkills = async () => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("GET", "/api/skills/me", {
+    params: { uuid },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+export const createSkill = async (payload) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("POST", "/api/skills", {
+    params: { uuid },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: payload,
+  });
+};
+
+export const updateSkill = async (id, payload) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("PUT", "/api/skills", {
+    params: { uuid, skill_id: id },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: payload,
+  });
+};
+
+export const deleteSkill = async (id) => {
+  const { uuid, token } = auth();
+  if (!uuid || !token) throw new Error("Not authenticated");
+
+  return http("DELETE", "/api/skills", {
+    params: { uuid, skill_id: id },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
