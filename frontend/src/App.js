@@ -22,7 +22,7 @@ import { FlashProvider, FlashMessage } from "./context/flashContext";
 
 
 // import Dashboard from "./pages/dashboard";
-import Dashboard from "./pages/dashboardNew";
+import Dashboard from "./pages/dashboard";
 
 
 export function App() {
