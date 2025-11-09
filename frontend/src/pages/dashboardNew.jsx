@@ -10,7 +10,13 @@ import './Dashboard.css';
 import { Link } from "react-router-dom";
 import RecentChanges from '../components/RecentChanges';
 
-// Helper function to format ISO date to readable format
+/**
+ * Converts an ISO date string to a human-readable format
+ * @param {string} isoDate - ISO 8601 date string (e.g., "2024-03-15T10:30:00Z")
+ * @returns {string} Formatted date string (e.g., "03-15-2024, 10:30")
+ * 
+ * Called by: createUpdateEntry()
+ */
 function formatDate(isoDate) {
     const date = new Date(isoDate);
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -21,7 +27,22 @@ function formatDate(isoDate) {
     return `${month}-${day}-${year}, ${hours}:${minutes}`;
 }
 
-// Helper function to create an update entry
+/**
+ * Creates a standardized update entry object for the recent changes list
+ * @param {string} isoDate - ISO date when the item was updated
+ * @param {string} schemaType - Type of data (e.g., "Profile", "Skill", "Employment")
+ * @param {string} name - Name/identifier of the updated item
+ * @returns {Object|null} Update entry object with structure:
+ *   {
+ *     isoDate: string,      // Original ISO date for sorting
+ *     formatted: string,    // Human-readable date
+ *     label: string        // Display label (e.g., "Skill: JavaScript")
+ *   }
+ *   Returns null if isoDate is not provided
+ * 
+ * Called by: All filter functions (profileFilter, skillFilter, etc.)
+ * Used in: RecentChanges component via formattedRecentUpdates
+ */
 function createUpdateEntry(isoDate, schemaType, name) {
     if (!isoDate) return null;
     
@@ -35,7 +56,16 @@ function createUpdateEntry(isoDate, schemaType, name) {
     };
 }
 
-// Helper function to merge and sort recent updates, keeping top 10
+/**
+ * Merges new updates with existing updates, sorts by date, and keeps only the 10 most recent
+ * @param {Array} existingUpdates - Array of existing update entry objects
+ * @param {Array} newUpdates - Array of new update entry objects to merge
+ * @returns {Array} Sorted array of up to 10 most recent update entries
+ *   Each entry has structure: { isoDate, formatted, label }
+ * 
+ * Called by: Dashboard useEffect() when fetching all data
+ * Used to populate: recentUpdates state → RecentChanges component
+ */
 function mergeRecentUpdates(existingUpdates, newUpdates) {
     const allUpdates = [...existingUpdates];
     
@@ -49,7 +79,17 @@ function mergeRecentUpdates(existingUpdates, newUpdates) {
     return allUpdates.slice(0, 10);
 }
 
-// Helper function to merge skill category counts
+/**
+ * Merges skill category counts from multiple sources
+ * @param {Object} existingCounts - Object with category names as keys and counts as values
+ *   Example: { "Programming": 5, "Design": 3 }
+ * @param {Object} newCounts - New category counts to merge
+ * @returns {Object} Combined category counts
+ *   Example: { "Programming": 7, "Design": 5, "Management": 2 }
+ * 
+ * Called by: Dashboard useEffect() when fetching all data
+ * Used to populate: skillCategoryCounts state → BarChart component
+ */
 function mergeSkillCategoryCounts(existingCounts, newCounts) {
     const merged = { ...existingCounts };
     
@@ -62,6 +102,21 @@ function mergeSkillCategoryCounts(existingCounts, newCounts) {
     return merged;
 }
 
+/**
+ * Filters and formats profile data for display
+ * @param {Array} profiles - Array of profile objects from API
+ * @returns {Object} Object containing:
+ *   {
+ *     filtered: Array,        // Array of [username, details[]] tuples for CategoryCard
+ *                            // Example: [["john_doe", ["Email: john@example.com", "Title: Developer"]]]
+ *     updates: Array,        // Array of update entry objects for recent changes
+ *     categoryCounts: Object // Empty object (profiles don't have categories)
+ *   }
+ * 
+ * Called by: filterBySchema() when schemaName is 'Profile'
+ * filtered output used in: CategoryCard component via data.profile
+ * updates output used in: RecentChanges component via recentUpdates
+ */
 function profileFilter(profiles) {
     const updates = [];
     
@@ -102,6 +157,23 @@ function profileFilter(profiles) {
     return { filtered, updates, categoryCounts: {} };
 }
 
+/**
+ * Filters and formats skill data for display, also counts skills by category
+ * @param {Array} skills - Array of skill objects from API
+ * @returns {Object} Object containing:
+ *   {
+ *     filtered: Array,        // Array of [skillName, details[]] tuples
+ *                            // Example: [["JavaScript", ["Proficiency: Expert", "Skill Category: Programming"]]]
+ *     updates: Array,        // Array of update entry objects for recent changes
+ *     categoryCounts: Object // Count of skills per category for bar chart
+ *                            // Example: { "Programming": 5, "Design": 3 }
+ *   }
+ * 
+ * Called by: filterBySchema() when schemaName is 'Skill'
+ * filtered output used in: CategoryCard component via data.skills
+ * updates output used in: RecentChanges component via recentUpdates
+ * categoryCounts output used in: BarChart component via skillCategoryCounts
+ */
 function skillFilter(skills) {
     const updates = [];
     const categoryCounts = {};
@@ -130,6 +202,21 @@ function skillFilter(skills) {
     return { filtered, updates, categoryCounts };
 }
 
+/**
+ * Filters and formats employment data for display
+ * @param {Array} employments - Array of employment objects from API
+ * @returns {Object} Object containing:
+ *   {
+ *     filtered: Array,        // Array of [jobTitle, details[]] tuples
+ *                            // Example: [["Software Engineer", ["Company: Google", "Location: NYC"]]]
+ *     updates: Array,        // Array of update entry objects for recent changes
+ *     categoryCounts: Object // Empty object (employment doesn't have categories)
+ *   }
+ * 
+ * Called by: filterBySchema() when schemaName is 'Employment'
+ * filtered output used in: CategoryCard component via data.employmentHistory
+ * updates output used in: RecentChanges component via recentUpdates
+ */
 function employmentFilter(employments) {
     const updates = [];
     
@@ -161,6 +248,21 @@ function employmentFilter(employments) {
     return { filtered, updates, categoryCounts: {} };
 }
 
+/**
+ * Filters and formats education data for display
+ * @param {Array} educations - Array of education objects from API
+ * @returns {Object} Object containing:
+ *   {
+ *     filtered: Array,        // Array of [institutionName, details[]] tuples
+ *                            // Example: [["MIT", ["Degree: BS", "Field of Study: Computer Science"]]]
+ *     updates: Array,        // Array of update entry objects for recent changes
+ *     categoryCounts: Object // Empty object (education doesn't have categories)
+ *   }
+ * 
+ * Called by: filterBySchema() when schemaName is 'Education'
+ * filtered output used in: CategoryCard component via data.education
+ * updates output used in: RecentChanges component via recentUpdates
+ */
 function educationFilter(educations) {
     const updates = [];
     
@@ -199,6 +301,21 @@ function educationFilter(educations) {
     return { filtered, updates, categoryCounts: {} };
 }
 
+/**
+ * Filters and formats project data for display
+ * @param {Array} projects - Array of project objects from API
+ * @returns {Object} Object containing:
+ *   {
+ *     filtered: Array,        // Array of [projectName, details[]] tuples
+ *                            // Example: [["E-commerce App", ["Role: Lead Developer", "Skills: React, Node.js"]]]
+ *     updates: Array,        // Array of update entry objects for recent changes
+ *     categoryCounts: Object // Empty object (projects don't have categories)
+ *   }
+ * 
+ * Called by: filterBySchema() when schemaName is 'Project'
+ * filtered output used in: CategoryCard component via data.projects
+ * updates output used in: RecentChanges component via recentUpdates
+ */
 function projectFilter(projects) {
     const updates = [];
     
@@ -248,6 +365,21 @@ function projectFilter(projects) {
     return { filtered, updates, categoryCounts: {} };
 }
 
+/**
+ * Filters and formats certification data for display
+ * @param {Array} certifications - Array of certification objects from API
+ * @returns {Object} Object containing:
+ *   {
+ *     filtered: Array,        // Array of [certName, details[]] tuples
+ *                            // Example: [["AWS Certified", ["Issuer: Amazon", "Date Earned: 2024-01-15"]]]
+ *     updates: Array,        // Array of update entry objects for recent changes
+ *     categoryCounts: Object // Empty object (certifications don't have categories)
+ *   }
+ * 
+ * Called by: filterBySchema() when schemaName is 'Certification'
+ * filtered output used in: CategoryCard component via data.certifications
+ * updates output used in: RecentChanges component via recentUpdates
+ */
 function certificationFilter(certifications) {
     const updates = [];
     
@@ -288,6 +420,20 @@ function certificationFilter(certifications) {
     return { filtered, updates, categoryCounts: {} };
 }
 
+/**
+ * Routes data to the appropriate filter function based on schema type
+ * @param {Array} data - Raw array of data objects from API
+ * @param {string} schemaName - Schema type: 'Profile', 'Skill', 'Employment', 'Education', 'Project', or 'Certification'
+ * @returns {Object} Result from the appropriate filter function:
+ *   {
+ *     filtered: Array,        // Formatted data tuples for display
+ *     updates: Array,        // Update entries for recent changes
+ *     categoryCounts: Object // Category counts (only populated for Skills)
+ *   }
+ * 
+ * Called by: fetchDataFromAPI() → transformData()
+ * Result used to: Populate component state (data, recentUpdates, skillCategoryCounts)
+ */
 function filterBySchema(data, schemaName) {
     switch(schemaName) {
         case 'Profile':
@@ -307,16 +453,34 @@ function filterBySchema(data, schemaName) {
     }
 }
 
+/**
+ * Fetches data from API endpoint and transforms it for use in the dashboard
+ * @param {string} endpoint - API endpoint to fetch from (e.g., '/api/skills/me')
+ * @param {string} schemaName - Schema type for filtering
+ * @returns {Promise<Object>} Transformed data object:
+ *   {
+ *     filtered: Array,        // Display-ready data tuples for CategoryCard
+ *     updates: Array,        // Update entries for RecentChanges
+ *     categoryCounts: Object, // Category counts for BarChart (Skills only)
+ *     rawData: Array         // Original unfiltered API response for export and other uses
+ *   }
+ * 
+ * Called by: Dashboard useEffect() → Promise.all() for all 6 data types
+ * Results stored in: Multiple state variables (data, rawData, recentUpdates, skillCategoryCounts)
+ */
 const fetchDataFromAPI = async (endpoint, schemaName) => {
   const apidata = await apiRequest(`${endpoint}?uuid=`);
 
+  // Transform raw API response into display-ready format
   function transformData(data) {
+    // Normalize data to array (API might return single object or array)
     const arr = Array.isArray(data)
     ? data
     : (data && typeof data === "object")
       ? [data]
       : [];
     
+    // Filter through appropriate schema filter and include rawData for export
     const filtered = filterBySchema(arr, schemaName);
     return { ...filtered, rawData: arr };
   }
@@ -325,6 +489,8 @@ const fetchDataFromAPI = async (endpoint, schemaName) => {
 };
 
 const Dashboard = () => {
+  // State for display-ready filtered data - used by CategoryCard components
+  // Structure: { profile: [[name, [details]]], employmentHistory: [[title, [details]]], ... }
   const [data, setData] = useState({
     profile: null,
     employmentHistory: null,
@@ -333,6 +499,9 @@ const Dashboard = () => {
     projects: null,
     certifications: null
   });
+  
+  // State for original API response data - used for exports and CareerTimeline
+  // Structure: { profile: [{}], employment: [{}], skills: [{}], ... }
   const [rawData, setRawData] = useState({
     profile: [],
     employment: [],
@@ -341,18 +510,31 @@ const Dashboard = () => {
     projects: [],
     certifications: []
   });
+  
+  // Raw employment data specifically for CareerTimeline component
   const [rawEmploymentData, setRawEmploymentData] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Array of recent update entries for RecentChanges component
+  // Structure: [{ isoDate: "", formatted: "", label: "" }, ...]
   const [recentUpdates, setRecentUpdates] = useState([]);
+  
+  // Skill category counts for BarChart component
+  // Structure: { "Programming": 5, "Design": 3, ... }
   const [skillCategoryCounts, setSkillCategoryCounts] = useState({});
+  
   const [exporting, setExporting] = useState(false);
 
+  // Fetch all data on component mount
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
         
+        // Fetch all 6 data types in parallel
+        // Each fetchDataFromAPI returns: { filtered, updates, categoryCounts, rawData }
         const [profileResult, employmentResult, skillsResult, educationResult, projectsResult, certResult] = await Promise.all([
           fetchDataFromAPI('/api/users/me',"Profile"),
           fetchDataFromAPI('/api/employment/me',"Employment"),
@@ -362,7 +544,8 @@ const Dashboard = () => {
           fetchDataFromAPI('/api/certifications/me',"Certification")
         ]);
 
-        // Set the filtered data
+        // Set the filtered data for CategoryCard components
+        // filtered format: [[name, [detail1, detail2, ...]], ...]
         setData({
           profile: profileResult.filtered,
           employmentHistory: employmentResult.filtered,
@@ -372,7 +555,8 @@ const Dashboard = () => {
           certifications: certResult.filtered
         });
 
-        // Store raw data for export
+        // Store raw data for export functionality and CareerTimeline
+        // rawData format: [{ field1: value1, field2: value2, ... }, ...]
         setRawData({
           profile: profileResult.rawData || [],
           employment: employmentResult.rawData || [],
@@ -382,10 +566,11 @@ const Dashboard = () => {
           certifications: certResult.rawData || []
         });
 
-        // Store raw employment data for timeline
+        // Store raw employment data separately for timeline component
         setRawEmploymentData(employmentResult.rawData || []);
 
-        // Merge all updates
+        // Merge all updates from different sources and keep top 10 most recent
+        // Each result.updates contains: [{ isoDate, formatted, label }, ...]
         let allUpdates = [];
         allUpdates = mergeRecentUpdates(allUpdates, profileResult.updates);
         allUpdates = mergeRecentUpdates(allUpdates, employmentResult.updates);
@@ -395,7 +580,8 @@ const Dashboard = () => {
         allUpdates = mergeRecentUpdates(allUpdates, certResult.updates);
         setRecentUpdates(allUpdates);
 
-        // Merge all skill category counts
+        // Merge all skill category counts for the bar chart
+        // Only skillsResult.categoryCounts will have data: { "category": count, ... }
         let allCategoryCounts = {};
         allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, profileResult.categoryCounts);
         allCategoryCounts = mergeSkillCategoryCounts(allCategoryCounts, employmentResult.categoryCounts);
@@ -416,6 +602,13 @@ const Dashboard = () => {
     fetchAllData();
   }, []);
 
+  /**
+   * Exports all dashboard data to a formatted text file
+   * Uses rawData state to access complete unfiltered data
+   * Creates downloadable .txt file with all sections formatted
+   * 
+   * Called by: "Export Summary" button click
+   */
   const handleExportSummary = () => {
     setExporting(true);
     
@@ -602,6 +795,21 @@ const Dashboard = () => {
 
 
 
+  /**
+   * Determines the completeness status of a data category for the status indicator
+   * @param {Object} inputCat - Category object with structure:
+   *   { 
+   *     title: string,        // Category name (e.g., "Profile", "Skills")
+   *     data: Array          // Filtered data tuples: [[name, [details]], ...]
+   *   }
+   * @returns {string} Status: 'complete', 'partial', or 'incomplete'
+   *   - 'complete': 80%+ of items have sufficient details AND meet minimum count threshold
+   *   - 'partial': Has some items but doesn't meet complete criteria
+   *   - 'incomplete': No items or doesn't meet minimum threshold
+   * 
+   * Called by: categories.map() in render - creates status indicator for each CategoryCard
+   * Result used to: Set color of status indicator circle (green/yellow/red)
+   */
   const getCompletenessStatus = (inputCat) => {        //INDICATORS
     const cardData=inputCat.data
     const schema=inputCat.title
@@ -610,6 +818,7 @@ const Dashboard = () => {
     }
 
 
+    // Minimum number of detail fields required for an item to be considered "complete"
     const threshData = {
     'Profile': 7,
     'Employment History': 3,
@@ -618,6 +827,7 @@ const Dashboard = () => {
     'Projects': 5,
     'Certifications': 4};
 
+    // Minimum number of items required in category to be considered "complete"
     const threshCount = {
     'Profile': 1,
     'Employment History': 2,
@@ -655,6 +865,8 @@ const Dashboard = () => {
 
 
 
+  // Define all 6 categories for the dashboard grid
+  // Each category contains: title (for display/routing) and data (filtered tuples for CategoryCard)
   const categories = [
     { title: 'Profile', data: data.profile },
     { title: 'Employment History', data: data.employmentHistory },
@@ -664,13 +876,15 @@ const Dashboard = () => {
     { title: 'Certifications', data: data.certifications }
   ];
 
+  // Map completeness status to Bootstrap variant colors for status indicators
   const statusColors = {
-    'complete': 'success',
-    'partial': 'warning',
-    'incomplete': 'danger'
+    'complete': 'success',    // Green
+    'partial': 'warning',     // Yellow
+    'incomplete': 'danger'    // Red
   };
 
-  // Format recent updates for display
+  // Format recent updates for RecentChanges component
+  // Convert from [{ isoDate, formatted, label }] to [[formatted, label]]
   const formattedRecentUpdates = recentUpdates.map(update => [update.formatted, update.label]);
 
   return (
@@ -707,9 +921,10 @@ const Dashboard = () => {
   </Button>
 </div>
         
+        {/* ProgressTracker shows overall completion across all categories */}
         <ProgressTracker data={data} />
         <Row>
-          {/* Left side: 3x2 grid */}
+          {/* Left side: 3x2 grid of category cards */}
           <Col lg={9}>
             <Row className="g-3">
               {categories.map((category, index) => {
@@ -724,7 +939,7 @@ const Dashboard = () => {
                       <Card.Body className="d-flex flex-column h-100">
                         {/* Header */}
                         <div className="d-flex align-items-center justify-content-between mb-3 flex-shrink-0">
-                          {/* Status indicator */}
+                          {/* Status indicator - colored circle showing complete/partial/incomplete */}
                           <div 
                             className="status-indicator" 
                             title={`Status: ${status === 'complete' ? 'Complete' : status === 'partial' ? 'Could be improved' : 'Incomplete'}`}
@@ -749,7 +964,7 @@ const Dashboard = () => {
                             </svg>
                           </div>
 
-                          {/* Title */}
+                          {/* Title - links to category detail page */}
                           <Card.Link 
                             href={link} 
                             className="text-decoration-none fw-semibold fs-5 text-primary flex-grow-1 text-center mx-2 card-title-link"
@@ -757,7 +972,7 @@ const Dashboard = () => {
                             {category.title}
                           </Card.Link>
 
-                          {/* Button */}
+                          {/* Add button - opens form on category page */}
                           <Link 
                             to={{ pathname: link }} 
                             state={{ showForm: true }}
@@ -772,7 +987,7 @@ const Dashboard = () => {
                           </Link>
                         </div>
 
-                        {/* Card content - scrollable */}
+                        {/* Card content - scrollable, displays filtered data via CategoryCard */}
                         <div className="flex-grow-1 overflow-auto card-content">
                           <CategoryCard data={category.data} />
                         </div>
@@ -787,7 +1002,7 @@ const Dashboard = () => {
           {/* Right side: Sticky sidebar with full height */}
           <Col lg={3}>
             <div className="sidebar-sticky">
-              {/* Skills Overview - Takes up half the height */}
+              {/* Skills Overview - Takes up half the height, displays skillCategoryCounts via BarChart */}
               <Card className="sidebar-card-top">
                 <Card.Body className="d-flex flex-column h-100">
                   <Card.Link 
@@ -805,7 +1020,7 @@ const Dashboard = () => {
                 </Card.Body>
               </Card>
 
-              {/* Quick Actions - Takes up the other half */}
+              {/* Recent Changes - Takes up the other half, displays formattedRecentUpdates via RecentChanges */}
               <Card className="sidebar-card-bottom">
                 <Card.Body className="d-flex flex-column h-100">
                   <Card.Link 
@@ -822,7 +1037,7 @@ const Dashboard = () => {
           </Col>
         </Row>
 
-        {/* Career Timeline */}
+        {/* Career Timeline - displays rawEmploymentData via CareerTimeline component */}
         <Row className="mt-4">
           <Col>
             <CareerTimeline 
