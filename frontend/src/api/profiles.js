@@ -11,6 +11,10 @@ class ProfilesAPI { // we don't require uuid as a query param, since it is now a
         return api.put(`${BASE_URL}/me`, data);
     }
 
+    deleteAllData(passBody) { // should just contain the password field in the json body
+        return api.post(`${BASE_URL}/me`, passBody);
+    }
+
     uploadAvatar(image) {
         const formData = new FormData();
         formData.append("image", image);
