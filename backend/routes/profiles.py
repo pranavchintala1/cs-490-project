@@ -48,7 +48,7 @@ async def update_profile(profile: Profile, uuid: str = Depends(authorize)):
     else:
         return {"detail": "Successfully updated profile"}
 
-@profiles_router.delete("/me", tags = ["profiles"])
+@profiles_router.post("/me", tags = ["profiles"])
 async def delete_profile(passSchema: DeletePassword, uuid: str = Depends(authorize)):
     try:
         pass_hash = await auth_dao.get_password_by_uuid(uuid)

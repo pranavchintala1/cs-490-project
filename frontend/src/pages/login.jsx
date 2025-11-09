@@ -48,8 +48,8 @@ function Login() {
       return;
     }
     catch (error) {
-
-      showFlash(error);
+      console.log("ERROR", error)
+      showFlash("Invalid Email or Password","error");
       reset();
       return;
     }
