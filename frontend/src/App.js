@@ -18,6 +18,14 @@ import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
 import JobsList from "./pages/jobs/JobList";
 import CoverLetter from "./pages/coverLetter/coverLetter";
+import ResumeList from "./pages/resumes/ResumeList";
+import ResumeCreate from "./pages/resumes/ResumeCreate";
+import ResumeEditor from "./pages/resumes/ResumeEditor";
+import ResumePreviewPage from "./pages/resumes/ResumePreviewPage";
+import VersionManagementPage from "./pages/resumes/VersionManagementPage";
+import SharingAndFeedbackPage from "./pages/resumes/SharingAndFeedbackPage";
+import PublicSharePage from "./pages/resumes/PublicSharePage";
+import ExportResumePage from "./pages/resumes/ExportResumePage";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
 
 
@@ -52,6 +60,14 @@ export function App() {
               <Route path="/certifications" element={<CertificationList />} />
               <Route path="/projects" element={<ProjectsList />} />
               <Route path="/jobs" element={<JobsList />} />
+              <Route path="/resumes" element={<ResumeList />} />
+              <Route path="/resumes/create" element={<ResumeCreate />} />
+              <Route path="/resumes/edit/:id" element={<ResumeEditor />} />
+              <Route path="/resumes/preview/:id" element={<ResumePreviewPage />} />
+              <Route path="/resumes/versions/:id" element={<VersionManagementPage />} />
+              <Route path="/resumes/feedback/:id" element={<SharingAndFeedbackPage />} />
+              <Route path="/resumes/public/:token" element={<PublicSharePage />} />
+              <Route path="/resumes/export/:id" element={<ExportResumePage />} />
              </Routes>
             </FlashProvider>
           </>
