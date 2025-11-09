@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo.errors import DuplicateKeyError
 
-from backend.mongo.cover_letters_dao import cover_letters_dao
+from mongo.cover_letters_dao import cover_letters_dao
 from sessions.session_authorizer import authorize
 from schema import CoverLetter
 
