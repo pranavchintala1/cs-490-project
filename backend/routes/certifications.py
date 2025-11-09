@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from pymongo.errors import DuplicateKeyError
 from io import BytesIO
 
-from mongo.certification_dao import certifications_dao
+from mongo.certifications_dao import certifications_dao
 from mongo.media_dao import media_dao
 from sessions.session_authorizer import authorize
 from schema import Certification
