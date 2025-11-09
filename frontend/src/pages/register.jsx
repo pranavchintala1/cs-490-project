@@ -4,155 +4,116 @@ import { useNavigate } from "react-router-dom";
 import { useFlash } from "../context/flashContext";
 import { GoogleLogin } from '@react-oauth/google';
 import { useMsal } from "@azure/msal-react";
-import { apiRequest } from "../api";
-
+import AuthAPI from "../api/authentication";
 
 function Register() {
-
     const {
         register,
         handleSubmit,
         reset,
         formState: { errors },
     } = useForm();
-
     const navigate = useNavigate();
-
     const { flash, showFlash } = useFlash();
-
     const { instance } = useMsal();
-
 
     const onSubmit = async (data) => {
 
         const payload = {
-        username: data.username,
-        password: data.password,
-        email: data.email,
-        full_name: `${data.firstName} ${data.lastName}`
+            username: data.username,
+            password: data.password,
+            email: data.email,
+            full_name: `${data.firstName} ${data.lastName}`
+        };
+
+        try {
+            const res = await AuthAPI.register(payload);
+
+            showFlash("Successfully Registered!", "Success");
+
+            localStorage.setItem("session", res.data.session_token);
+            localStorage.setItem("uuid", res.data.uuid)
+
+            navigate(`/profile`);
+            return;
+        }
+        catch (error) {
+            showFlash(error, "error");
+            return;
+        }
     };
 
+    const OAuthSubmit = async (data) => {
+        try {
+            // Link this account with local non-google account later.
+            const res = await AuthAPI.loginGoogle(data);
 
-
-        try{
-                const res = await apiRequest("/api/auth/register", "", {
-        method: "POST",
-        body: JSON.stringify(payload)
-        });
-
-       
-            showFlash("Successfully Registered!","Success");
-
-            localStorage.setItem("session",res.session_token);
-            localStorage.setItem("uuid",res.uuid)
-                
-            
-            navigate(`/profile`);
-            return;
-        }
-        catch(error){
-            showFlash(error,"error");
-            return;
-
-        }
-
-            
-        };
-
-        const OAuthSubmit = async (data) => {
-
-        
-            try{
-            const res = await apiRequest("/api/auth/verify-google-token"," ",{
-        method: "POST",
-        body: JSON.stringify(data)
-        }); // Link this account with local non-google account later.
-
-            
-
-            localStorage.setItem("session",res.session_token)
-            localStorage.setItem("uuid",res.uuid)
-                
+            localStorage.setItem("session", res.data.session_token)
+            localStorage.setItem("uuid", res.data.uuid)
 
             navigate(`/profile`);
             return;
-            }
-            catch (error){
-
-            showFlash(error,"error");
+        }
+        catch (error) {
+            showFlash(error, "error");
             return;
+        }
+    };
 
+    async function handleMicrosoftLogin() {
+        try {
+            const loginResponse = await instance.loginPopup({
+                scopes: ["user.read", "openid", "profile", "email"],
+                prompt: "select_account",
+            });
 
+            if (!loginResponse?.account) {
+                showFlash("Microsoft login failed. No account found.", "error");
+                return;
             }
 
-        };
+            const tokenResponse = await instance.acquireTokenSilent({
+                scopes: ["user.read", "openid", "profile", "email"],
+                account: loginResponse.account,
+            });
 
-async function handleMicrosoftLogin() {
-  try {
+            if (!tokenResponse?.idToken) {
+                showFlash("Unable to acquire Microsoft token.", "error");
+                return;
+            }
 
-    const loginResponse = await instance.loginPopup({
-      scopes: ["user.read", "openid", "profile", "email"],
-      prompt: "select_account",
-    });
+            const res = await AuthAPI.loginMicrosoft({token: tokenResponse.idToken});
 
-    if (!loginResponse?.account) {
-      showFlash("Microsoft login failed. No account found.", "error");
-      return;
-    }
+            if (res.status !== 200) { 
+                showFlash(res.data.detail, "error")
+                return;
+            }
 
-    const tokenResponse = await instance.acquireTokenSilent({
-      scopes: ["user.read", "openid", "profile", "email"],
-      account: loginResponse.account,
-    });
+            localStorage.setItem("session", res.data.session_token);
+            localStorage.setItem("uuid", res.data.uuid);
 
-    if (!tokenResponse?.idToken) {
-      showFlash("Unable to acquire Microsoft token.", "error");
-      return;
-    }
+            navigate("/profile");
+        } catch (err) {
+            console.error("Microsoft login failed:", err);
+            showFlash(err.message, "error");
+        }
+    };
 
-    const res = await apiRequest("/api/auth/login/microsoft", " ", {
-      method: "PUT",
-      headers: {"Content-Type": "application/json",},
-      body: JSON.stringify({ token: tokenResponse.idToken }),
-    });
-
-    if (res.detail !== "success") {
-      showFlash(res.detail,"error")
-      return;
-    }
-
-    localStorage.setItem("session", res.session_token);
-    localStorage.setItem("uuid", res.uuid);
-
-    navigate("/profile");
-  } catch (err) {
-    console.error("Microsoft login failed:", err);
-    showFlash(err.message,"error");
-  }
-};
-
-
-    
     return (
         <>
             <h2>Register</h2>
-
             <form className="Register" onSubmit={handleSubmit(onSubmit)}>
-
-                 <input
+                <input
                     type="text"
                     {...register("username", { required: true })}
                     placeholder="Username"
                     required
                 />
-
-
                 <input
                     type="email"
                     {...register("email", { required: true })}
                     placeholder="Email"
                 />
-
                 <input
                     type="password"
                     minLength="8"
@@ -161,17 +122,14 @@ async function handleMicrosoftLogin() {
                     placeholder="Password"
                     title="Password must be minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number"
                 />
-
                 <input
                     type="password"
-                    {...register("confirm", { 
-                        required: true, 
-                        validate: (value,data) => value === data.password || "Passwords must match."})}
+                    {...register("confirm", {
+                        required: true,
+                        validate: (value, data) => value === data.password || "Passwords must match."
+                    })}
                     placeholder="Confirm Password"
                 />
-
-                
-
                 <input
                     type="text"
                     {...register("firstName", { required: true })}
@@ -180,7 +138,6 @@ async function handleMicrosoftLogin() {
                     pattern="^[A-Za-z]+$"
                     title="Please enter a valid name only"
                 />
-
                 <input
                     type="text"
                     {...register("lastName", { required: true })}
@@ -189,10 +146,8 @@ async function handleMicrosoftLogin() {
                     pattern="^[A-Za-z]+$"
                     title="Please enter a valid name only"
                 />
-
-                <input type="submit" style={{}} /> 
+                <input type="submit" style={{}} />
             </form>
-
             <GoogleLogin
                 onSuccess={credentialResponse => {
                     OAuthSubmit(credentialResponse);
@@ -200,20 +155,12 @@ async function handleMicrosoftLogin() {
                 onError={() => {
                     console.log('Login Failed');
                 }}
-                />
-
+            />
             <button onClick={handleMicrosoftLogin}>
-            Login with Microsoft
+                Login with Microsoft
             </button>
         </>
     );
-
-
-
-
-
-
-
 }
 
 export default Register;
