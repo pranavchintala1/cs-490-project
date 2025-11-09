@@ -335,7 +335,10 @@ function axiosCall(schemaName) {
 
 const fetchDataFromAPI = async (schemaName) => {
   
-  const apidata = axiosCall(schemaName);
+  const response = axiosCall(schemaName);
+  const apidata = (await response)['data'];
+  console.log(apidata)
+
 
   function transformData(data) {
     const arr = Array.isArray(data)
@@ -345,7 +348,7 @@ const fetchDataFromAPI = async (schemaName) => {
       : [];
     
 
-    console.log(arr)
+    
 
     const filtered = filterBySchema(arr, schemaName);
     return { ...filtered, rawData: arr };
