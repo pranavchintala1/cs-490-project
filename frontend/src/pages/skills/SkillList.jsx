@@ -61,7 +61,8 @@ export default function SkillList() {
         position: newPosition
       };
 
-      const res = SkillsAPI.add(skillData);
+      const res = await SkillsAPI.add(skillData);
+      console.log(res);
 
       if (res && res.data.skill_id) {
         const newSkill = { ...skillData, id: res.data.skill_id };
