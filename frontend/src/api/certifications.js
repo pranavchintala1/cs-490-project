@@ -31,7 +31,7 @@ class CertificationsAPI {
 
     getMedia(mediaId) { 
         // "download" determines whether to immediately download the file or send it as a blob
-        return api.get(`${BASE_URL}/media`, {params: {download: false, media_id: mediaId}, responseType: "blob"});
+        return api.get(`${BASE_URL}/media`, {params: {media_id: mediaId}, responseType: "blob"});
     }
 
     getMediaIds(certificationId) {
