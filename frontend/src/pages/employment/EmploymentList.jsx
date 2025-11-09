@@ -15,9 +15,8 @@ export default function EmploymentList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  const uuid = localStorage.getItem('uuid') || '';
-  
   const location = useLocation();
+  
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -59,7 +58,7 @@ export default function EmploymentList() {
       setItems(items.map(it => it.id === id ? { ...it, ...patch } : it));
     } catch (error) {
       console.error("Failed to update employment:", error);
-      alert("Failed to update employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update employment. Please try again.");
     }
   };
 
@@ -68,11 +67,10 @@ export default function EmploymentList() {
     
     try {
       await EmploymentAPI.delete(id);
-
       setItems(items.filter(it => it.id !== id));
     } catch (error) {
       console.error("Failed to delete employment:", error);
-      alert("Failed to delete employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete employment. Please try again.");
     }
   };
 
@@ -93,7 +91,7 @@ export default function EmploymentList() {
       setEditEntry(null);
     } catch (error) {
       console.error("Failed to save employment:", error);
-      alert("Failed to save employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to save employment. Please try again.");
     }
   };
 
