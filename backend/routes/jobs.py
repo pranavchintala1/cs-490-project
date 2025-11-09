@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from mongo.jobs_dao import jobs_dao
 from sessions.session_authorizer import authorize
-from schema import Job
+from schema.Job import Job
 
 jobs_router = APIRouter(prefix = "/jobs")
 
@@ -70,3 +70,5 @@ async def delete_job(job_id: str, uuid: str = Depends(authorize)):
     else:
         return {"detail": "Successfully deleted job"}
     
+# @jobs_router.post("/import", tags = ["jobs"])
+# async def import_from_url(url: str, uuid)
