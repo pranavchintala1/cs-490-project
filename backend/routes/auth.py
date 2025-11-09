@@ -16,7 +16,8 @@ from mongo.profiles_dao import profiles_dao
 from mongo.forgotPassword import ForgotPassword
 from sessions.session_manager import session_manager
 from sessions.session_authorizer import authorize
-from schema import RegistInfo, LoginCred, Profile
+from schema.Auth import RegistInfo, LoginCred
+from schema.Profile import Profile
 
 import httpx
 from jose import jwt, JWTError
