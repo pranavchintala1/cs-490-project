@@ -133,11 +133,11 @@ export default function EducationForm({ addEntry, editEntry, cancelEdit }) {
             required
           >
             <option value="" disabled>Select Education Level</option>
-            <option value="High School">🏫 High School</option>
-            <option value="Associate">📘 Associate Degree</option>
-            <option value="Bachelor's">🎓 Bachelor's Degree</option>
-            <option value="Master's">📚 Master's Degree</option>
-            <option value="PhD">🔬 PhD / Doctorate</option>
+            <option value="High School Degree">🏫 High School</option>
+            <option value="Associate Degree">📘 Associate Degree</option>
+            <option value="Bachelor's Degree">🎓 Bachelor's Degree</option>
+            <option value="Master's Degree">📚 Master's Degree</option>
+            <option value="PhD/Doctorate">🔬 PhD / Doctorate</option>
             <option value="Certificate">📜 Certificate</option>
             <option value="Bootcamp">💻 Bootcamp</option>
           </select>
