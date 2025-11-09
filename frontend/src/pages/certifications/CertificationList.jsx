@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
-import { apiRequest } from "../../api";
+import CertificationsAPI from "../../api/certifications";
 import { useLocation } from "react-router-dom";
 
 export default function CertificationList() {
@@ -11,11 +11,6 @@ export default function CertificationList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-
-  // Get these once at component level
-  const uuid = localStorage.getItem('uuid') || '';
-  const token = localStorage.getItem('session') || '';
-  const baseURL = 'http://localhost:8000';
 
   useEffect(() => {
     if (location.state?.showForm) {
@@ -30,18 +25,18 @@ export default function CertificationList() {
   const loadCertifications = async () => {
     try {
       setLoading(true);
-      // Pass uuid as the 'id' parameter so api.js appends it correctly
-      const data = await apiRequest(`/api/certifications/me?uuid=`, uuid);
+      const res = await CertificationsAPI.getAll();
 
-      const transformedCerts = await Promise.all((data || []).map(async cert => {
+      // Transform backend data to frontend format
+      const transformedCerts = await Promise.all((res.data || []).map(async cert => {
+        // Check if certification has associated media
         let hasDocument = false;
         let mediaId = null;
 
         try {
-          // Pass uuid as 'id' parameter
-          const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${cert._id}&uuid=`, uuid);
-          const mediaIds = mediaIdsResponse.media_id_list || [];
-          
+          const idsRes = await CertificationsAPI.getMediaIds(cert._id);
+          const mediaIds = idsRes.data.media_id_list || [];
+
           if (mediaIds.length > 0) {
             hasDocument = true;
             mediaId = mediaIds[0];
@@ -113,43 +108,19 @@ export default function CertificationList() {
         document_name: documentFile && documentFile.size > 0 ? documentFile.name : null
       };
 
-      // For POST requests, api.js doesn't append uuid, so include it in endpoint
-      const response = await apiRequest(`/api/certifications?uuid=${uuid}`, "", {
-        method: "POST",
-        body: JSON.stringify(backendData)
-      });
+      // Create certification first
+      const res = await CertificationsAPI.add(backendData);
 
       if (documentFile && documentFile.size > 0) {
-        const certificationId = response.certification_id;
-        const uploadFormData = new FormData();
-        uploadFormData.append('media', documentFile);
-
-        const uploadResponse = await fetch(
-          `${baseURL}/api/certifications/media?parent_id=${certificationId}&uuid=${uuid}`,
-          {
-            method: "POST",
-            headers: {
-              ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
-            body: uploadFormData
-          }
-        );
-
-        if (!uploadResponse.ok) {
-          const errorText = await uploadResponse.text();
-          console.error("Upload failed - Status:", uploadResponse.status);
-          console.error("Response:", errorText);
-          throw new Error(`Failed to upload document: ${uploadResponse.status}`);
-        }
-        
-        console.log("File uploaded successfully!");
+        const certificationId = res.data.certification_id;
+        await CertificationsAPI.uploadMedia(certificationId, documentFile);
       }
 
       await loadCertifications();
       setShowForm(false);
     } catch (error) {
       console.error("Failed to add certification:", error);
-      alert("Failed to add certification. Please try again.");
+      alert(error.response?.data?.detail || "Failed to add certification. Please try again.");
     }
   };
 
@@ -172,55 +143,20 @@ export default function CertificationList() {
         backendData.document_name = documentFile.name;
       }
 
-      // For PUT requests, pass uuid as 'id' parameter to let api.js append it
-      await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, uuid, {
-        method: "PUT",
-        body: JSON.stringify(backendData)
-      });
+      // Update certification
+      await CertificationsAPI.update(editCert.id, backendData);
 
       if (documentFile && documentFile.size > 0) {
-        // Pass uuid as 'id' parameter
-        const mediaIdsResponse = await apiRequest(`/api/certifications/media/ids?parent_id=${editCert.id}&uuid=`, uuid);
-        const existingMediaIds = mediaIdsResponse.media_id_list || [];
-
-        const uploadFormData = new FormData();
-        uploadFormData.append('media', documentFile);
+        // Check if certification already has media
+        const idsRes = await CertificationsAPI.getMediaIds(editCert.id);
+        const existingMediaIds = idsRes.data.media_id_list || [];
 
         if (existingMediaIds.length > 0) {
           const mediaId = existingMediaIds[0];
-          const updateResponse = await fetch(
-            `${baseURL}/api/certifications/media?parent_id=${editCert.id}&media_id=${mediaId}&uuid=${uuid}`,
-            {
-              method: "PUT",
-              headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-              },
-              body: uploadFormData
-            }
-          );
-
-          if (!updateResponse.ok) {
-            const errorText = await updateResponse.text();
-            console.error("Update failed:", errorText);
-            throw new Error("Failed to update document");
-          }
+          await CertificationsAPI.updateMedia(mediaId, documentFile);
         } else {
-          const uploadResponse = await fetch(
-            `${baseURL}/api/certifications/media?parent_id=${editCert.id}&uuid=${uuid}`,
-            {
-              method: "POST",
-              headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-              },
-              body: uploadFormData
-            }
-          );
-
-          if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            console.error("Upload failed:", errorText);
-            throw new Error("Failed to upload document");
-          }
+          // Upload new media
+          await CertificationsAPI.uploadMedia(editCert.id, documentFile);
         }
       }
 
@@ -229,7 +165,7 @@ export default function CertificationList() {
       setShowForm(false);
     } catch (error) {
       console.error("Failed to update certification:", error);
-      alert("Failed to update certification. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update certification. Please try again.");
     }
   };
 
@@ -237,15 +173,11 @@ export default function CertificationList() {
     if (!window.confirm("Delete this certification?")) return;
 
     try {
-      // For DELETE requests, pass uuid as 'id' parameter to let api.js append it
-      await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, uuid, {
-        method: "DELETE"
-      });
-
+      await CertificationsAPI.delete(id);
       setCerts(sortCerts(certs.filter((c) => c.id !== id)));
     } catch (error) {
       console.error("Failed to delete certification:", error);
-      alert("Failed to delete certification. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete certification. Please try again.");
     }
   };
 

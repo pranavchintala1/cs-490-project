@@ -1,5 +1,5 @@
 import React from "react";
-import { apiRequest } from "../../api";
+import CertificationsAPI from "../../api/certifications";
 
 export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelete }) {
   // Helper function to parse date string as local date without timezone issues
@@ -44,26 +44,9 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
     }
 
     try {
-      const uuid = localStorage.getItem('uuid') || '';
-      const token = localStorage.getItem('session') || '';
-      const baseURL = 'http://localhost:8000';
+      const res = await CertificationsAPI.getMedia(cert.media_id);
 
-      const response = await fetch(
-        `${baseURL}/api/certifications/media?parent_id=${cert.id}&media_id=${cert.media_id}&uuid=${uuid}`,
-        {
-          method: "GET",
-          headers: {
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          }
-        }
-      );
-
-      if (!response.ok) {
-        console.error("Download failed:", response.status);
-        return alert("Failed to download file");
-      }
-
-      const blob = await response.blob();
+      const blob = res.data;
       const url = URL.createObjectURL(blob);
 
       const link = document.createElement("a");
@@ -83,25 +66,7 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
     if (!window.confirm("Delete this document?")) return;
 
     try {
-      const uuid = localStorage.getItem('uuid') || '';
-      const token = localStorage.getItem('session') || '';
-      const baseURL = 'http://localhost:8000';
-
-      const response = await fetch(
-        `${baseURL}/api/certifications/media?parent_id=${cert.id}&media_id=${cert.media_id}&uuid=${uuid}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete document");
-      }
-
+      await CertificationsAPI.deleteMedia(cert.media_id);
       alert("Document deleted successfully");
       
       // Refresh the certifications list
@@ -110,7 +75,7 @@ export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelet
       }
     } catch (err) {
       console.error("Error deleting document:", err);
-      alert("Failed to delete document");
+      alert(err.response?.data?.detail || "Failed to delete document");
     }
   };
 
