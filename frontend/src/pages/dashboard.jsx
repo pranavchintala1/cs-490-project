@@ -4,16 +4,18 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import CategoryCard from '../components/Card';
 import ProgressTracker from '../components/ProgressTracker';
 import BarChart from '../components/BarChart';
+// import { apiRequest } from "../api";
 import CareerTimeline from '../components/Timeline';
 import './Dashboard.css';
 import { Link } from "react-router-dom";
 import RecentChanges from '../components/RecentChanges';
-import EmploymentAPI from "../api/employment";
-import SkillsAPI from "../api/skills";
-import EducationAPI from "../api/education";
-import ProjectsAPI from "../api/projects";
-import ProfilesAPI from "../api/profiles";
-import CertificationsAPI from "../api/certifications";
+import ProfileApi from '../api/profiles';
+import EmploymentApi from '../api/employment';
+import SkillsApi from '../api/skills';
+import EducationApi from '../api/education';
+import ProjectsApi from '../api/projects';
+import CertificationsApi from '../api/certifications';
+
 
 // Helper function to format ISO date to readable format
 function formatDate(isoDate) {
@@ -312,6 +314,49 @@ function filterBySchema(data, schemaName) {
     }
 }
 
+function axiosCall(schemaName) {
+    switch(schemaName) {
+        case 'Profile':
+            return ProfileApi.get();
+        case 'Skill':
+            return SkillsApi.getAll();
+        case 'Employment':
+            return EmploymentApi.getAll();
+        case 'Education':
+            return EducationApi.getAll();
+        case 'Project':
+            return ProjectsApi.getAll();
+        case 'Certification':
+            return CertificationsApi.getAll();
+        default:
+            throw new Error(`Unknown schema: ${schemaName}`);
+    }
+}
+
+const fetchDataFromAPI = async (schemaName) => {
+  
+  const response = axiosCall(schemaName);
+  const apidata = (await response)['data'];
+  console.log(apidata)
+
+
+  function transformData(data) {
+    const arr = Array.isArray(data)
+    ? data
+    : (data && typeof data === "object")
+      ? [data]
+      : [];
+    
+
+    
+
+    const filtered = filterBySchema(arr, schemaName);
+    return { ...filtered, rawData: arr };
+  }
+  
+  return transformData(apidata);
+};
+
 const Dashboard = () => {
   const [data, setData] = useState({
     profile: null,
@@ -340,24 +385,15 @@ const Dashboard = () => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
-
-        const [
-          {data: profileResult}, 
-          {data: employmentResult}, 
-          {data: skillsResult}, 
-          {data: educationResult}, 
-          {data: projectsResult},
-          {data: certResult}
-        ] = await Promise.all([
-          ProfilesAPI.get(),
-          EmploymentAPI.getAll(),
-          SkillsAPI.getAll(),
-          EducationAPI.getAll(),
-          ProjectsAPI.getAll(),
-          CertificationsAPI.getAll()
+        
+        const [profileResult, employmentResult, skillsResult, educationResult, projectsResult, certResult] = await Promise.all([
+          fetchDataFromAPI("Profile"),
+          fetchDataFromAPI("Employment"),
+          fetchDataFromAPI("Skill"),
+          fetchDataFromAPI("Education"),
+          fetchDataFromAPI("Project"),
+          fetchDataFromAPI("Certification")
         ]);
-
-        // The data set by the above axios requests set each result to the returned data (not the entire request)
 
         // Set the filtered data
         setData({
