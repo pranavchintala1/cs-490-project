@@ -98,7 +98,7 @@ class Job(BaseModel):
     archive_date: Optional[str] = None
 
 class CoverLetter(BaseModel):
-    category: str
-    industry: str
-    data: dict
-    
+    title: Optional[str] = None
+    company: Optional[str] = None
+    position: Optional[str] = None
+    content: Optional[str] = None
