@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import EmploymentForm from "./EmploymentForm";
-import { apiRequest } from "../../api";
+import EmploymentAPI from "../../api/employment";
 import { useLocation } from 'react-router-dom';
 
 const parseLocalDate = (dateStr) => {
@@ -15,9 +15,8 @@ export default function EmploymentList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  const uuid = localStorage.getItem('uuid') || '';
-  
   const location = useLocation();
+  
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -31,9 +30,9 @@ export default function EmploymentList() {
   const loadEmployment = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/employment/me?uuid=", uuid);
+      const res = await EmploymentAPI.getAll();
       
-      const transformedItems = (data || []).map(item => ({
+      const transformedItems = (res.data || []).map(item => ({
         id: item._id,
         title: item.title,
         company: item.company,
@@ -54,15 +53,12 @@ export default function EmploymentList() {
 
   const onUpdate = async (id, patch) => {
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, uuid, {
-        method: "PUT",
-        body: JSON.stringify(patch)
-      });
+      await EmploymentAPI.update(id, patch);
       
       setItems(items.map(it => it.id === id ? { ...it, ...patch } : it));
     } catch (error) {
       console.error("Failed to update employment:", error);
-      alert("Failed to update employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update employment. Please try again.");
     }
   };
 
@@ -70,14 +66,11 @@ export default function EmploymentList() {
     if (!window.confirm("Delete this employment entry?")) return;
     
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, uuid, {
-        method: "DELETE"
-      });
-
+      await EmploymentAPI.delete(id);
       setItems(items.filter(it => it.id !== id));
     } catch (error) {
       console.error("Failed to delete employment:", error);
-      alert("Failed to delete employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete employment. Please try again.");
     }
   };
 
@@ -86,13 +79,11 @@ export default function EmploymentList() {
       if (data.id) {
         await onUpdate(data.id, data);
       } else {
-        const response = await apiRequest("/api/employment?uuid=", uuid, {
-          method: "POST",
-          body: JSON.stringify(data)
-        });
+        // Add new
+        const res = await EmploymentAPI.add(data);
 
-        if (response && response.employment_id) {
-          const newEntry = { ...data, id: response.employment_id };
+        if (res && res.data.employment_id) {
+          const newEntry = { ...data, id: res.data.employment_id };
           setItems([newEntry, ...items]);
         }
       }
@@ -100,7 +91,7 @@ export default function EmploymentList() {
       setEditEntry(null);
     } catch (error) {
       console.error("Failed to save employment:", error);
-      alert("Failed to save employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to save employment. Please try again.");
     }
   };
 

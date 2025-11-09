@@ -89,23 +89,6 @@ async def logout(uuid: str = Depends(authorize)):
 async def validate_session(uuid: str = Depends(authorize)):
     return {"detail": "Successfully validated session"}
 
-@auth_router.post("/check-password")
-async def check_password(credentials: LoginCred):
-    try:
-        pass_hash = await auth_dao.get_password(credentials.email.lower())
-
-        uuid = await auth_dao.get_uuid(credentials.email.lower())
-    except Exception as e:
-        raise HTTPException(500, "Encountered internal service error")
-    
-    if not pass_hash:
-        raise HTTPException(401, "Invalid email address")
-    
-    if bcrypt.checkpw(credentials.password.encode("utf-8"), pass_hash.encode("utf-8")):
-        return {"detail": "Valid login"}
-    else:
-        raise HTTPException(401, "Invalid login")
-
 @auth_router.post("/password/forgot", tags = ["profiles"])
 async def forgot_password(email: str = Body(..., embed=True)):
 
@@ -151,7 +134,7 @@ async def update_password(token: str = Body(...),password: str = Body(...)):
 
 
 
-@auth_router.post("/verify-google-token", tags = ["profiles"])
+@auth_router.post("/login/google", tags = ["profiles"])
 async def verify_google_token(token: dict = Body(...)):
 
     credentials = token.get("credential")

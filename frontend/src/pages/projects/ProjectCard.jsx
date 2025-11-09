@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ProjectsAPI from "../../api/projects";
 
 const statusColors = {
   Planned: "#2196f3",
@@ -39,25 +40,15 @@ export default function ProjectCard({ project, deleteProject, onEdit, expanded, 
   const statusEmoji = statusEmojis[project.status] || "📋";
 
   const getImageSrc = (file) => {
-    console.log('Getting image src for:', file);
     if (file.url) {
       return file.url;
     }
     return null;
   };
 
-  // Get the thumbnail image (thumbnail_id now stores the filename)
-  console.log('Project thumbnail_id:', project.thumbnail_id);
-  console.log('Available media files:', project.media_files?.map(f => f.filename));
-  
   const thumbnailImage = project.thumbnail_id
-    ? project.media_files?.find(file => {
-        console.log('Comparing:', file.filename, '===', project.thumbnail_id, ':', file.filename === project.thumbnail_id);
-        return file.filename === project.thumbnail_id && isImage(file.filename);
-      })
+    ? project.media_files?.find(file => file.filename === project.thumbnail_id && isImage(file.filename))
     : project.media_files?.find(file => isImage(file.filename));
-  
-  console.log('Selected thumbnail:', thumbnailImage?.filename);
 
   const handleDeleteMedia = async (mediaId, filename) => {
     if (!window.confirm(`Are you sure you want to delete ${filename}?`)) {
@@ -65,47 +56,24 @@ export default function ProjectCard({ project, deleteProject, onEdit, expanded, 
     }
 
     try {
-      const uuid = localStorage.getItem('uuid') || '';
-      const token = localStorage.getItem('session') || '';
-      const baseURL = 'http://localhost:8000';
+      await ProjectsAPI.deleteMedia(mediaId);
       
-      const response = await fetch(
-        `${baseURL}/api/projects/media?media_id=${mediaId}&uuid=${uuid}`,
-        {
-          method: "DELETE",
-          headers: {
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          }
-        }
-      );
-      
-      if (!response.ok) {
-        alert("Failed to delete media file");
-        return;
-      }
-
       // Trigger reload of projects
       if (onMediaDelete) {
         onMediaDelete();
       }
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Error deleting media file");
+      alert(err.response?.data?.detail || "Error deleting media file");
     }
   };
 
   const handleSetThumbnail = async (filename) => {
-    console.log('handleSetThumbnail called with filename:', filename);
-    
     if (!window.confirm(`Do you want to set the thumbnail to ${filename}?`)) {
       return;
     }
 
     try {
-      const uuid = localStorage.getItem('uuid') || '';
-      const token = localStorage.getItem('session') || '';
-      const baseURL = 'http://localhost:8000';
-      
       // Get the current project data
       const currentData = {
         project_name: project.project_name,
@@ -120,43 +88,19 @@ export default function ProjectCard({ project, deleteProject, onEdit, expanded, 
         industry: project.industry,
         status: project.status,
         project_url: project.project_url,
-        thumbnail_id: filename  // Store filename in thumbnail_id field
+        thumbnail_id: filename
       };
       
-      console.log('Setting thumbnail:', filename, 'for project:', project.id);
-      console.log('Sending data:', currentData);
-      
       // Update the project with the new thumbnail_id
-      const response = await fetch(
-        `${baseURL}/api/projects?project_id=${project.id}&uuid=${uuid}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { "Authorization": `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify(currentData)
-        }
-      );
-      
-      console.log('Response status:', response.status);
-      const responseData = await response.json();
-      console.log('Response data:', responseData);
-      
-      if (!response.ok) {
-        alert("Failed to set thumbnail");
-        return;
-      }
+      await ProjectsAPI.update(project.id, currentData);
 
       // Trigger reload of projects to refresh the thumbnail
       if (onMediaDelete) {
         await onMediaDelete();
       }
-      
-      //alert("Thumbnail updated successfully!");
     } catch (err) {
       console.error("Set thumbnail error:", err);
-      alert("Error setting thumbnail: " + err.message);
+      alert(err.response?.data?.detail || "Error setting thumbnail");
     }
   };
 
@@ -373,7 +317,6 @@ export default function ProjectCard({ project, deleteProject, onEdit, expanded, 
                     const imageSrc = getImageSrc(file);
                     const isImageFile = isImage(file.filename);
                     const isThumbnail = file.filename === project.thumbnail_id;
-                    console.log('Rendering file:', file.filename, 'isImage:', isImageFile, 'src:', imageSrc, 'isThumbnail:', isThumbnail);
                     
                     return (
                       <div 
