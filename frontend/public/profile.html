@@ -12,13 +12,13 @@ async function loadProfile() {
     try {
         const response = await fetch(`/api/profile/${userId}`, {
             headers: {
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
+                "Authorization": `Bearer ${localStorage.getItem("session")}`
             }
         });
 
         if (response.status === 401 || response.status === 403) {
             alert("Unauthorized. Please log in again.");
-            localStorage.removeItem("token");
+            localStorage.removeItem("session");
             window.location.href = "/login.html";
             return;
         }
