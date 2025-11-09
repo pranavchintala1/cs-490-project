@@ -12,6 +12,7 @@ class ProfilesAPI { // we don't require uuid as a query param, since it is now a
     }
 
     deleteAllData(passBody) { // should just contain the password field in the json body
+        console.log("PASSBODY ", passBody)
         return api.post(`${BASE_URL}/me`, passBody);
     }
 
