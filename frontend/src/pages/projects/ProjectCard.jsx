@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import ProjectsAPI from "../../api/projects";
 
 const statusColors = {
   Planned: "#2196f3",
@@ -13,23 +12,25 @@ const statusEmojis = {
   Completed: "✅"
 };
 
+// Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
 };
 
+// Helper to format date for display
 const formatDate = (dateStr) => {
   if (!dateStr) return null;
   const date = parseLocalDate(dateStr);
   return date.toLocaleDateString();
 };
 
-export default function ProjectCard({ project, deleteProject, onEdit, expanded, onToggle, onMediaDelete }) {
+export default function ProjectCard({ project, deleteProject, onEdit, expanded, onToggle }) {
   const [zoomedImage, setZoomedImage] = useState(null);
-  const [hoveredMediaId, setHoveredMediaId] = useState(null);
   
   const handleCardClick = (e) => {
+    // Only toggle if clicking the card itself, not buttons or interactive elements
     if (e.target === e.currentTarget || e.target.closest('[data-card-content]')) {
       onToggle(project.id);
     }
@@ -39,69 +40,14 @@ export default function ProjectCard({ project, deleteProject, onEdit, expanded, 
   const statusColor = statusColors[project.status] || "#666";
   const statusEmoji = statusEmojis[project.status] || "📋";
 
+  // Helper to get image source (handles both URL and base64)
   const getImageSrc = (file) => {
     if (file.url) {
       return file.url;
+    } else if (file.data && file.content_type) {
+      return `data:${file.content_type};base64,${file.data}`;
     }
     return null;
-  };
-
-  const thumbnailImage = project.thumbnail_id
-    ? project.media_files?.find(file => file.filename === project.thumbnail_id && isImage(file.filename))
-    : project.media_files?.find(file => isImage(file.filename));
-
-  const handleDeleteMedia = async (mediaId, filename) => {
-    if (!window.confirm(`Are you sure you want to delete ${filename}?`)) {
-      return;
-    }
-
-    try {
-      await ProjectsAPI.deleteMedia(mediaId);
-      
-      // Trigger reload of projects
-      if (onMediaDelete) {
-        onMediaDelete();
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert(err.response?.data?.detail || "Error deleting media file");
-    }
-  };
-
-  const handleSetThumbnail = async (filename) => {
-    if (!window.confirm(`Do you want to set the thumbnail to ${filename}?`)) {
-      return;
-    }
-
-    try {
-      // Get the current project data
-      const currentData = {
-        project_name: project.project_name,
-        description: project.description,
-        role: project.role,
-        start_date: project.start_date,
-        end_date: project.end_date,
-        skills: project.skills,
-        team_size: project.team_size,
-        details: project.details,
-        achievements: project.achievements,
-        industry: project.industry,
-        status: project.status,
-        project_url: project.project_url,
-        thumbnail_id: filename
-      };
-      
-      // Update the project with the new thumbnail_id
-      await ProjectsAPI.update(project.id, currentData);
-
-      // Trigger reload of projects to refresh the thumbnail
-      if (onMediaDelete) {
-        await onMediaDelete();
-      }
-    } catch (err) {
-      console.error("Set thumbnail error:", err);
-      alert(err.response?.data?.detail || "Error setting thumbnail");
-    }
   };
 
   return (
@@ -122,71 +68,25 @@ export default function ProjectCard({ project, deleteProject, onEdit, expanded, 
         }}
         onClick={handleCardClick}
       >
-        {thumbnailImage && (
-          <div 
-            style={{ 
-              marginBottom: "12px",
-              marginLeft: "-16px",
-              marginRight: "-16px",
-              marginTop: "-16px",
-              borderRadius: "8px 8px 0 0",
-              overflow: "hidden",
-              position: "relative"
-            }}
-          >
-            <img
-              src={getImageSrc(thumbnailImage)}
-              alt="Project thumbnail"
-              style={{
-                width: "100%",
-                height: "100px",
-                objectFit: "cover",
-                cursor: "pointer"
-              }}
-              onClick={handleCardClick}
-            />
-            <div style={{
-              position: "absolute",
-              top: "12px",
-              right: "12px",
-              background: statusColor,
-              color: "white",
-              padding: "4px 12px",
-              borderRadius: "12px",
-              fontSize: "12px",
-              fontWeight: "700",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.3)"
-            }}>
-              <span>{statusEmoji}</span>
-              {project.status}
-            </div>
-          </div>
-        )}
+        <div style={{
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          background: statusColor,
+          color: "white",
+          padding: "4px 12px",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "700",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px"
+        }}>
+          <span>{statusEmoji}</span>
+          {project.status}
+        </div>
 
-        {!thumbnailImage && (
-          <div style={{
-            position: "absolute",
-            top: "12px",
-            right: "12px",
-            background: statusColor,
-            color: "white",
-            padding: "4px 12px",
-            borderRadius: "12px",
-            fontSize: "12px",
-            fontWeight: "700",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px"
-          }}>
-            <span>{statusEmoji}</span>
-            {project.status}
-          </div>
-        )}
-
-        <div style={{ paddingRight: thumbnailImage ? "0" : "100px" }} data-card-content>
+        <div style={{ paddingRight: "100px" }} data-card-content>
           <h3 style={{
             margin: "0 0 8px 0",
             fontSize: "18px",
@@ -315,148 +215,38 @@ export default function ProjectCard({ project, deleteProject, onEdit, expanded, 
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   {project.media_files.map((file, idx) => {
                     const imageSrc = getImageSrc(file);
-                    const isImageFile = isImage(file.filename);
-                    const isThumbnail = file.filename === project.thumbnail_id;
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        style={{ position: "relative" }}
-                        onMouseEnter={() => setHoveredMediaId(file.media_id)}
-                        onMouseLeave={() => setHoveredMediaId(null)}
+                    return isImage(file.filename) && imageSrc ? (
+                      <img
+                        key={idx}
+                        src={imageSrc}
+                        alt={file.filename}
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          objectFit: "cover",
+                          borderRadius: "6px",
+                          cursor: "zoom-in",
+                          border: "2px solid #ddd"
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setZoomedImage(imageSrc);
+                        }}
+                      />
+                    ) : (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: "8px 12px",
+                          background: "#f0f0f0",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
                       >
-                        {isImageFile && imageSrc ? (
-                          <>
-                            <img
-                              src={imageSrc}
-                              alt={file.filename}
-                              style={{
-                                width: "100px",
-                                height: "100px",
-                                objectFit: "cover",
-                                borderRadius: "6px",
-                                cursor: "zoom-in",
-                                border: isThumbnail ? "3px solid #4caf50" : "2px solid #ddd"
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setZoomedImage(imageSrc);
-                              }}
-                              onError={(e) => {
-                                console.error('Image failed to load:', file.filename, imageSrc);
-                                e.target.style.display = 'none';
-                              }}
-                            />
-                            {isThumbnail && (
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  bottom: "4px",
-                                  left: "4px",
-                                  background: "rgba(76, 175, 80, 0.9)",
-                                  color: "white",
-                                  padding: "2px 6px",
-                                  borderRadius: "3px",
-                                  fontSize: "10px",
-                                  fontWeight: "600"
-                                }}
-                              >
-                                ⭐ Thumbnail
-                              </div>
-                            )}
-                            {hoveredMediaId === file.media_id && (
-                              <div style={{
-                                position: "absolute",
-                                top: "4px",
-                                right: "4px",
-                                display: "flex",
-                                gap: "4px"
-                              }}>
-                                {!isThumbnail && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSetThumbnail(file.filename);
-                                    }}
-                                    style={{
-                                      background: "rgba(76, 175, 80, 0.9)",
-                                      color: "white",
-                                      border: "none",
-                                      borderRadius: "4px",
-                                      padding: "4px 8px",
-                                      cursor: "pointer",
-                                      fontSize: "10px",
-                                      fontWeight: "600",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "2px"
-                                    }}
-                                    title="Set as thumbnail"
-                                  >
-                                    ⭐
-                                  </button>
-                                )}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteMedia(file.media_id, file.filename);
-                                  }}
-                                  style={{
-                                    background: "rgba(255, 59, 48, 0.9)",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    padding: "4px 8px",
-                                    cursor: "pointer",
-                                    fontSize: "10px",
-                                    fontWeight: "600"
-                                  }}
-                                  title="Delete this image"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            <div
-                              style={{
-                                padding: "8px 12px",
-                                background: "#f0f0f0",
-                                borderRadius: "4px",
-                                fontSize: "12px",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px"
-                              }}
-                            >
-                              📎 {file.filename}
-                            </div>
-                            {hoveredMediaId === file.media_id && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteMedia(file.media_id, file.filename);
-                                }}
-                                style={{
-                                  background: "#ff3b30",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "4px",
-                                  padding: "4px 8px",
-                                  cursor: "pointer",
-                                  fontSize: "11px",
-                                  fontWeight: "600",
-                                  transition: "opacity 0.2s"
-                                }}
-                                title="Delete this file"
-                              >
-                                🗑️
-                              </button>
-                            )}
-                          </div>
-                        )}
+                        📎 {file.filename}
                       </div>
                     );
                   })}

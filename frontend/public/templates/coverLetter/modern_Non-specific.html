@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 3px solid #007BFF;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #007BFF;
+        }
+        header p {
+            margin: 5px 0;
+            font-size: 1.2em;
+            color: #555;
+        }
+        main {
+            padding: 30px;
+        }
+        main h2 {
+            color: #007BFF;
+            border-bottom: 2px solid #007BFF;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        main p {
+            margin: 10px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 1px solid #ddd;
+        }
+        .signature {
+            margin-top: 30px;
+            font-style: italic;
+        }
+        .skills-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills-list li {
+            background-color: #007BFF;
+            color: #fff;
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{position}} | {{company}}</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the <strong>{{position}}</strong> role at <strong>{{company}}</strong>. With a strong background in <strong>{{experience}}</strong>, I am confident in my ability to contribute effectively to your team.</p>
+        </section>
+        <section>
+            <h2>Professional Summary</h2>
+            <p>{{summary}}</p>
+        </section>
+        <section>
+            <h2>Key Skills</h2>
+            <ul class="skills-list">
+                <li>{{skills}}</li>
+                <li>Project Management</li>
+                <li>Team Leadership</li>
+                <li>Problem Solving</li>
+                <li>Communication</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Why I’m a Great Fit</h2>
+            <p>With my experience in <strong>{{experience}}</strong>, I have developed a keen ability to <strong>analyze complex problems</strong> and deliver <strong>innovative solutions</strong>. I am particularly drawn to {{company}} because of its commitment to <strong>excellence and innovation</strong>, and I am eager to contribute to your ongoing success.</p>
+        </section>
+        <p class="signature">Sincerely,<br>{{name}}</p>
+    </main>
+    <footer>
+        <p>Contact: {{name}} | Phone: (123) 456-7890 | Email: {{name}}@email.com</p>
+    </footer>
+</body>
+</html>

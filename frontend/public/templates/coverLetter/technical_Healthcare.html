@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Cover Letter - Healthcare</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #007bff;
+        }
+        h2 {
+            font-size: 20px;
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        p {
+            margin: 10px 0;
+        }
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .skill {
+            background-color: #007bff;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        footer {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Application for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in healthcare technology and a passion for innovation, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section>
+            <h2>Skills</h2>
+            <div class="skills">
+                <span class="skill">{{skills}}</span>
+                <span class="skill">Electronic Health Records (EHR)</span>
+                <span class="skill">Data Analysis</span>
+                <span class="skill">Project Management</span>
+                <span class="skill">Healthcare IT</span>
+            </div>
+        </section>
+        <section>
+            <h2>Experience</h2>
+            <p><strong>Senior Healthcare Analyst</strong> - HealthTech Solutions | 2018–2023</p>
+            <p>{{experience}}</p>
+            <ul>
+                <li>Implemented EHR systems across 50+ healthcare facilities, improving data accuracy by 30%.</li>
+                <li>Led a team of 10 analysts to optimize patient data workflows, reducing processing time by 20%.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Summary</h2>
+            <p>{{summary}}</p>
+            <p>With a proven track record in healthcare technology and a commitment to driving efficiency, I am eager to bring my expertise to {{company}} and contribute to advancements in healthcare delivery.</p>
+        </section>
+        <section>
+            <p>Thank you for considering my application. I look forward to the opportunity to discuss how my skills and experiences align with the goals of {{company}}.</p>
+            <p>Sincerely,<br>{{name}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>Contact: {{name}} | Email: {{name.lower().replace(' ', '.')}}@email.com | Phone: (123) 456-7890</p>
+    </footer>
+</body>
+</html>

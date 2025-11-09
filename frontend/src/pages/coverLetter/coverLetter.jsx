@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import CoverLetterForm from "./CoverLetterForm";
-import CoverLetterAPI from "../../api/coverLetters";
+import { apiRequest } from "../../api";
 import { renderTemplate } from "./renderTemplate"; 
-import { useFlash } from "../../context/flashContext"; 
+import { useFlash } from "../../context/flashContext";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
@@ -14,17 +14,9 @@ const formatDate = (dateStr) => {
   });
 };
 
-// Styles and industries
 const styles = ["formal", "creative", "technical", "modern", "casual"];
 const industries = [
-  "Software Development", "Cybersecurity", "Fintech", "Healthcare Administration",
-  "Nursing", "Education (K-12)", "Higher Education", "Digital Marketing",
-  "Mechanical Engineering", "Civil Engineering", "Corporate Law", "Employment Law",
-  "Recruiting", "B2B Sales", "Graphic Design", "UX/UI Design", "Data Analytics",
-  "Construction Management", "Hotel Management", "Retail Management",
-  "Manufacturing Operations", "Real Estate Sales", "Financial Consulting",
-  "Public Sector Administration", "Environmental Science", "Pharmaceutical Research",
-  "Aerospace Engineering", "Automotive Design", "Agricultural Technology"
+  "Software_Development", "Cybersecurity", "Healthcare", "Education", "Marketing","Non-specific"
 ];
 
 export default function CoverLetterList() {
@@ -33,24 +25,27 @@ export default function CoverLetterList() {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sampleLetters, setSampleLetters] = useState([]);
-
-  const { showFlash } = useFlash(); 
+  const { showFlash } = useFlash();
 
   // Load user's cover letters
   useEffect(() => {
     const loadCoverLetters = async () => {
       try {
         setLoading(true);
+        const uuid = localStorage.getItem("uuid");
+        if (!uuid) throw new Error("Missing UUID in localStorage");
 
-        const res = CoverLetterAPI.getAll();
-        const mapped = (res.data || []).map((item) => ({
-          id: item._id,
+        const data = await apiRequest(`/api/coverletters/me/`);
+
+        const mapped = (data || []).map((item) => ({
+          id: item.id,
           title: item.title,
           company: item.company,
           position: item.position,
           content: item.content,
           created_at: item.created_at,
         }));
+
         setLetters(mapped);
       } catch (err) {
         console.error("Failed to load cover letters:", err);
@@ -69,9 +64,9 @@ export default function CoverLetterList() {
       for (let style of styles) {
         const group = { style, letters: [] };
         for (let industry of industries.slice(0, 3)) {
-          const id = `${style}_${industry.replace(/\s/g, "_")}`;
+          const id = `${style}_${industry.replace(/\s/g, "_")}.html`;
           try {
-            const content = await renderTemplate(`/templates/${id}.mustache`);
+            const content = await renderTemplate(id);
             group.letters.push({ id, title: `${style} - ${industry}`, content });
           } catch (err) {
             console.error("Failed to load template", id, err);
@@ -91,19 +86,19 @@ export default function CoverLetterList() {
 
     try {
       if (data.id) {
-        // UPDATE
         const putBody = {
           title: data.title,
           company: data.company || "",
           position: data.position || "",
           content: data.content,
         };
-
-        await CoverLetterAPI.update(data.id, putBody);
+        await apiRequest("/api/coverletters/", data.id, {
+          method: "PUT",
+          body: JSON.stringify(putBody),
+        });
         setLetters((prev) => prev.map((l) => (l.id === data.id ? { ...l, ...putBody } : l)));
         showFlash("Cover letter updated successfully!", "success");
       } else {
-        // CREATE
         const payload = {
           coverletter: {
             title: data.title,
@@ -113,12 +108,14 @@ export default function CoverLetterList() {
           },
           uuid,
         };
+        const response = await apiRequest("/api/coverletters", "", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
 
-        const res = await CoverLetterAPI.add(payload);
-
-        if (res?.data.cover_letter_id) {
+        if (response?.coverletter_id) {
           const newEntry = {
-            id: res.data.cover_letter_id,
+            id: response.coverletter_id,
             title: payload.coverletter.title,
             company: payload.coverletter.company,
             position: payload.coverletter.position,
@@ -145,7 +142,7 @@ export default function CoverLetterList() {
     if (!window.confirm("Are you sure you want to delete this cover letter?")) return;
 
     try {
-      await CoverLetterAPI.delete(id);
+      await apiRequest(`/api/coverletters/`, id, { method: "DELETE" });
       setLetters((prev) => prev.filter((l) => l.id !== id));
       showFlash("Cover letter deleted successfully.", "success");
     } catch (err) {
@@ -161,24 +158,12 @@ export default function CoverLetterList() {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
+    <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h1>📝 Cover Letters</h1>
         <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditEntry(null);
-          }}
-          style={{
-            padding: "12px 24px",
-            background: "#4f8ef7",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-          }}
+          onClick={() => { setShowForm(!showForm); setEditEntry(null); }}
+          style={{ padding: "12px 24px", background: "#4f8ef7", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", fontSize: "14px" }}
         >
           {showForm ? "← Cancel" : "+ Add Cover Letter"}
         </button>
@@ -188,81 +173,49 @@ export default function CoverLetterList() {
         <CoverLetterForm
           editEntry={editEntry}
           onAdded={onAdded}
-          cancelEdit={() => {
-            setEditEntry(null);
-            setShowForm(false);
-          }}
+          cancelEdit={() => { setEditEntry(null); setShowForm(false); }}
         />
       )}
 
-      {/* User letters */}
       <section>
         <h2>Your Cover Letters</h2>
-        {loading ? (
-          <p>Loading cover letters...</p>
-        ) : letters.length === 0 ? (
-          <p>No cover letters yet.</p>
-        ) : (
+        {loading ? <p>Loading cover letters...</p> : letters.length === 0 ? <p>No cover letters yet.</p> : (
           <ul style={{ listStyle: "none", padding: 0 }}>
             {letters.map((letter) => (
-              <li
-                key={letter.id}
-                style={{
-                  marginBottom: "20px",
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  padding: "12px",
-                  background: "white",
-                }}
-              >
+              <li key={letter.id} style={{ marginBottom: "20px", border: "1px solid #ddd", borderRadius: "6px", padding: "16px", background: "white" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <div>
                     <h3>{letter.title}</h3>
                     {letter.company && <p>{letter.company}</p>}
                     {letter.position && <p>Position: {letter.position}</p>}
-                    {letter.created_at && (
-                      <p style={{ fontSize: "12px", color: "#999" }}>Created: {formatDate(letter.created_at)}</p>
-                    )}
+                    {letter.created_at && <p style={{ fontSize: "12px", color: "#999" }}>Created: {formatDate(letter.created_at)}</p>}
                   </div>
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button
-                      onClick={() => {
-                        setEditEntry(letter);
-                        setShowForm(true);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#34c759",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                      }}
+                      onClick={() => { setEditEntry(letter); setShowForm(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                      style={{ padding: "6px 12px", background: "#34c759", color: "white", border: "none", borderRadius: "4px" }}
                     >
                       ✏️ Edit
                     </button>
                     <button
                       onClick={() => onDelete(letter.id)}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#ff3b30",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                      }}
+                      style={{ padding: "6px 12px", background: "#ff3b30", color: "white", border: "none", borderRadius: "4px" }}
                     >
                       🗑️ Delete
                     </button>
                   </div>
                 </div>
-                {letter.content && <pre style={{ whiteSpace: "pre-wrap", marginTop: "8px" }}>{letter.content}</pre>}
+                {letter.content && <iframe
+                  title={`coverletter-${letter.id}`}
+                  srcDoc={letter.content}
+                  style={{ width: "100%", height: "600px", border: "1px solid #ccc", marginTop: "10px", borderRadius: "6px" }}
+                />}
               </li>
             ))}
           </ul>
         )}
       </section>
 
-      {/* Sample templates */}
       <section style={{ marginTop: "40px" }}>
         <h2>Sample Cover Letters</h2>
         {sampleLetters.map((group) => (
@@ -275,39 +228,42 @@ export default function CoverLetterList() {
                   style={{
                     border: "1px solid #ddd",
                     borderRadius: "6px",
-                    padding: "12px",
+                    padding: "16px",
                     background: "#f9f9f9",
                     width: "calc(33% - 10px)",
-                    minHeight: "220px",
                     display: "flex",
                     flexDirection: "column",
-                    cursor: "pointer",
+                    justifyContent: "space-between", // keeps button at bottom
+                    cursor: "pointer"
                   }}
-                  onClick={() => handleUseSample(sample)}
                 >
-                  <h4>{sample.title}</h4>
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      fontSize: "14px",
-                      marginTop: "8px",
-                      flexGrow: 1,
-                    }}
-                  >
-                    {sample.content}
-                  </pre>
+                  <div>
+                    <h4>{sample.title}</h4>
+                    <iframe
+                      title={`sample-${sample.id}`}
+                      srcDoc={sample.content}
+                      style={{ width: "100%", border: "1px solid #ccc", borderRadius: "6px" }}
+                      ref={(el) => {
+                        if (el) {
+                          el.onload = () => {
+                            try {
+                              el.style.height = el.contentWindow.document.body.scrollHeight + "px";
+                            } catch {}
+                          };
+                        }
+                      }}
+                    />
+                  </div>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleUseSample(sample);
-                    }}
-                    style={{
-                      marginTop: "auto",
-                      padding: "6px 12px",
-                      background: "#4f8ef7",
-                      color: "white",
-                      border: "none",
+                    onClick={() => handleUseSample(sample)}
+                    style={{ 
+                      marginTop: "10px", 
+                      padding: "6px 12px", 
+                      background: "#4f8ef7", 
+                      color: "white", 
+                      border: "none", 
                       borderRadius: "4px",
+                      alignSelf: "center"
                     }}
                   >
                     Use this sample

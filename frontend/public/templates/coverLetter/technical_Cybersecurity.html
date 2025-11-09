@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Cover Letter - Cybersecurity</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 40px 20px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+        }
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 5px;
+            font-size: 1.5em;
+        }
+        .section p {
+            margin: 10px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Application for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section class="section">
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the <span class="highlight">{{position}}</span> role at <span class="highlight">{{company}}</span>. With a strong background in cybersecurity and a passion for protecting digital assets, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section class="section">
+            <h2>Skills</h2>
+            <p>My technical expertise includes:</p>
+            <ul>
+                <li>{{skills}} (e.g., Penetration Testing, Network Security, Incident Response)</li>
+                <li>Proficiency in tools like Wireshark, Metasploit, and SIEM solutions</li>
+                <li>Strong understanding of encryption protocols and secure coding practices</li>
+            </ul>
+        </section>
+        <section class="section">
+            <h2>Experience</h2>
+            <p>{{experience}} (e.g., "Over 5 years of experience in cybersecurity, including roles as a Security Analyst and Ethical Hacker. Successfully identified and mitigated vulnerabilities in enterprise systems, reducing breach risks by 40%.")</p>
+        </section>
+        <section class="section">
+            <h2>Summary</h2>
+            <p>{{summary}} (e.g., "I am a dedicated cybersecurity professional with a proven track record of enhancing organizational security postures. My analytical mindset and hands-on experience make me a valuable asset in safeguarding critical infrastructure.")</p>
+        </section>
+        <section class="section">
+            <p>I would welcome the opportunity to discuss how my skills and experiences align with the needs of {{company}}. Thank you for considering my application.</p>
+            <p>Sincerely,<br>{{name}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

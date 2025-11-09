@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
-import CertificationsAPI from "../../api/certifications";
-import { useLocation } from "react-router-dom";
+import { apiRequest } from "../../api";
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
@@ -10,13 +9,6 @@ export default function CertificationList() {
   const [editCert, setEditCert] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
-  const location = useLocation();
-
-  useEffect(() => {
-    if (location.state?.showForm) {
-      setShowForm(true);
-    }
-  }, [location.state]);
 
   useEffect(() => {
     loadCertifications();
@@ -25,40 +17,21 @@ export default function CertificationList() {
   const loadCertifications = async () => {
     try {
       setLoading(true);
-      const res = await CertificationsAPI.getAll();
+      const data = await apiRequest("/api/certifications/me?uuid=", "");
 
       // Transform backend data to frontend format
-      const transformedCerts = await Promise.all((res.data || []).map(async cert => {
-        // Check if certification has associated media
-        let hasDocument = false;
-        let mediaId = null;
-
-        try {
-          const idsRes = await CertificationsAPI.getMediaIds(cert._id);
-          const mediaIds = idsRes.data.media_id_list || [];
-
-          if (mediaIds.length > 0) {
-            hasDocument = true;
-            mediaId = mediaIds[0];
-          }
-        } catch (error) {
-          console.error("Error fetching media for cert:", cert._id, error);
-        }
-
-        return {
-          id: cert._id,
-          name: cert.name,
-          category: cert.category,
-          issuer: cert.issuer,
-          date_earned: cert.date_earned,
-          expiration_date: cert.date_expiry,
-          does_not_expire: !cert.date_expiry,
-          verified: cert.verified || false,
-          has_document: hasDocument,
-          media_id: mediaId,
-          cert_id: cert.cert_number,
-          document_name: cert.document_name
-        };
+      const transformedCerts = (data || []).map(cert => ({
+        id: cert._id,
+        name: cert.name,
+        category: cert.category,
+        issuer: cert.issuer,
+        date_earned: cert.date_earned,
+        expiration_date: cert.date_expiry,
+        does_not_expire: !cert.date_expiry,
+        verified: cert.verified || false,
+        has_document: cert.has_document || false,
+        document_name: cert.document_name,
+        cert_id: cert.cert_number
       }));
 
       setCerts(sortCerts(transformedCerts));
@@ -95,40 +68,8 @@ export default function CertificationList() {
   const addCert = async (formData) => {
     try {
       const certData = Object.fromEntries(formData.entries());
-      const documentFile = formData.get('document');
 
-      const backendData = {
-        name: certData.name,
-        issuer: certData.issuer,
-        date_earned: certData.date_earned,
-        date_expiry: certData.does_not_expire === 'true' ? null : certData.expiration_date,
-        cert_number: certData.cert_number,
-        category: certData.category,
-        verified: certData.verified === 'true',
-        document_name: documentFile && documentFile.size > 0 ? documentFile.name : null
-      };
-
-      // Create certification first
-      const res = await CertificationsAPI.add(backendData);
-
-      if (documentFile && documentFile.size > 0) {
-        const certificationId = res.data.certification_id;
-        await CertificationsAPI.uploadMedia(certificationId, documentFile);
-      }
-
-      await loadCertifications();
-      setShowForm(false);
-    } catch (error) {
-      console.error("Failed to add certification:", error);
-      alert(error.response?.data?.detail || "Failed to add certification. Please try again.");
-    }
-  };
-
-  const submitEdit = async (formData) => {
-    try {
-      const certData = Object.fromEntries(formData.entries());
-      const documentFile = formData.get('document');
-
+      // Transform frontend data to match backend schema exactly
       const backendData = {
         name: certData.name,
         issuer: certData.issuer,
@@ -139,33 +80,47 @@ export default function CertificationList() {
         verified: certData.verified === 'true'
       };
 
-      if (documentFile && documentFile.size > 0) {
-        backendData.document_name = documentFile.name;
-      }
+      await apiRequest("/api/certifications?uuid=", "", {
+        method: "POST",
+        body: JSON.stringify(backendData)
+      });
 
-      // Update certification
-      await CertificationsAPI.update(editCert.id, backendData);
+      // Reload certifications from server to get the actual data
+      await loadCertifications();
+      setShowForm(false);
+    } catch (error) {
+      console.error("Failed to add certification:", error);
+      alert("Failed to add certification. Please try again.");
+    }
+  };
 
-      if (documentFile && documentFile.size > 0) {
-        // Check if certification already has media
-        const idsRes = await CertificationsAPI.getMediaIds(editCert.id);
-        const existingMediaIds = idsRes.data.media_id_list || [];
+  const submitEdit = async (formData) => {
+    try {
+      const certData = Object.fromEntries(formData.entries());
 
-        if (existingMediaIds.length > 0) {
-          const mediaId = existingMediaIds[0];
-          await CertificationsAPI.updateMedia(mediaId, documentFile);
-        } else {
-          // Upload new media
-          await CertificationsAPI.uploadMedia(editCert.id, documentFile);
-        }
-      }
+      // Transform frontend data to match backend schema exactly
+      const backendData = {
+        name: certData.name,
+        issuer: certData.issuer,
+        date_earned: certData.date_earned,
+        date_expiry: certData.does_not_expire === 'true' ? null : certData.expiration_date,
+        cert_number: certData.cert_number,
+        category: certData.category,
+        verified: certData.verified === 'true'
+      };
 
+      await apiRequest(`/api/certifications?certification_id=${editCert.id}&uuid=`, "", {
+        method: "PUT",
+        body: JSON.stringify(backendData)
+      });
+
+      // Reload certifications from server to get the actual updated data
       await loadCertifications();
       setEditCert(null);
       setShowForm(false);
     } catch (error) {
       console.error("Failed to update certification:", error);
-      alert(error.response?.data?.detail || "Failed to update certification. Please try again.");
+      alert("Failed to update certification. Please try again.");
     }
   };
 
@@ -173,11 +128,14 @@ export default function CertificationList() {
     if (!window.confirm("Delete this certification?")) return;
 
     try {
-      await CertificationsAPI.delete(id);
+      await apiRequest(`/api/certifications?certification_id=${id}&uuid=`, "", {
+        method: "DELETE"
+      });
+
       setCerts(sortCerts(certs.filter((c) => c.id !== id)));
     } catch (error) {
       console.error("Failed to delete certification:", error);
-      alert(error.response?.data?.detail || "Failed to delete certification. Please try again.");
+      alert("Failed to delete certification. Please try again.");
     }
   };
 
@@ -284,7 +242,6 @@ export default function CertificationList() {
                     setEditCert(cert);
                     setShowForm(true);
                   }}
-                  onMediaDelete={loadCertifications}
                 />
               ))}
             </div>

@@ -2,7 +2,8 @@ import React from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Nav as BootstrapNav, Container, Button, NavDropdown } from "react-bootstrap";
 import { useFlash } from "../context/flashContext";
-import AuthAPI from "../api/authentication";
+import { sendData } from "../tools/db_commands";
+import { apiRequest } from "../api";
 
 
 const Nav = () => {
@@ -13,33 +14,35 @@ const Nav = () => {
 
 const logout = async () => {
   const uuid = localStorage.getItem("uuid");
-  
 
   try {
-    await AuthAPI.logout();
-
-    showFlash("Successfully Logged out", "success");
+    apiRequest("/api/auth/logout?uuid=", "", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
   } catch (error) {
-    showFlash(error.detail,"error");
     console.error("Logout failed:", error);
-
   };
 
-    localStorage.removeItem("uuid");
     localStorage.removeItem("session");
+    localStorage.removeItem("uuid");
 
+
+    showFlash("Successfully Logged out", "success");
     navigate("/");
   };
 
   const [showDropdown, setShowDropdown] = React.useState(false);
 
-
-  // Why would we want this
-  // React.useEffect(() => {
-  //   // Automatically show dropdown when on dashboard
-  //   setShowDropdown(location.pathname.startsWith("/dashboard"));
-  // }, [location.pathname]);
+  React.useEffect(() => {
+    // Automatically show dropdown when on dashboard
+    setShowDropdown(location.pathname.startsWith("/dashboard"));
+  }, [location.pathname]);
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
@@ -66,7 +69,6 @@ const logout = async () => {
                   title={
                     <span
                       onClick={(e) => {
-                        e.preventDefault(); // <-- add this line
                         e.stopPropagation(); // prevents dropdown toggle from hijacking the click
                         navigate("/dashboard");
                       }}

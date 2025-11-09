@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formal Cover Letter - Software Development</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 28px;
+            margin: 0;
+        }
+        header p {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+        main {
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .section p {
+            font-size: 16px;
+            margin: 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .signature {
+            margin-top: 30px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{name}}</h1>
+            <p>123 Main Street, City, State, ZIP | (123) 456-7890 | {{name}}@email.com</p>
+            <p>{{date}}</p>
+        </header>
+        <main>
+            <div class="section">
+                <h2>Dear Hiring Manager,</h2>
+                <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in software development and a passion for creating efficient, scalable solutions, I am confident in my ability to contribute to your team's success.</p>
+            </div>
+            <div class="section">
+                <h2>Professional Summary</h2>
+                <p>{{summary}}</p>
+            </div>
+            <div class="section">
+                <h2>Key Skills</h2>
+                <p>{{skills}}</p>
+            </div>
+            <div class="section">
+                <h2>Professional Experience</h2>
+                <p>{{experience}}</p>
+            </div>
+            <div class="section">
+                <p>I am eager to bring my technical expertise and collaborative spirit to {{company}}. Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
+            </div>
+            <div class="signature">
+                <p>Sincerely,</p>
+                <p>{{name}}</p>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; {{year}} {{name}}. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

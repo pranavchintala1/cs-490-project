@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #007bff;
+        }
+        header p {
+            margin: 5px 0;
+            font-size: 1.2em;
+        }
+        main {
+            padding: 40px;
+        }
+        main h2 {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        main p {
+            margin: 10px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 3px solid #007bff;
+        }
+        .skills-list {
+            columns: 2;
+            -webkit-columns: 2;
+            -moz-columns: 2;
+            list-style-type: square;
+            padding-left: 20px;
+        }
+        .skills-list li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Application for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in {{experience}}, I am confident in my ability to contribute effectively to your team.</p>
+        </section>
+        <section>
+            <h2>Professional Summary</h2>
+            <p>{{summary}}</p>
+        </section>
+        <section>
+            <h2>Key Skills</h2>
+            <ul class="skills-list">
+                <li>{{skills}}</li>
+                <li>Problem Solving</li>
+                <li>Team Collaboration</li>
+                <li>Project Management</li>
+                <li>Technical Writing</li>
+                <li>Data Analysis</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Experience</h2>
+            <p><strong>Senior Technical Specialist</strong> - Tech Innovators Inc. (2018–2023)</p>
+            <p>Led a team of 10 developers to implement cutting-edge solutions, resulting in a 25% increase in project efficiency.</p>
+            <p><strong>Technical Analyst</strong> - Data Solutions Ltd. (2015–2018)</p>
+            <p>Analyzed complex datasets to provide actionable insights, improving decision-making processes by 30%.</p>
+        </section>
+        <section>
+            <h2>Why I’m a Fit</h2>
+            <p>My technical expertise, combined with my passion for innovation, aligns perfectly with {{company}}’s mission. I am eager to bring my skills to your team and contribute to your success.</p>
+        </section>
+        <section>
+            <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to {{company}}.</p>
+            <p>Sincerely,<br>{{name}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>Contact: {{name}} | Email: {{name}}@example.com | Phone: (123) 456-7890</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formal Cover Letter - Healthcare</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 28px;
+            margin: 0;
+        }
+        header p {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+        .address {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .address p {
+            margin: 5px 0;
+        }
+        main {
+            margin-bottom: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .content {
+            font-size: 16px;
+        }
+        .content p {
+            margin: 15px 0;
+        }
+        .signature {
+            margin-top: 30px;
+            font-size: 18px;
+        }
+        footer {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            margin-top: 30px;
+        }
+        .section-title {
+            font-size: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{name}}</h1>
+            <p>123 Healthcare Lane, Wellness City, HC 12345 | (555) 123-4567 | {{name}}@email.com</p>
+        </header>
+        <div class="address">
+            <p>{{date}}</p>
+            <p>Hiring Manager</p>
+            <p>{{company}}</p>
+            <p>Industry Street, Job City, JC 56789</p>
+        </div>
+        <main>
+            <div class="greeting">
+                <p>Dear Hiring Manager,</p>
+            </div>
+            <div class="content">
+                <p>
+                    I am writing to express my interest in the <strong>{{position}}</strong> at {{company}}. With a strong background in healthcare and a passion for improving patient outcomes, I am confident in my ability to contribute effectively to your team.
+                </p>
+                <div class="section-title">Professional Summary</div>
+                <p>{{summary}}</p>
+                <div class="section-title">Key Skills</div>
+                <p>{{skills}}</p>
+                <div class="section-title">Professional Experience</div>
+                <p>{{experience}}</p>
+                <p>
+                    I am excited about the opportunity to bring my skills and experiences to {{company}}. I would welcome the chance to discuss how my background aligns with the needs of your team. Thank you for considering my application.
+                </p>
+            </div>
+            <div class="signature">
+                <p>Sincerely,</p>
+                <p>{{name}}</p>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2023 {{name}}. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

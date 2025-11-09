@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Marketing Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        header {
+            text-align: center;
+            background-color: #ff6f61;
+            color: #fff;
+            padding: 40px 20px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+        }
+        main {
+            padding: 30px;
+        }
+        main section {
+            margin-bottom: 30px;
+        }
+        main h2 {
+            color: #ff6f61;
+            border-bottom: 2px solid #ff6f61;
+            padding-bottom: 5px;
+            font-size: 1.8em;
+        }
+        main p {
+            font-size: 1.1em;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+        }
+        .placeholder {
+            color: #ff6f61;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Applying for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the <span class="placeholder">{{position}}</span> role at <span class="placeholder">{{company}}</span>. With a passion for creative strategies and a proven track record in <span class="placeholder">{{experience}}</span>, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section>
+            <h2>Why Me?</h2>
+            <p>Here’s a snapshot of what I bring to the table:</p>
+            <ul>
+                <li><strong>Skills:</strong> <span class="placeholder">{{skills}}</span></li>
+                <li><strong>Experience:</strong> <span class="placeholder">{{experience}}</span></li>
+                <li><strong>Achievements:</strong> Successfully launched campaigns that increased engagement by 40%.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>About Me</h2>
+            <p><span class="placeholder">{{summary}}</span></p>
+        </section>
+        <section>
+            <h2>Let's Connect</h2>
+            <p>I’d love the opportunity to discuss how my skills align with <span class="placeholder">{{company}}</span>'s goals. Looking forward to hearing from you!</p>
+        </section>
+    </main>
+    <footer>
+        <p>Best regards, <br> {{name}}</p>
+    </footer>
+</body>
+</html>

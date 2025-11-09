@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        header {
+            text-align: center;
+            background-color: #ffedd5;
+            color: #555;
+            padding: 40px 20px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 400;
+        }
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+            color: #777;
+        }
+        main {
+            padding: 30px;
+        }
+        main section {
+            margin-bottom: 30px;
+        }
+        main h2 {
+            font-size: 1.8em;
+            color: #ff6f61;
+            border-bottom: 2px solid #ff6f61;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        main p {
+            font-size: 1.1em;
+            color: #555;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            background-color: #ffedd5;
+        }
+        .placeholder {
+            color: #ff6f61;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Application for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a background in {{experience}}, I am confident in my ability to contribute effectively to your team.</p>
+        </section>
+        <section>
+            <h2>About Me</h2>
+            <p>I bring {{experience}} years of experience in {{skills}}, where I have developed a strong foundation in [specific skills or achievements]. My passion for [industry or field] drives me to continuously learn and grow, making me a valuable asset to any team.</p>
+        </section>
+        <section>
+            <h2>Why I'm a Great Fit</h2>
+            <p>{{summary}} My skills in {{skills}} align perfectly with the requirements of the {{position}} role, and I am eager to bring my unique perspective to {{company}}.</p>
+        </section>
+        <section>
+            <h2>Looking Forward</h2>
+            <p>I would welcome the opportunity to discuss how my skills and experiences align with the needs of {{company}}. Thank you for considering my application. I look forward to the possibility of contributing to your team.</p>
+        </section>
+    </main>
+    <footer>
+        <p>Sincerely,</p>
+        <p>{{name}}</p>
+        <p>Contact: [Your Email] | [Your Phone Number]</p>
+    </footer>
+
+    <!-- Sample Filler Data -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const placeholders = {
+                '{{name}}': 'John Doe',
+                '{{company}}': 'InnovateTech Solutions',
+                '{{position}}': 'Marketing Specialist',
+                '{{skills}}': 'digital marketing, content creation, SEO',
+                '{{experience}}': '5',
+                '{{summary}}': 'As a creative and results-driven professional, I have successfully led multiple campaigns that increased brand visibility and engagement by 30%.'
+            };
+            Object.keys(placeholders).forEach(key => {
+                const elements = document.querySelectorAll(`.placeholder${key}`);
+                elements.forEach(el => el.textContent = placeholders[key]);
+            });
+        });
+    </script>
+</body>
+</html>

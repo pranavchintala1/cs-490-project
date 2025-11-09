@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Cover Letter - Software Development</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background-color: #6200ea;
+            color: #fff;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        header p {
+            margin: 0.5rem 0 0;
+            font-size: 1.2rem;
+        }
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: -50px auto 2rem;
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .section {
+            margin-bottom: 2rem;
+        }
+        .section h2 {
+            color: #6200ea;
+            border-bottom: 3px solid #6200ea;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        .section p {
+            margin: 0.5rem 0;
+        }
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .skills-list span {
+            background-color: #6200ea;
+            color: #fff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background-color: #6200ea;
+            color: #fff;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+        }
+        .background-shape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(98, 0, 234, 0.1) 0%, rgba(98, 0, 234, 0) 100%);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="background-shape"></div>
+        <h1>{{name}}</h1>
+        <p>Applying for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <section class="section">
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the <strong>{{position}}</strong> role at <strong>{{company}}</strong>. With a strong foundation in software development and a passion for innovative solutions, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section class="section">
+            <h2>Skills</h2>
+            <div class="skills-list">
+                <span>JavaScript</span>
+                <span>React</span>
+                <span>Node.js</span>
+                <span>Python</span>
+                <span>SQL</span>
+                <span>Git</span>
+                <span>REST APIs</span>
+                <span>Agile Methodologies</span>
+            </div>
+        </section>
+        <section class="section">
+            <h2>Experience</h2>
+            <p><strong>Senior Software Developer</strong> - Tech Innovators Inc. (2018–2023)</p>
+            <p>Led a team of 5 developers to design and implement scalable web applications, resulting in a 30% increase in user engagement.</p>
+            <p><strong>Software Engineer</strong> - CodeCraft Solutions (2015–2018)</p>
+            <p>Developed and maintained backend systems using Node.js and SQL, improving system performance by 25%.</p>
+        </section>
+        <section class="section">
+            <h2>Summary</h2>
+            <p>With over 8 years of experience in software development, I have honed my skills in building robust, user-centric applications. My expertise in JavaScript, React, and Node.js, combined with my ability to lead teams and solve complex problems, makes me a strong candidate for this role. I am eager to bring my creativity and technical expertise to {{company}} and contribute to your innovative projects.</p>
+        </section>
+        <section class="section">
+            <h2>Sincerely,</h2>
+            <p>{{name}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

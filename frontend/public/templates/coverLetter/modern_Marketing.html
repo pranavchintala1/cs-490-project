@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Marketing Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 4px solid #6200ea;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #6200ea;
+        }
+        header p {
+            margin: 5px 0;
+            font-size: 1.2em;
+            color: #555;
+        }
+        main {
+            padding: 30px;
+        }
+        main h2 {
+            color: #6200ea;
+            border-bottom: 2px solid #6200ea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        main p {
+            margin: 10px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 2px solid #6200ea;
+        }
+        .skills-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills-list li {
+            background-color: #6200ea;
+            color: #fff;
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .summary {
+            font-style: italic;
+            color: #555;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Marketing Professional | {{position}}</p>
+    </header>
+    <main>
+        <section>
+            <h2>Dear Hiring Manager at {{company}},</h2>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in marketing and a passion for driving brand growth, I am confident in my ability to contribute to your team's success.</p>
+        </section>
+        <section>
+            <h2>Professional Skills</h2>
+            <ul class="skills-list">
+                <li>{{skills}}</li>
+                <li>Digital Marketing</li>
+                <li>Content Strategy</li>
+                <li>SEO & SEM</li>
+                <li>Social Media Management</li>
+                <li>Analytics & Reporting</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Experience</h2>
+            <p><strong>Marketing Specialist</strong> - {{experience}}</p>
+            <p>Led successful campaigns that increased brand visibility by 30% and engagement by 25%.</p>
+        </section>
+        <section>
+            <h2>Summary</h2>
+            <p class="summary">{{summary}}</p>
+            <p class="summary">Passionate marketing professional with over 5 years of experience in creating and implementing effective marketing strategies. Proven track record of enhancing brand presence and driving customer engagement through innovative campaigns and data-driven insights.</p>
+        </section>
+    </main>
+    <footer>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to {{company}}.</p>
+        <p>Sincerely,<br>{{name}}</p>
+    </footer>
+</body>
+</html>

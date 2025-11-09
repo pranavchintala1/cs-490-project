@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import ProfilesApi from '../api/profiles';
-import AuthApi from '../api/authentication';
-import { useFlash } from '../context/flashContext';
 
+import { apiRequest } from "../api.js";
+
+async function deleteCurrentUser() {
+  try {
+    const response = await apiRequest("api/users/me", {
+      method: "DELETE",
+    });
+
+    console.log("User deleted:", response);
+    // Optionally clear local storage and redirect after delete
+    localStorage.clear();
+    window.location.href = "/login?deleted=true";
+  } catch (err) {
+    console.error("Failed to delete user:", err);
+  }
+}
 
 
 
 const DeleteAccount = () => {
-  const navigate = useNavigate();
   const [showWarning, setShowWarning] = useState(false);
   const [password, setPassword] = useState('');
-  const { flash, showFlash } = useFlash();
 
   const handleDeleteClick = () => {
     setShowWarning(true);
@@ -22,73 +32,40 @@ const DeleteAccount = () => {
     setPassword('');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (password.trim()) {
-      try {
-        console.log({ password: password })
-        const response = await ProfilesApi.deleteAllData({ password: password });
-        
-        
-        // If we get here, it was successful (200)
-        if (response.status === 200) {
-          // Delete successful, now logout          
-          localStorage.removeItem("uuid");
-          localStorage.removeItem("session");
-          navigate("/");
-        }
-      } catch (error) {
-        // Handle different error codes
-        if (error.response) {
-          if (error.response.status === 401) {
-            // Wrong password
-            setPassword('');
-            showFlash("Invalid password. Please try again.", "error");
-          } else if (error.response.status === 500) {
-            // Server error
-            setPassword('');
-            showFlash("Server error occurred. Please try again later.", "error");
-          } else {
-            // Other error
-            setPassword('');
-            showFlash("An unexpected error occurred. Please try again.", "error");
-          }
-        } else {
-          // Network error or no response
-          setPassword('');
-          showFlash("Unable to connect to server. Please check your connection.", "error");
-        }
-        console.error("Delete failed:", error);
-      }
+      // Call the delete_account function
+      deleteCurrentUser();
     }
   };
 
   if (!showWarning) {
     return (
       <div style={{
-        backgroundColor: '#F9FAFC',
-        padding: '18px',
-        borderRadius: '12px',
-        border: '1px solid #D1D5DB',
+        backgroundColor: '#F9FAFC', // Background Light
+        padding: '18px', // Match Dashboard container padding
+        borderRadius: '12px', // Match Dashboard container radius
+        border: '1px solid #D1D5DB', // Divider Gray
         maxWidth: '400px',
         margin: '20px auto',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box' // Consistent with CategoryCard
       }}>
         <button
           onClick={handleDeleteClick}
           style={{
-            backgroundColor: '#E53935',
-            color: '#FFFFFF',
+            backgroundColor: '#E53935', // Error Red
+            color: '#FFFFFF', // White
             border: 'none',
-            padding: '12px 20px',
-            borderRadius: '8px',
-            fontSize: '14px',
+            padding: '12px 20px', // Consistent with other buttons
+            borderRadius: '8px', // Match CategoryCard radius
+            fontSize: '14px', // Match CategoryCard text size
             fontWeight: '600',
             cursor: 'pointer',
             width: '100%',
             boxSizing: 'border-box'
           }}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#00A67A'}
-          onMouseOut={(e) => e.target.style.backgroundColor = '#E53935'}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#00A67A'} // Teal Green hover (consistent with links)
+          onMouseOut={(e) => e.target.style.backgroundColor = '#E53935'} // Back to Error Red
         >
           Delete Account
         </button>
@@ -98,47 +75,47 @@ const DeleteAccount = () => {
 
   return (
     <div style={{
-      backgroundColor: '#F9FAFC',
-      padding: '18px',
-      borderRadius: '12px',
-      border: '1px solid #E53935',
+      backgroundColor: '#F9FAFC', // Background Light
+      padding: '18px', // Match Dashboard container padding
+      borderRadius: '12px', // Match Dashboard container radius
+      border: '1px solid #E53935', // Error Red border for warning
       maxWidth: '400px',
       margin: '20px auto',
       boxSizing: 'border-box'
     }}>
       <div style={{
-        backgroundColor: '#E5E9EC',
-        padding: '10px',
-        borderRadius: '8px',
-        border: '1px solid #D1D5DB',
-        marginBottom: '12px',
+        backgroundColor: '#E5E9EC', // Soft Gray (consistent with CategoryCard)
+        padding: '10px', // Match CategoryCard padding
+        borderRadius: '8px', // Match CategoryCard radius
+        border: '1px solid #D1D5DB', // Divider Gray
+        marginBottom: '12px', // Consistent spacing
         boxSizing: 'border-box'
       }}>
         <h3 style={{
-          fontSize: '14px',
+          fontSize: '14px', // Match CategoryCard heading size
           fontWeight: '600',
-          color: '#E53935',
-          marginBottom: '6px',
+          color: '#E53935', // Error Red
+          marginBottom: '6px', // Match CategoryCard spacing
           textAlign: 'center'
         }}>
           ⚠️ Warning: Account Deletion
         </h3>
         
         <p style={{
-          fontSize: '12px',
-          color: '#0A0F1A',
-          marginBottom: '4px',
-          lineHeight: '1.3',
+          fontSize: '12px', // Match CategoryCard list text size
+          color: '#0A0F1A', // Text Primary
+          marginBottom: '4px', // Tight spacing like CategoryCard
+          lineHeight: '1.3', // Match CategoryCard line height
           margin: 0
         }}>
           This action will <strong>permanently delete your account</strong> and all associated data.
         </p>
         
         <p style={{
-          fontSize: '12px',
-          color: '#0A0F1A',
-          lineHeight: '1.3',
-          margin: '2px 0 0 0'
+          fontSize: '12px', // Match CategoryCard list text size
+          color: '#0A0F1A', // Text Primary
+          lineHeight: '1.3', // Match CategoryCard line height
+          margin: '2px 0 0 0' // Minimal spacing like CategoryCard
         }}>
           <strong>This cannot be undone.</strong> All information will be removed immediately.
         </p>
@@ -147,10 +124,10 @@ const DeleteAccount = () => {
       <div style={{ marginBottom: '12px' }}>
         <label style={{
           display: 'block',
-          fontSize: '12px',
+          fontSize: '12px', // Match CategoryCard text size
           fontWeight: '600',
-          color: '#0A0F1A',
-          marginBottom: '4px'
+          color: '#0A0F1A', // Text Primary
+          marginBottom: '4px' // Tight spacing
         }}>
           Enter your password to confirm:
         </label>
@@ -162,37 +139,37 @@ const DeleteAccount = () => {
           placeholder="Password"
           style={{
             width: '100%',
-            padding: '8px',
-            border: '1px solid #D1D5DB',
-            borderRadius: '6px',
-            fontSize: '12px',
+            padding: '8px', // Smaller, consistent padding
+            border: '1px solid #D1D5DB', // Divider Gray
+            borderRadius: '6px', // Slightly smaller radius
+            fontSize: '12px', // Match CategoryCard text size
             boxSizing: 'border-box',
-            color: '#0A0F1A',
-            backgroundColor: '#FFFFFF'
+            color: '#0A0F1A', // Text Primary
+            backgroundColor: '#FFFFFF' // Surface White
           }}
         />
       </div>
 
       <div style={{
         display: 'flex',
-        gap: '8px'
+        gap: '8px' // Smaller gap, consistent with spacing
       }}>
         <button
           onClick={handleCancel}
           style={{
-            backgroundColor: '#FFFFFF',
-            color: '#4A4A4A',
-            border: '1px solid #D1D5DB',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            fontSize: '12px',
+            backgroundColor: '#FFFFFF', // Surface White
+            color: '#4A4A4A', // Text Secondary
+            border: '1px solid #D1D5DB', // Divider Gray
+            padding: '8px 12px', // Smaller, consistent padding
+            borderRadius: '6px', // Match input radius
+            fontSize: '12px', // Match CategoryCard text size
             fontWeight: '600',
             cursor: 'pointer',
             flex: '1',
             boxSizing: 'border-box'
           }}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#E5E9EC'}
-          onMouseOut={(e) => e.target.style.backgroundColor = '#FFFFFF'}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#E5E9EC'} // Soft Gray hover
+          onMouseOut={(e) => e.target.style.backgroundColor = '#FFFFFF'} // Back to Surface White
         >
           Cancel
         </button>
@@ -201,12 +178,12 @@ const DeleteAccount = () => {
           onClick={handleSubmit}
           disabled={!password.trim()}
           style={{
-            backgroundColor: password.trim() ? '#E53935' : '#D1D5DB',
-            color: '#FFFFFF',
+            backgroundColor: password.trim() ? '#E53935' : '#D1D5DB', // Error Red or Divider Gray
+            color: '#FFFFFF', // White
             border: 'none',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            fontSize: '12px',
+            padding: '8px 12px', // Smaller, consistent padding
+            borderRadius: '6px', // Match input radius
+            fontSize: '12px', // Match CategoryCard text size
             fontWeight: '600',
             cursor: password.trim() ? 'pointer' : 'not-allowed',
             flex: '1',
@@ -214,12 +191,12 @@ const DeleteAccount = () => {
           }}
           onMouseOver={(e) => {
             if (password.trim()) {
-              e.target.style.backgroundColor = '#00A67A';
+              e.target.style.backgroundColor = '#00A67A'; // Teal Green hover (consistent)
             }
           }}
           onMouseOut={(e) => {
             if (password.trim()) {
-              e.target.style.backgroundColor = '#E53935';
+              e.target.style.backgroundColor = '#E53935'; // Back to Error Red
             }
           }}
         >

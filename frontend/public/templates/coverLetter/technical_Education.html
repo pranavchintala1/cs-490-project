@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Cover Letter - Education Industry</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+        }
+        main {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 15px;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            border-top: 3px solid #007bff;
+        }
+        h1, h2, h3 {
+            color: #007bff;
+        }
+        .skills, .experience {
+            margin-bottom: 20px;
+        }
+        .skills ul, .experience ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills li, .experience li {
+            background-color: #007bff;
+            color: #fff;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .summary {
+            font-style: italic;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>Application for {{position}} at {{company}}</p>
+    </header>
+    <main>
+        <div class="sidebar">
+            <h2>Skills</h2>
+            <div class="skills">
+                <ul>
+                    <li>{{skills}}</li>
+                    <li>Educational Technology</li>
+                    <li>Curriculum Development</li>
+                    <li>Data Analysis</li>
+                    <li>Project Management</li>
+                </ul>
+            </div>
+            <h2>Experience</h2>
+            <div class="experience">
+                <ul>
+                    <li>{{experience}}</li>
+                    <li>5+ Years in Education</li>
+                    <li>Instructional Design</li>
+                    <li>Team Leadership</li>
+                </ul>
+            </div>
+        </div>
+        <div class="content">
+            <h2>Dear Hiring Manager,</h2>
+            <p>I am excited to apply for the {{position}} role at {{company}}. With a strong background in education and a passion for leveraging technology to enhance learning, I am confident in my ability to contribute to your team.</p>
+            <div class="summary">
+                <p>{{summary}}</p>
+                <p>Passionate educator with over 5 years of experience in curriculum development and instructional design. Skilled in integrating technology to create engaging and effective learning environments. Proven ability to lead teams and analyze data to drive educational outcomes.</p>
+            </div>
+            <p>Thank you for considering my application. I look forward to the opportunity to discuss how my skills and experiences align with the goals of {{company}}.</p>
+            <p>Sincerely,</p>
+            <p>{{name}}</p>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>
