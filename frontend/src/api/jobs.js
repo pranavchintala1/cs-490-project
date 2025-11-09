@@ -22,6 +22,10 @@ class JobsAPI {
     delete(jobId) {
         return api.delete(`${BASE_URL}?job_id=${jobId}`);
     }
+
+    importFromUrl(url) {
+        return api.post(`${BASE_URL}/import`, {url});
+    }
 }
 
 export default new JobsAPI();
