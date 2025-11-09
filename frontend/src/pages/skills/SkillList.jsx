@@ -20,11 +20,8 @@ export default function SkillList() {
   const [loading, setLoading] = useState(true);
   const sensors = useSensors(useSensor(PointerSensor));
 
-  const uuid = localStorage.getItem('uuid') || '';
-
   const categories = ["Technical", "Soft Skills", "Languages", "Industry-Specific"];
 
-  // Load all skills on mount
   useEffect(() => {
     loadSkills();
   }, []);
@@ -62,7 +59,6 @@ export default function SkillList() {
       };
 
       const res = await SkillsAPI.add(skillData);
-      console.log(res);
 
       if (res && res.data.skill_id) {
         const newSkill = { ...skillData, id: res.data.skill_id };
@@ -70,7 +66,7 @@ export default function SkillList() {
       }
     } catch (error) {
       console.error("Failed to add skill:", error);
-      alert("Failed to add skill. Please try again.");
+      alert(error.response?.data?.detail || "Failed to add skill. Please try again.");
     }
   };
 
@@ -83,7 +79,7 @@ export default function SkillList() {
       );
     } catch (error) {
       console.error("Failed to update skill:", error);
-      alert("Failed to update skill. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update skill. Please try again.");
     }
   };
 
@@ -96,7 +92,7 @@ export default function SkillList() {
       setSkills((prev) => prev.filter((s) => s.id !== id));
     } catch (error) {
       console.error("Failed to delete skill:", error);
-      alert("Failed to delete skill. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete skill. Please try again.");
     }
   };
 
@@ -227,7 +223,7 @@ export default function SkillList() {
         <SortableContext items={skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div style={{ 
             display: "grid", 
-            gridTemplateColumns: "repeat(2, 1fr)", // 2 columns per category
+            gridTemplateColumns: "repeat(2, 1fr)",
             gap: "16px",
             marginBottom: "20px"
           }}>

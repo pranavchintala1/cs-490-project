@@ -12,11 +12,6 @@ export default function CertificationList() {
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  // Get these once at component level
-  const uuid = localStorage.getItem('uuid') || '';
-  const token = localStorage.getItem('session') || '';
-  const baseURL = 'http://localhost:8000';
-
   useEffect(() => {
     if (location.state?.showForm) {
       setShowForm(true);
@@ -40,7 +35,7 @@ export default function CertificationList() {
 
         try {
           const idsRes = await CertificationsAPI.getMediaIds(cert._id);
-          const mediaIds = idsRes.data.media_id_list || []; // shouldn't need [], since empty list is returned if no media found
+          const mediaIds = idsRes.data.media_id_list || [];
 
           if (mediaIds.length > 0) {
             hasDocument = true;
@@ -118,25 +113,14 @@ export default function CertificationList() {
 
       if (documentFile && documentFile.size > 0) {
         const certificationId = res.data.certification_id;
-
-        // no longer required to use fetch, axios fixes this (automatically too)
-        const uploadRes = await CertificationsAPI.uploadMedia(certificationId, documentFile);
-
-        if (uploadRes.status != 200) {
-          const errorText = await uploadRes.data.detail;
-          console.error("Upload failed - Status:", uploadRes.status);
-          console.error("Response:", errorText);
-          throw new Error(`Failed to upload document: ${uploadRes.status}`);
-        }
-
-        console.log("File uploaded successfully!");
+        await CertificationsAPI.uploadMedia(certificationId, documentFile);
       }
 
       await loadCertifications();
       setShowForm(false);
     } catch (error) {
       console.error("Failed to add certification:", error);
-      alert("Failed to add certification. Please try again.");
+      alert(error.response?.data?.detail || "Failed to add certification. Please try again.");
     }
   };
 
@@ -169,22 +153,10 @@ export default function CertificationList() {
 
         if (existingMediaIds.length > 0) {
           const mediaId = existingMediaIds[0];
-          const updateRes = await CertificationsAPI.updateMedia(mediaId, documentFile)
-
-          if (updateRes.status != 200) {
-            const errorText = await updateRes.data.detail;
-            console.error("Update failed:", errorText);
-            throw new Error("Failed to update document");
-          }
+          await CertificationsAPI.updateMedia(mediaId, documentFile);
         } else {
           // Upload new media
-          const uploadRes = await CertificationsAPI.uploadMedia(editCert.id, documentFile);
-
-          if (uploadRes.status != 200) {
-            const errorText = await uploadRes.data.detail;
-            console.error("Upload failed:", errorText);
-            throw new Error("Failed to upload document");
-          }
+          await CertificationsAPI.uploadMedia(editCert.id, documentFile);
         }
       }
 
@@ -193,7 +165,7 @@ export default function CertificationList() {
       setShowForm(false);
     } catch (error) {
       console.error("Failed to update certification:", error);
-      alert("Failed to update certification. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update certification. Please try again.");
     }
   };
 
@@ -201,12 +173,11 @@ export default function CertificationList() {
     if (!window.confirm("Delete this certification?")) return;
 
     try {
-      await CertificationsAPI.delete(id); // :(
-
+      await CertificationsAPI.delete(id);
       setCerts(sortCerts(certs.filter((c) => c.id !== id)));
     } catch (error) {
       console.error("Failed to delete certification:", error);
-      alert("Failed to delete certification. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete certification. Please try again.");
     }
   };
 
