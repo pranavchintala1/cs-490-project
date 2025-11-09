@@ -2,21 +2,19 @@ import React, { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day);
 };
 
-// Helper to format date for display
 const formatDate = (dateStr) => {
   if (!dateStr) return null;
   const date = parseLocalDate(dateStr);
   return date.toLocaleDateString();
 };
 
-export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOverlay }) {
+export default function JobCard({ job, onView, onEdit, onDelete, onArchive, onRestore, isOverlay, onSelect, isSelected }) {
   const [expanded, setExpanded] = useState(false);
   
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
@@ -33,10 +31,9 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOv
   const lastStatusChange = job.statusHistory?.[job.statusHistory.length - 1]?.timestamp || job.createdAt;
   const daysInStage = Math.floor((new Date() - new Date(lastStatusChange)) / (1000 * 60 * 60 * 24));
 
-  // Check if deadline is approaching (within 7 days)
   const deadlineDate = job.deadline ? parseLocalDate(job.deadline) : null;
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize to start of day
+  today.setHours(0, 0, 0, 0);
   
   const daysUntilDeadline = deadlineDate ? Math.floor((deadlineDate - today) / (1000 * 60 * 60 * 24)) : null;
   const deadlineWarning = daysUntilDeadline !== null && daysUntilDeadline <= 7 && daysUntilDeadline >= 0;
@@ -46,7 +43,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOv
     background: deadlinePassed ? "#ffebee" : deadlineWarning ? "#fff3cd" : "white",
     padding: "12px",
     borderRadius: "6px",
-    border: isDragging ? "2px solid #4f8ef7" : "1px solid #ddd",
+    border: isSelected ? "2px solid #4f8ef7" : isDragging ? "2px solid #4f8ef7" : "1px solid #ddd",
     boxShadow: isDragging ? "0 4px 12px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.1)",
     transition: "all 0.2s",
     boxSizing: "border-box",
@@ -68,13 +65,28 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOv
     <li ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <div style={cardStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "8px" }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>
-              {job.title}
-              {job.archived && <span style={{ marginLeft: "8px", fontSize: "12px", color: "#999" }}>📦 Archived</span>}
-            </div>
-            <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
-              {job.company}
+          <div style={{ flex: 1, display: "flex", alignItems: "start", gap: "8px" }}>
+            {onSelect && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onSelect(job.id);
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{ marginTop: "4px", cursor: "pointer", width: "16px", height: "16px" }}
+              />
+            )}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "16px", fontWeight: "bold", marginBottom: "4px", color: "#333" }}>
+                {job.title}
+                {job.archived && <span style={{ marginLeft: "8px", fontSize: "12px", color: "#999" }}>📦 Archived</span>}
+              </div>
+              <div style={{ fontSize: "14px", color: "#666", marginBottom: "4px" }}>
+                {job.company}
+              </div>
             </div>
           </div>
           <button 
@@ -117,6 +129,12 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOv
             📍 {job.location}
           </div>
         )}
+        
+        {job.archived && job.archiveDate && (
+          <div style={{ fontSize: "12px", color: "#999", marginBottom: "4px", fontStyle: "italic" }}>
+            🗄️ Archived: {formatDate(job.archiveDate.split('T')[0])}
+          </div>
+        )}
 
         {expanded && (
           <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #eee", color: "#000" }}>
@@ -155,8 +173,13 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOv
                 <strong>Contacts:</strong> {job.contacts.substring(0, 100)}{job.contacts.length > 100 ? "..." : ""}
               </div>
             )}
+            {job.archiveReason && (
+              <div style={{ margin: "8px 0", fontSize: "13px", background: "#ffebee", padding: "8px", borderRadius: "4px" }}>
+                <strong>Archive Reason:</strong> {job.archiveReason}
+              </div>
+            )}
             
-            <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "12px" }}>
               <button 
                 onClick={(e) => { 
                   e.stopPropagation(); 
@@ -191,7 +214,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOv
               >
                 ✏ Edit
               </button>
-              {onArchive && !job.archived && (
+              {!job.archived && onArchive && (
                 <button 
                   onClick={(e) => { 
                     e.stopPropagation(); 
@@ -211,6 +234,25 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, isOv
                   }}
                 >
                   🗄 Archive
+                </button>
+              )}
+              {job.archived && onRestore && (
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    onRestore(job.id);
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{ 
+                    ...buttonStyle,
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                    background: "#4caf50", 
+                    color: "white" 
+                  }}
+                >
+                  ♻️ Restore
                 </button>
               )}
               <button 
