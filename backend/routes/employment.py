@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from mongo.employment_dao import employment_dao
 from sessions.session_authorizer import authorize
-from schema import Employment
+from schema.Employment import Employment
 
 employment_router = APIRouter(prefix = "/employment")
 
