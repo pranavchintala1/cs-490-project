@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo.errors import DuplicateKeyError
 
-from mongo.job_dao import jobs_dao
+from backend.mongo.jobs_dao import jobs_dao
 from sessions.session_authorizer import authorize
 from schema import Job
 
