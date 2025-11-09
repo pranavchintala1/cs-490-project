@@ -69,6 +69,10 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     e.preventDefault();
     if (!title.trim()) return alert("Job title is required");
     if (!company.trim()) return alert("Company name is required");
+    if (!location.trim()) return alert("Location is required");
+    if (!industry) return alert("Industry is required");
+    if (!jobType) return alert("Job type is required");
+    if (!deadline) return alert("Application deadline is required");
     
     // Validate URL if provided
     if (url.trim() && !validateUrl(url.trim())) {
@@ -81,12 +85,12 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     const jobData = { 
       title: title.trim(),
       company: company.trim(),
-      location: location.trim() || undefined,
+      location: location.trim(),
       salary: salary.trim() || undefined,
       url: url.trim() || undefined,
-      deadline: deadline || undefined,
-      industry: industry || undefined,
-      job_type: jobType || undefined,
+      deadline: deadline,
+      industry: industry,
+      job_type: jobType,
       description: description.trim() || undefined,
       status: status,
       notes: notes.trim() || undefined,
@@ -174,12 +178,13 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           <div>
-            <label style={labelStyle}>Location</label>
+            <label style={labelStyle}>Location *</label>
             <input 
               style={inputStyle}
               placeholder="e.g., Remote or New York, NY"
               value={location} 
               onChange={(e) => setLocation(e.target.value)} 
+              required
             />
           </div>
           <div>
@@ -217,13 +222,14 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
         
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
           <div>
-            <label style={labelStyle}>Industry</label>
+            <label style={labelStyle}>Industry *</label>
             <select 
               style={inputStyle}
               value={industry} 
               onChange={(e) => setIndustry(e.target.value)}
+              required
             >
-              <option value="">Select Industry</option>
+              <option value="" disabled>Select Industry</option>
               <option value="Technology">Technology</option>
               <option value="Finance">Finance</option>
               <option value="Healthcare">Healthcare</option>
@@ -238,13 +244,14 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           </div>
 
           <div>
-            <label style={labelStyle}>Job Type</label>
+            <label style={labelStyle}>Job Type *</label>
             <select 
               style={inputStyle}
               value={jobType} 
               onChange={(e) => setJobType(e.target.value)}
+              required
             >
-              <option value="">Select Type</option>
+              <option value="" disabled>Select Type</option>
               <option value="Full-Time">Full-Time</option>
               <option value="Part-Time">Part-Time</option>
               <option value="Internship">Internship</option>
@@ -270,12 +277,13 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           </div>
         </div>
 
-        <label style={labelStyle}>Application Deadline</label>
+        <label style={labelStyle}>Application Deadline *</label>
         <input 
           style={inputStyle}
           type="date"
           value={deadline} 
           onChange={(e) => setDeadline(e.target.value)} 
+          required
         />
 
         <label style={labelStyle}>Job Description (2000 char limit)</label>
