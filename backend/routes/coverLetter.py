@@ -9,12 +9,37 @@ from mongo.cover_letters_dao import cover_letters_dao
 
 coverletter_router = APIRouter()
 
+# ------------------------------------------------------------
+# GET a single cover letter by ID
+# ------------------------------------------------------------
+@coverletter_router.get("/cover-letters/{letter_id}", response_model=CoverLetterOut)
+async def get_coverletter(
+    letter_id: str = Path(...),
+    uuid: str = Header(...)
+):
+    """
+    Fetch a single cover letter by ID if it belongs to the current user.
+    """
+    letter = await cover_letters_dao.get_cover_letter(letter_id, uuid)
+
+    if not letter:
+        raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")
+
+    return {
+        "id": str(letter["_id"]),
+        "user_id": letter.get("uuid"),
+        "title": letter.get("title"),
+        "company": letter.get("company"),
+        "position": letter.get("position"),
+        "content": letter.get("content"),
+        "created_at": letter.get("created_at"),
+    }
 
 # ------------------------------------------------------------
 # GET all cover letters for the current user
 # ------------------------------------------------------------
-@coverletter_router.get("/api/cover-letters/me", response_model=List[CoverLetterOut])
-async def get_my_coverletters(uuid: str = Header(...)):
+@coverletter_router.get("/cover-letters/me/{uuid}", response_model=List[CoverLetterOut])
+async def get_my_coverletters(uuid: str = Path(...)):
     """
     Fetch all cover letters belonging to the current user.
     The user's UUID is passed via the 'uuid' header (set by frontend axios interceptor).
@@ -43,7 +68,7 @@ async def get_my_coverletters(uuid: str = Header(...)):
 # ------------------------------------------------------------
 # POST create a new cover letter
 # ------------------------------------------------------------
-@coverletter_router.post("/api/cover-letters")
+@coverletter_router.post("/cover-letters")
 async def add_coverletter(
     coverletter: CoverLetterIn,
     uuid: str = Header(...)
@@ -68,7 +93,7 @@ async def add_coverletter(
 # ------------------------------------------------------------
 # PUT update a cover letter
 # ------------------------------------------------------------
-@coverletter_router.put("/api/cover-letters/{letter_id}")
+@coverletter_router.put("/cover-letters/{letter_id}")
 async def update_coverletter(
     letter_id: str = Path(...),
     coverletter: CoverLetterIn = Body(...),
@@ -87,23 +112,25 @@ async def update_coverletter(
     modified_count = await cover_letters_dao.update_cover_letter(letter_id, uuid, updates)
 
     if modified_count == 0:
-        raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")
+        # Check if the document exists
+        letter_exists = await cover_letters_dao.get_cover_letter(letter_id, uuid)
+        if not letter_exists:
+            raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")
+        # If it exists, nothing changed → return success
+        return {"message": "No changes to update"}
 
     return {"message": "Updated successfully"}
-
 
 # ------------------------------------------------------------
 # DELETE a cover letter
 # ------------------------------------------------------------
-@coverletter_router.delete("/api/cover-letters/{letter_id}")
-async def delete_coverletter(
-    letter_id: str = Path(...),
-    uuid: str = Header(...)
-):
+@coverletter_router.delete("/cover-letters/{letter_id}")
+async def delete_coverletter(letter_id: str = Path(...)):
     """
     Delete a cover letter belonging to the current user.
     """
-    deleted_count = await cover_letters_dao.delete_cover_letter(letter_id, uuid)
+    # pass both letter_id and uuid to ensure only the owner can delete
+    deleted_count = await cover_letters_dao.delete_cover_letter(letter_id)
 
     if deleted_count == 0:
         raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")

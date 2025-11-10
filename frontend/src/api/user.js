@@ -1,14 +1,17 @@
 import api from "./base";
 
-const BASE_URL = "/user";
-
 class UserAPI {
-  // Fetch all user data for the current user
-  getAllData() {
-    return api.get(`${BASE_URL}/me/all_data`);
+  // Fetch all user data
+  async getAllData() {
+    // `api` already adds uuid + Authorization headers via interceptor
+    try {
+      const res = await api.get("/user/me/all_data");
+      return res.data;
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      throw err;
+    }
   }
-
-  // If you want, you can add more user endpoints here later...
 }
 
 export default new UserAPI();

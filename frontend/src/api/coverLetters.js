@@ -1,27 +1,32 @@
-import api from "./base"
+import api from "./base";
 
-const BASE_URL = "/cover-letters"
+const BASE_URL = "/cover-letters";
 
 class CoverLetterAPI {
-    add(data) {
-        return api.post(BASE_URL, data);
-    }
+  // GET all cover letters for the current user
+  getAll(uuid) {
+    return api.get(`${BASE_URL}/me/${uuid}`);
+  }
 
-    get(coverLetterId) {
-        return api.get(`${BASE_URL}?cover_letter_id=${coverLetterId}`);
-    }
+  // GET a specific cover letter by ID
+  get(coverLetterId) {
+    return api.get(`${BASE_URL}/${coverLetterId}`);
+  }
 
-    getAll() {
-        return api.get(`${BASE_URL}/me`);
-    }
+  // POST create a new cover letter
+  add(data) {
+    return api.post(BASE_URL, data);
+  }
 
-    update(coverLetterId, data) {
-        return api.get(`${BASE_URL}?cover_letter_id=${coverLetterId}`, data);
-    }
+  // PUT update an existing cover letter
+  update(coverLetterId, data) {
+    return api.put(`${BASE_URL}/${coverLetterId}`, data);
+  }
 
-    delete(coverLetterId) {
-        return api.delete(`${BASE_URL}?cover_letter_id=${coverLetterId}`);
-    }
+  // DELETE a cover letter
+  delete(coverLetterId) {
+    return api.delete(`${BASE_URL}/${coverLetterId}`);
+  }
 }
 
-export default new CoverLetterAPI()
+export default new CoverLetterAPI();

@@ -49,7 +49,7 @@ app.include_router(education_router, prefix = api_prefix)
 app.include_router(employment_router, prefix = api_prefix)
 app.include_router(certifications_router, prefix = api_prefix)
 app.include_router(jobs_router, prefix = api_prefix)
-app.include_router(coverletter_router)
+app.include_router(coverletter_router,prefix=api_prefix)
 app.include_router(user_router,prefix=api_prefix)
 app.include_router(resumes_router, prefix = api_prefix)
 

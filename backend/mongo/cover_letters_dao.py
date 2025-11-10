@@ -9,16 +9,18 @@ class CoverLettersDAO:
         result = await self.collection.insert_one(data)
         return data["_id"]
 
-    async def get_cover_letter(self, letter_id: str) -> dict | None:
-        return await self.collection.find_one({"_id": letter_id})
+    async def get_cover_letter(self, letter_id: str, uuid: str) -> dict | None:
+
+        return await self.collection.find_one({"_id": letter_id, "uuid": uuid})
 
     async def get_all_cover_letters(self, user_uuid: str) -> list[dict]:
         cursor = self.collection.find({"uuid": user_uuid}).sort("created_at", -1)
         return [doc async for doc in cursor]
 
-    async def update_cover_letter(self, letter_id: str, updates: dict) -> int:
+    async def update_cover_letter(self, letter_id: str, user_uuid: str, updates: dict) -> int:
+    # Only update if _id AND uuid match
         result = await self.collection.update_one(
-            {"_id": letter_id},
+            {"_id": letter_id, "uuid": user_uuid},
             {"$set": updates}
         )
         return result.modified_count
