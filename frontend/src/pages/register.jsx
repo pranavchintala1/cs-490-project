@@ -5,7 +5,7 @@ import { useFlash } from "../context/flashContext";
 import { GoogleLogin } from '@react-oauth/google';
 import { useMsal } from "@azure/msal-react";
 import AuthAPI from "../api/authentication"; 
-import "../Styles/register.css"; 
+import "../styles/register.css"; 
 import logo from "../logo.svg.png"; 
 
 function Register() {

@@ -52,7 +52,7 @@ const Home = ({ user, session }) => {
             ⚡ Powerful Tools for Every Step
           </h2>
 
-          <Row className="justify-content-center flex-nowrap g-4 overflow-auto">
+          <Row className="justify-content-center flex-wrap g-4">
             <Col xs="auto">
               <Card className="feature-card p-4">
                 <Card.Body>

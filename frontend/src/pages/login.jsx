@@ -6,7 +6,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
 import { useMsal } from "@azure/msal-react";
 import AuthAPI from "../api/authentication"; 
-import "../Styles/login.css"; 
+import "../styles/login.css"; 
 import logo from "../logo.svg.png"; 
 
 function Login() {
