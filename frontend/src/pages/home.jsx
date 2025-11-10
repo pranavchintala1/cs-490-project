@@ -49,13 +49,15 @@ const Home = ({ user, session }) => {
       <section className="features-section py-5 text-center text-white">
         <Container fluid>
           <h2 className="fw-bold mb-5">
-            ⚡ Powerful Tools for Every Step
+            <i className="bi bi-lightning-charge-fill fs-2 me-2 text-gradient"></i>
+            Powerful Tools for Every Step
           </h2>
 
           <Row className="justify-content-center flex-wrap g-4">
             <Col xs="auto">
               <Card className="feature-card p-4">
                 <Card.Body>
+                  <i className="bi bi-briefcase-fill fs-1 text-success mb-3"></i>
                   <Card.Title>Track Applications</Card.Title>
                   <Card.Text>
                     Keep tabs on every role you apply for — all in one place.
@@ -67,6 +69,7 @@ const Home = ({ user, session }) => {
             <Col xs="auto">
               <Card className="feature-card p-4">
                 <Card.Body>
+                  <i className="bi bi-bar-chart-fill fs-1 text-success mb-3"></i>
                   <Card.Title>Visual Analytics</Card.Title>
                   <Card.Text>
                     Gain insights into your job search performance and success rates.
@@ -78,6 +81,7 @@ const Home = ({ user, session }) => {
             <Col xs="auto">
               <Card className="feature-card p-4">
                 <Card.Body>
+                  <i className="bi bi-gear-wide-connected fs-1 text-success mb-3"></i>
                   <Card.Title>Automation Support</Card.Title>
                   <Card.Text>
                     Leverage automation tools to simplify repetitive job tasks.
@@ -89,6 +93,7 @@ const Home = ({ user, session }) => {
             <Col xs="auto">
               <Card className="feature-card p-4">
                 <Card.Body>
+                  <i className="bi bi-lightbulb-fill fs-1 text-success mb-3"></i>
                   <Card.Title>Smart Insights</Card.Title>
                   <Card.Text>
                     Get actionable recommendations to improve your job search strategy.
