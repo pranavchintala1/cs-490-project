@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
 import { useFlash } from "../context/flashContext";
-import { sendData } from "../tools/db_commands";
 import "../styles/forgot.css";
 import logo from "../logo.svg.png";
 
