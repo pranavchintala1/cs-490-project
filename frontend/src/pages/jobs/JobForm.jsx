@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import JobsAPI from "../../api/jobs";
 
 export default function JobForm({ addJob, editJob, cancelEdit }) {
   const [title, setTitle] = useState("");
@@ -16,6 +17,8 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
   const [salaryNotes, setSalaryNotes] = useState("");
   const [interviewNotes, setInterviewNotes] = useState("");
   const [id, setId] = useState(null);
+  const [isScrapingUrl, setIsScrapingUrl] = useState(false);
+  const [scrapeError, setScrapeError] = useState("");
 
   useEffect(() => {
     if (editJob) {
@@ -53,6 +56,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     setSalaryNotes("");
     setInterviewNotes("");
     setId(null);
+    setScrapeError("");
   };
 
   const validateUrl = (urlString) => {
@@ -62,6 +66,51 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       return urlObj.protocol === "http:" || urlObj.protocol === "https:";
     } catch {
       return false;
+    }
+  };
+
+  const handleScrapeUrl = async () => {
+    if (!url.trim()) {
+      setScrapeError("Please enter a URL first");
+      return;
+    }
+
+    if (!validateUrl(url.trim())) {
+      setScrapeError("Please enter a valid URL");
+      return;
+    }
+
+    setIsScrapingUrl(true);
+    setScrapeError("");
+
+    try {
+      const response = await JobsAPI.importFromUrl(url.trim());
+      const data = response.data;
+
+      // Populate form fields with scraped data
+      if (data.title) setTitle(data.title);
+      if (data.company) setCompany(data.company);
+      if (data.location) setLocation(data.location);
+      if (data.salary) setSalary(data.salary);
+      if (data.job_type) {
+        // Try to match scraped job type to our options
+        const normalizedType = data.job_type.toLowerCase();
+        if (normalizedType.includes('full')) setJobType('Full-Time');
+        else if (normalizedType.includes('part')) setJobType('Part-Time');
+        else if (normalizedType.includes('intern')) setJobType('Internship');
+        else if (normalizedType.includes('contract')) setJobType('Contract');
+        else if (normalizedType.includes('freelance')) setJobType('Freelance');
+      }
+      if (data.description) setDescription(data.description.substring(0, 2000));
+
+      setScrapeError("");
+      alert("Job details imported successfully! Please review and fill in remaining required fields.");
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || error.message || "Failed to scrape URL. Please enter details manually.";
+      setScrapeError(errorMessage);
+      console.error('Scraping error:', error);
+    } finally {
+      setIsScrapingUrl(false);
     }
   };
 
@@ -154,6 +203,66 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     }}>
       <h2 style={{ marginTop: 0, color: "#333" }}>{editJob ? "Edit Job" : "Add New Job"}</h2>
 
+      {/* URL Import Section */}
+      <div style={{
+        ...sectionStyle,
+        background: "#e8f4fd",
+        border: "2px dashed #4f8ef7"
+      }}>
+        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>🔗 Quick Import from URL</h3>
+        <p style={{ fontSize: "13px", color: "#666", marginBottom: "12px" }}>
+          Paste a job posting URL from Indeed, LinkedIn, or Glassdoor to auto-fill the form
+        </p>
+        
+        <label style={labelStyle}>Job Posting URL</label>
+        <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <input 
+              style={{
+                ...inputStyle,
+                marginBottom: 0,
+                border: url.trim() && !validateUrl(url.trim()) ? "2px solid #f44336" : "1px solid #ccc"
+              }}
+              type="url"
+              placeholder="https://www.indeed.com/viewjob?jk=..."
+              value={url} 
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setScrapeError("");
+              }} 
+            />
+            {url.trim() && !validateUrl(url.trim()) && (
+              <div style={{ color: "#f44336", fontSize: "12px", marginTop: "4px" }}>
+                Please enter a valid URL starting with http:// or https://
+              </div>
+            )}
+            {scrapeError && (
+              <div style={{ color: "#f44336", fontSize: "12px", marginTop: "4px" }}>
+                {scrapeError}
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleScrapeUrl}
+            disabled={isScrapingUrl || !url.trim() || !validateUrl(url.trim())}
+            style={{
+              padding: "10px 20px",
+              background: isScrapingUrl ? "#ccc" : "#4f8ef7",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: isScrapingUrl || !url.trim() ? "not-allowed" : "pointer",
+              fontSize: "14px",
+              fontWeight: "600",
+              whiteSpace: "nowrap"
+            }}
+          >
+            {isScrapingUrl ? "⏳ Importing..." : "📥 Import"}
+          </button>
+        </div>
+      </div>
+
       {/* Basic Information */}
       <div style={sectionStyle}>
         <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>📋 Basic Information</h3>
@@ -197,23 +306,6 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
             />
           </div>
         </div>
-
-        <label style={labelStyle}>Job Posting URL</label>
-        <input 
-          style={{
-            ...inputStyle,
-            border: url.trim() && !validateUrl(url.trim()) ? "2px solid #f44336" : "1px solid #ccc"
-          }}
-          type="url"
-          placeholder="https://example.com/job-posting"
-          value={url} 
-          onChange={(e) => setUrl(e.target.value)} 
-        />
-        {url.trim() && !validateUrl(url.trim()) && (
-          <div style={{ color: "#f44336", fontSize: "12px", marginTop: "-8px", marginBottom: "12px" }}>
-            Please enter a valid URL starting with http:// or https://
-          </div>
-        )}
       </div>
 
       {/* Job Details */}
