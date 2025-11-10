@@ -6,7 +6,8 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
   const [salary, setSalary] = useState("");
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(""); // Job posting URL
+  const [importUrl, setImportUrl] = useState(""); // Separate import URL
   const [deadline, setDeadline] = useState("");
   const [industry, setIndustry] = useState("");
   const [jobType, setJobType] = useState("");
@@ -41,16 +42,17 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
   }, [editJob]);
 
   const resetForm = () => {
-    setTitle(""); 
-    setCompany(""); 
-    setLocation(""); 
-    setSalary(""); 
+    setTitle("");
+    setCompany("");
+    setLocation("");
+    setSalary("");
     setUrl("");
-    setDeadline(""); 
-    setIndustry(""); 
-    setJobType(""); 
-    setDescription(""); 
-    setStatus("Interested"); 
+    setImportUrl("");
+    setDeadline("");
+    setIndustry("");
+    setJobType("");
+    setDescription("");
+    setStatus("Interested");
     setNotes("");
     setContacts("");
     setSalaryNotes("");
@@ -70,12 +72,12 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
   };
 
   const handleScrapeUrl = async () => {
-    if (!url.trim()) {
+    if (!importUrl.trim()) {
       setScrapeError("Please enter a URL first");
       return;
     }
 
-    if (!validateUrl(url.trim())) {
+    if (!validateUrl(importUrl.trim())) {
       setScrapeError("Please enter a valid URL");
       return;
     }
@@ -84,31 +86,35 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     setScrapeError("");
 
     try {
-      const response = await JobsAPI.importFromUrl(url.trim());
+      const response = await JobsAPI.importFromUrl(importUrl.trim());
       const data = response.data;
 
-      // Populate form fields with scraped data
       if (data.title) setTitle(data.title);
       if (data.company) setCompany(data.company);
       if (data.location) setLocation(data.location);
       if (data.salary) setSalary(data.salary);
       if (data.job_type) {
-        // Try to match scraped job type to our options
         const normalizedType = data.job_type.toLowerCase();
-        if (normalizedType.includes('full')) setJobType('Full-Time');
-        else if (normalizedType.includes('part')) setJobType('Part-Time');
-        else if (normalizedType.includes('intern')) setJobType('Internship');
-        else if (normalizedType.includes('contract')) setJobType('Contract');
-        else if (normalizedType.includes('freelance')) setJobType('Freelance');
+        if (normalizedType.includes("full")) setJobType("Full-Time");
+        else if (normalizedType.includes("part")) setJobType("Part-Time");
+        else if (normalizedType.includes("intern")) setJobType("Internship");
+        else if (normalizedType.includes("contract")) setJobType("Contract");
+        else if (normalizedType.includes("freelance")) setJobType("Freelance");
       }
-      if (data.description) setDescription(data.description.substring(0, 2000));
+      if (data.description)
+        setDescription(data.description.substring(0, 2000));
 
       setScrapeError("");
-      alert("Job details imported successfully! Please review and fill in remaining required fields.");
+      alert(
+        "Job details imported successfully! Please review and fill in remaining required fields."
+      );
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || error.message || "Failed to scrape URL. Please enter details manually.";
+      const errorMessage =
+        error.response?.data?.detail ||
+        error.message ||
+        "Failed to scrape URL. Please enter details manually.";
       setScrapeError(errorMessage);
-      console.error('Scraping error:', error);
+      console.error("Scraping error:", error);
     } finally {
       setIsScrapingUrl(false);
     }
@@ -122,16 +128,16 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     if (!industry) return alert("Industry is required");
     if (!jobType) return alert("Job type is required");
     if (!deadline) return alert("Application deadline is required");
-    
-    // Validate URL if provided
+
     if (url.trim() && !validateUrl(url.trim())) {
-      return alert("Please enter a valid URL starting with http:// or https://");
+      return alert(
+        "Please enter a valid Job Posting URL starting with http:// or https://"
+      );
     }
 
     const now = new Date().toISOString();
-    
-    // Backend expects snake_case and tuple format for status_history
-    const jobData = { 
+
+    const jobData = {
       title: title.trim(),
       company: company.trim(),
       location: location.trim(),
@@ -145,17 +151,17 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       notes: notes.trim() || undefined,
       contacts: contacts.trim() || undefined,
       salary_notes: salaryNotes.trim() || undefined,
-      interview_notes: interviewNotes.trim() || undefined
+      interview_notes: interviewNotes.trim() || undefined,
     };
 
-    // Only include status_history for new jobs or if status changed
     if (editJob) {
-      // Add the id to jobData for editing
       jobData.id = id;
-      
       const statusChanged = editJob.status !== status;
       if (statusChanged) {
-        jobData.status_history = [...(editJob.status_history || []), [status, now]];
+        jobData.status_history = [
+          ...(editJob.status_history || []),
+          [status, now],
+        ];
       }
       editJob.submit(jobData);
     } else {
@@ -174,7 +180,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     borderRadius: "4px",
     border: "1px solid #ccc",
     fontSize: "14px",
-    boxSizing: "border-box"
+    boxSizing: "border-box",
   };
 
   const labelStyle = {
@@ -182,62 +188,78 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     marginBottom: "6px",
     fontWeight: "600",
     fontSize: "14px",
-    color: "#333"
+    color: "#333",
   };
 
   const sectionStyle = {
     marginBottom: "20px",
     padding: "16px",
     background: "#f9f9f9",
-    borderRadius: "6px"
+    borderRadius: "6px",
   };
 
   return (
-    <div style={{ 
-      maxWidth: "800px", 
-      margin: "0 auto",
-      padding: "20px",
-      background: "white",
-      borderRadius: "8px",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-    }}>
-      <h2 style={{ marginTop: 0, color: "#333" }}>{editJob ? "Edit Job" : "Add New Job"}</h2>
+    <div
+      style={{
+        maxWidth: "800px",
+        margin: "0 auto",
+        padding: "20px",
+        background: "white",
+        borderRadius: "8px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+      }}
+    >
+      <h2 style={{ marginTop: 0, color: "#333" }}>
+        {editJob ? "Edit Job" : "Add New Job"}
+      </h2>
 
       {/* URL Import Section */}
-      <div style={{
-        ...sectionStyle,
-        background: "#e8f4fd",
-        border: "2px dashed #4f8ef7"
-      }}>
-        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>🔗 Quick Import from URL</h3>
+      <div
+        style={{
+          ...sectionStyle,
+          background: "#e8f4fd",
+          border: "2px dashed #4f8ef7",
+        }}
+      >
+        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+          🔗 Quick Import from URL
+        </h3>
         <p style={{ fontSize: "13px", color: "#666", marginBottom: "12px" }}>
-          Paste a job posting URL from Indeed, LinkedIn, or Glassdoor to auto-fill the form
+          Paste a job posting URL from Indeed, LinkedIn, or Glassdoor to
+          auto-fill the form
         </p>
-        
-        <label style={labelStyle}>Job Posting URL</label>
+
+        <label style={labelStyle}>Import URL</label>
         <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
           <div style={{ flex: 1 }}>
-            <input 
+            <input
               style={{
                 ...inputStyle,
                 marginBottom: 0,
-                border: url.trim() && !validateUrl(url.trim()) ? "2px solid #f44336" : "1px solid #ccc"
+                border:
+                  importUrl.trim() && !validateUrl(importUrl.trim())
+                    ? "2px solid #f44336"
+                    : "1px solid #ccc",
               }}
               type="url"
               placeholder="https://www.indeed.com/viewjob?jk=..."
-              value={url} 
+              value={importUrl}
               onChange={(e) => {
-                setUrl(e.target.value);
+                setImportUrl(e.target.value);
                 setScrapeError("");
-              }} 
+              }}
             />
-            {url.trim() && !validateUrl(url.trim()) && (
-              <div style={{ color: "#f44336", fontSize: "12px", marginTop: "4px" }}>
+            {importUrl.trim() && !validateUrl(importUrl.trim()) && (
+              <div
+                style={{ color: "#f44336", fontSize: "12px", marginTop: "4px" }}
+              >
                 Please enter a valid URL starting with http:// or https://
               </div>
             )}
             {scrapeError && (
-              <div style={{ color: "#f44336", fontSize: "12px", marginTop: "4px" }}>
+              <div
+                style={{ color: "#f44336", fontSize: "12px", marginTop: "4px" }}
+              >
                 {scrapeError}
               </div>
             )}
@@ -245,17 +267,22 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           <button
             type="button"
             onClick={handleScrapeUrl}
-            disabled={isScrapingUrl || !url.trim() || !validateUrl(url.trim())}
+            disabled={
+              isScrapingUrl ||
+              !importUrl.trim() ||
+              !validateUrl(importUrl.trim())
+            }
             style={{
               padding: "10px 20px",
               background: isScrapingUrl ? "#ccc" : "#4f8ef7",
               color: "white",
               border: "none",
               borderRadius: "4px",
-              cursor: isScrapingUrl || !url.trim() ? "not-allowed" : "pointer",
+              cursor:
+                isScrapingUrl || !importUrl.trim() ? "not-allowed" : "pointer",
               fontSize: "14px",
               fontWeight: "600",
-              whiteSpace: "nowrap"
+              whiteSpace: "nowrap",
             }}
           >
             {isScrapingUrl ? "⏳ Importing..." : "📥 Import"}
@@ -265,63 +292,96 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
 
       {/* Basic Information */}
       <div style={sectionStyle}>
-        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>📋 Basic Information</h3>
-        
+        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+          📋 Basic Information
+        </h3>
+
         <label style={labelStyle}>Job Title *</label>
-        <input 
+        <input
           style={inputStyle}
           placeholder="e.g., Senior Frontend Developer"
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)} 
-          required 
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
         />
 
         <label style={labelStyle}>Company Name *</label>
-        <input 
+        <input
           style={inputStyle}
           placeholder="e.g., TechCorp Inc."
-          value={company} 
-          onChange={(e) => setCompany(e.target.value)} 
-          required 
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          required
         />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           <div>
             <label style={labelStyle}>Location *</label>
-            <input 
+            <input
               style={inputStyle}
               placeholder="e.g., Remote or New York, NY"
-              value={location} 
-              onChange={(e) => setLocation(e.target.value)} 
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
               required
             />
           </div>
           <div>
             <label style={labelStyle}>Salary Range</label>
-            <input 
+            <input
               style={inputStyle}
               placeholder="e.g., $80k-$120k"
-              value={salary} 
-              onChange={(e) => setSalary(e.target.value)} 
+              value={salary}
+              onChange={(e) => setSalary(e.target.value)}
             />
           </div>
         </div>
+
+        <label style={labelStyle}>Job Posting URL</label>
+        <input
+          style={{
+            ...inputStyle,
+            border:
+              url.trim() && !validateUrl(url.trim())
+                ? "2px solid #f44336"
+                : "1px solid #ccc",
+          }}
+          type="url"
+          placeholder="https://example.com/job-posting"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        {url.trim() && !validateUrl(url.trim()) && (
+          <div
+            style={{
+              color: "#f44336",
+              fontSize: "12px",
+              marginTop: "-8px",
+              marginBottom: "12px",
+            }}
+          >
+            Please enter a valid URL starting with http:// or https://
+          </div>
+        )}
       </div>
 
       {/* Job Details */}
       <div style={sectionStyle}>
-        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>🔍 Job Details</h3>
-        
+        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+          🔍 Job Details
+        </h3>
+
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
           <div>
             <label style={labelStyle}>Industry *</label>
-            <select 
+            <select
               style={inputStyle}
-              value={industry} 
+              value={industry}
               onChange={(e) => setIndustry(e.target.value)}
               required
             >
-              <option value="" disabled>Select Industry</option>
+              <option value="" disabled>
+                Select Industry
+              </option>
               <option value="Technology">Technology</option>
               <option value="Finance">Finance</option>
               <option value="Healthcare">Healthcare</option>
@@ -337,13 +397,15 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
 
           <div>
             <label style={labelStyle}>Job Type *</label>
-            <select 
+            <select
               style={inputStyle}
-              value={jobType} 
+              value={jobType}
               onChange={(e) => setJobType(e.target.value)}
               required
             >
-              <option value="" disabled>Select Type</option>
+              <option value="" disabled>
+                Select Type
+              </option>
               <option value="Full-Time">Full-Time</option>
               <option value="Part-Time">Part-Time</option>
               <option value="Internship">Internship</option>
@@ -354,9 +416,9 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
 
           <div>
             <label style={labelStyle}>Status</label>
-            <select 
+            <select
               style={inputStyle}
-              value={status} 
+              value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value="Interested">Interested</option>
@@ -370,68 +432,105 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
         </div>
 
         <label style={labelStyle}>Application Deadline *</label>
-        <input 
+        <input
           style={inputStyle}
           type="date"
-          value={deadline} 
-          onChange={(e) => setDeadline(e.target.value)} 
+          value={deadline}
+          onChange={(e) => setDeadline(e.target.value)}
           required
         />
 
         <label style={labelStyle}>Job Description (2000 char limit)</label>
-        <textarea 
-          style={{ ...inputStyle, minHeight: "120px", resize: "vertical", fontFamily: "inherit" }}
+        <textarea
+          style={{
+            ...inputStyle,
+            minHeight: "120px",
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
           placeholder="Paste or type the job description here..."
-          value={description} 
+          value={description}
           onChange={(e) => setDescription(e.target.value.substring(0, 2000))}
           maxLength={2000}
         />
-        <div style={{ fontSize: "12px", color: "#666", marginTop: "-8px", marginBottom: "12px" }}>
+        <div
+          style={{
+            fontSize: "12px",
+            color: "#666",
+            marginTop: "-8px",
+            marginBottom: "12px",
+          }}
+        >
           {description.length}/2000 characters
         </div>
       </div>
 
       {/* Personal Notes */}
       <div style={sectionStyle}>
-        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>📝 Personal Notes & Tracking</h3>
-        
+        <h3 style={{ marginTop: 0, fontSize: "16px", color: "#4f8ef7" }}>
+          📝 Personal Notes & Tracking
+        </h3>
+
         <label style={labelStyle}>General Notes</label>
-        <textarea 
-          style={{ ...inputStyle, minHeight: "80px", resize: "vertical", fontFamily: "inherit" }}
+        <textarea
+          style={{
+            ...inputStyle,
+            minHeight: "80px",
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
           placeholder="Your personal observations, thoughts, pros/cons..."
-          value={notes} 
+          value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
 
         <label style={labelStyle}>Contact Information</label>
-        <textarea 
-          style={{ ...inputStyle, minHeight: "60px", resize: "vertical", fontFamily: "inherit" }}
+        <textarea
+          style={{
+            ...inputStyle,
+            minHeight: "60px",
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
           placeholder="Recruiter name, hiring manager, email, phone..."
-          value={contacts} 
+          value={contacts}
           onChange={(e) => setContacts(e.target.value)}
         />
 
         <label style={labelStyle}>Salary Negotiation Notes</label>
-        <textarea 
-          style={{ ...inputStyle, minHeight: "60px", resize: "vertical", fontFamily: "inherit" }}
+        <textarea
+          style={{
+            ...inputStyle,
+            minHeight: "60px",
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
           placeholder="Salary expectations, negotiation points, benefits..."
-          value={salaryNotes} 
+          value={salaryNotes}
           onChange={(e) => setSalaryNotes(e.target.value)}
         />
 
         <label style={labelStyle}>Interview Notes & Feedback</label>
-        <textarea 
-          style={{ ...inputStyle, minHeight: "80px", resize: "vertical", fontFamily: "inherit" }}
+        <textarea
+          style={{
+            ...inputStyle,
+            minHeight: "80px",
+            resize: "vertical",
+            fontFamily: "inherit",
+          }}
           placeholder="Interview questions asked, your answers, feedback received..."
-          value={interviewNotes} 
+          value={interviewNotes}
           onChange={(e) => setInterviewNotes(e.target.value)}
         />
       </div>
 
       <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-        <button 
-          type="button" 
-          onClick={() => { resetForm(); cancelEdit && cancelEdit(); }}
+        <button
+          type="button"
+          onClick={() => {
+            resetForm();
+            cancelEdit && cancelEdit();
+          }}
           style={{
             padding: "12px 24px",
             background: "#999",
@@ -440,12 +539,12 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
             borderRadius: "4px",
             cursor: "pointer",
             fontSize: "14px",
-            fontWeight: "600"
+            fontWeight: "600",
           }}
         >
           Cancel
         </button>
-        <button 
+        <button
           type="button"
           onClick={handleSubmit}
           style={{
@@ -456,7 +555,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
             borderRadius: "4px",
             cursor: "pointer",
             fontSize: "14px",
-            fontWeight: "600"
+            fontWeight: "600",
           }}
         >
           {editJob ? "💾 Save Changes" : "➕ Add Job"}
