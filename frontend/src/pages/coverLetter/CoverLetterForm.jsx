@@ -1,86 +1,115 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-export default function CoverLetterForm({ onAdded, editEntry, cancelEdit }) {
-  const [form, setForm] = useState({
-    title: "",
-    company: "",
-    position: "",
-    content: ""
-  });
+export default function CoverLetterForm({ editEntry, onAdded, cancelEdit }) {
+  const [title, setTitle] = useState(editEntry?.title || "");
+  const [company, setCompany] = useState(editEntry?.company || "");
+  const [position, setPosition] = useState(editEntry?.position || "");
+  const [content, setContent] = useState(editEntry?.content || "");
+  const iframeRef = useRef(null);
 
+  // Update state when editEntry changes
   useEffect(() => {
-    if (editEntry) setForm(editEntry);
+    setTitle(editEntry?.title || "");
+    setCompany(editEntry?.company || "");
+    setPosition(editEntry?.position || "");
+    setContent(editEntry?.content || "");
   }, [editEntry]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
+  // Initialize iframe only when editEntry/content changes externally
+  useEffect(() => {
+    if (!iframeRef.current) return;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!form.title || !form.content) {
-      alert("Please fill out at least a title and content.");
-      return;
+    const doc = iframeRef.current.contentDocument;
+
+    // Write full HTML including <head> if it exists
+    doc.open();
+    if (content.includes("<html")) {
+      doc.write(content);
+    } else {
+      doc.write(`<html><head></head><body>${content || ""}</body></html>`);
     }
-    onAdded(form);
-    setForm({ title: "", company: "", position: "", content: "" });
+    doc.close();
+
+    doc.body.contentEditable = "true";
+    doc.body.style.padding = "20px";
+    doc.body.style.minHeight = "500px";
+
+    const handleInput = () => {
+      // Save the **entire document**, not just body.innerHTML
+      setContent(doc.documentElement.outerHTML);
+    };
+
+    doc.body.addEventListener("input", handleInput);
+
+    return () => {
+      doc.body.removeEventListener("input", handleInput);
+    };
+  }, [editEntry]);
+
+  const handleSave = () => {
+    onAdded({ ...editEntry, title, company, position, content });
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-      <div style={{ marginBottom: "10px" }}>
-        <input
-          name="title"
-          placeholder="Title"
-          value={form.title}
-          onChange={handleChange}
-          style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-        />
-      </div>
-      <div style={{ marginBottom: "10px" }}>
-        <input
-          name="company"
-          placeholder="Company"
-          value={form.company}
-          onChange={handleChange}
-          style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-        />
-      </div>
-      <div style={{ marginBottom: "10px" }}>
-        <input
-          name="position"
-          placeholder="Position"
-          value={form.position}
-          onChange={handleChange}
-          style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-        />
-      </div>
-      <div style={{ marginBottom: "10px" }}>
-        <textarea
-          name="content"
-          placeholder="Your cover letter content..."
-          value={form.content}
-          onChange={handleChange}
-          rows={6}
-          style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-        />
-      </div>
-      <div style={{ display: "flex", gap: "10px" }}>
-        <button
-          type="submit"
-          style={{ padding: "8px 16px", background: "#4f8ef7", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
-        >
-          {editEntry ? "Update" : "Add"} Cover Letter
-        </button>
-        <button
-          type="button"
-          onClick={cancelEdit}
-          style={{ padding: "8px 16px", background: "#ccc", color: "#333", border: "none", borderRadius: "4px", cursor: "pointer" }}
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+    <div style={{ marginBottom: "20px" }}>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Title"
+        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+      />
+      <input
+        type="text"
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+        placeholder="Company"
+        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+      />
+      <input
+        type="text"
+        value={position}
+        onChange={(e) => setPosition(e.target.value)}
+        placeholder="Position"
+        style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+      />
+
+      <iframe
+        ref={iframeRef}
+        style={{
+          width: "100%",
+          minHeight: "500px",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          marginBottom: "10px",
+        }}
+      />
+
+      <button
+        onClick={handleSave}
+        style={{
+          marginRight: "10px",
+          padding: "8px 16px",
+          background: "#34c759",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+        }}
+      >
+        Save
+      </button>
+      <button
+        onClick={cancelEdit}
+        style={{
+          padding: "8px 16px",
+          background: "#ff3b30",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+        }}
+      >
+        Cancel
+      </button>
+    </div>
   );
 }

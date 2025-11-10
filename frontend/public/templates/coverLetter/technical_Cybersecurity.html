@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Cover Letter - Cybersecurity</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            border-bottom: 3px solid #007BFF;
+        }
+        footer {
+            border-top: 3px solid #007BFF;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        h1, h2, h3 {
+            color: #007BFF;
+        }
+        .contact-info {
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        .summary, .skills, .experience, .education, .certifications {
+            margin-bottom: 30px;
+        }
+        .summary p {
+            background-color: #e8f4ff;
+            padding: 15px;
+            border-left: 5px solid #007BFF;
+        }
+        .skills ul, .certifications ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li, .certifications ul li {
+            background-color: #e8f4ff;
+            margin: 5px 0;
+            padding: 10px;
+            border-left: 5px solid #007BFF;
+        }
+        .experience h3, .education h3 {
+            margin-bottom: 10px;
+        }
+        .experience p, .education p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="contact-info">
+            <strong>{{name}}</strong><br>
+            {{address}}<br>
+            {{phone}} | <a href="mailto:{{email}}">{{email}}</a>
+        </div>
+        <h1>{{title}}</h1>
+    </header>
+
+    <main>
+        <section class="summary">
+            <h2>Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+
+        <section class="skills">
+            <h2>Skills</h2>
+            <ul>
+                <li>{{skills}}</li>
+            </ul>
+        </section>
+
+        <section class="experience">
+            <h2>Experience</h2>
+            <h3>{{latest_title}}</h3>
+            <p><strong>{{latest_company}}</strong> | {{latest_location}}</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </section>
+
+        <section class="education">
+            <h2>Education</h2>
+            <h3>{{top_degree}} in {{top_field}}</h3>
+            <p><strong>{{top_institution}}</strong></p>
+        </section>
+
+        <section class="certifications">
+            <h2>Certifications</h2>
+            <ul>
+                <li>{{certifications}}</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; {{name}} | {{industry}} Professional with {{experience_level}} Experience</p>
+    </footer>
+</body>
+</html>

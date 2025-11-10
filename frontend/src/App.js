@@ -18,6 +18,7 @@ import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
 import JobsList from "./pages/jobs/JobList";
 import CoverLetter from "./pages/coverLetter/coverLetter";
+import CoverLetterEditPage from "./pages/coverLetter/CoverLetterEditPage";
 import ResumeList from "./pages/resumes/ResumeList";
 import ResumeCreate from "./pages/resumes/ResumeCreate";
 import ResumeEditor from "./pages/resumes/ResumeEditor";
@@ -27,6 +28,8 @@ import SharingAndFeedbackPage from "./pages/resumes/SharingAndFeedbackPage";
 import PublicSharePage from "./pages/resumes/PublicSharePage";
 import ExportResumePage from "./pages/resumes/ExportResumePage";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
+
+// inside your router
 
 
 // import Dashboard from "./pages/dashboard";
@@ -54,6 +57,7 @@ export function App() {
                 <Route path = "/resetPassword/:token" element = {<ResetPassword />}/>
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
                 <Route path = "/coverLetter" element = {<CoverLetter />} />
+                <Route path="/cover-letter/edit/:id" element={<CoverLetterEditPage />} />
 
               <Route path="/skills" element={<SkillsList />} />
               <Route path="/education" element={<EducationList />} />

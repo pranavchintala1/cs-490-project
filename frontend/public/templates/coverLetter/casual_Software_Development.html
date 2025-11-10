@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Cover Letter - Software Development</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ff6f61;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .contact-info {
+            text-align: right;
+            font-size: 14px;
+        }
+        .contact-info p {
+            margin: 5px 0;
+        }
+        main {
+            padding: 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        .summary, .skills, .experience {
+            margin-bottom: 30px;
+        }
+        .summary h2, .skills h2, .experience h2 {
+            color: #ff6f61;
+            border-bottom: 2px solid #ff6f61;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .summary p {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+        .skills ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li {
+            background: #ff6f61;
+            color: white;
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .experience p {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+        footer {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <div class="contact-info">
+            <p>{{email}}</p>
+            <p>{{phone}}</p>
+            <p>{{address}}</p>
+        </div>
+    </header>
+    <main>
+        <section class="summary">
+            <h2>Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+        <section class="skills">
+            <h2>Skills</h2>
+            <ul>
+                {{skills}}
+                <li>JavaScript</li>
+                <li>Python</li>
+                <li>React</li>
+                <li>Node.js</li>
+                <li>SQL</li>
+            </ul>
+        </section>
+        <section class="experience">
+            <h2>Experience</h2>
+            <p><strong>{{latest_title}}</strong> at {{latest_company}} | {{latest_location}}</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>
