@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import logo from "../logo.svg.png"; 
-import "../Styles/home.css"; 
+import "../styles/home.css"; 
 import { Link } from "react-router-dom";
 
 const Home = ({ user, session }) => {
