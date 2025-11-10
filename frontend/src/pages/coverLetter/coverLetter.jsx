@@ -1,323 +1,239 @@
-import { useState, useEffect } from "react";
-import CoverLetterForm from "./CoverLetterForm";
+import { useState, useEffect, useRef } from "react";
+import { renderTemplate } from "./renderTemplate";
+import { useFlash } from "../../context/flashContext";
+import UserAPI from "../../api/user";
 import CoverLetterAPI from "../../api/coverLetters";
-import { renderTemplate } from "./renderTemplate"; 
-import { useFlash } from "../../context/flashContext"; 
+import CoverLetterForm from "./CoverLetterForm";
+import { useNavigate } from "react-router-dom"; 
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-// Styles and industries
 const styles = ["formal", "creative", "technical", "modern", "casual"];
-const industries = [
-  "Software Development", "Cybersecurity", "Fintech", "Healthcare Administration",
-  "Nursing", "Education (K-12)", "Higher Education", "Digital Marketing",
-  "Mechanical Engineering", "Civil Engineering", "Corporate Law", "Employment Law",
-  "Recruiting", "B2B Sales", "Graphic Design", "UX/UI Design", "Data Analytics",
-  "Construction Management", "Hotel Management", "Retail Management",
-  "Manufacturing Operations", "Real Estate Sales", "Financial Consulting",
-  "Public Sector Administration", "Environmental Science", "Pharmaceutical Research",
-  "Aerospace Engineering", "Automotive Design", "Agricultural Technology"
-];
+const industries = ["Software_Development","Cybersecurity","Healthcare","Education","Marketing","Non-specific"];
+
+
+function populateTemplate(template, data) {
+  if (!template || !data) return template || "";
+  const { profile = {}, education = [], skills = [], employment = [], certifications = [] } = data;
+  const topEducation = education[0] || {};
+  const latestEmployment = employment[0] || {};
+
+  return template
+    .replace(/\{\{name\}\}/g, profile?.full_name || profile?.username || "")
+    .replace(/\{\{username\}\}/g, profile?.username || "")
+    .replace(/\{\{email\}\}/g, profile?.email || "")
+    .replace(/\{\{phone\}\}/g, profile?.phone_number || "")
+    .replace(/\{\{address\}\}/g, profile?.address || "")
+    .replace(/\{\{title\}\}/g, profile?.title || "")
+    .replace(/\{\{biography\}\}/g, profile?.biography || "")
+    .replace(/\{\{industry\}\}/g, profile?.industry || "")
+    .replace(/\{\{experience_level\}\}/g, profile?.experience_level || "")
+    .replace(/\{\{skills\}\}/g, skills?.map(s => s.name).join(", ") || "")
+    .replace(/\{\{latest_title\}\}/g, latestEmployment?.title || "")
+    .replace(/\{\{latest_company\}\}/g, latestEmployment?.company || "")
+    .replace(/\{\{latest_location\}\}/g, latestEmployment?.location || "")
+    .replace(/\{\{top_degree\}\}/g, topEducation?.degree || "")
+    .replace(/\{\{top_field\}\}/g, topEducation?.field_of_study || "")
+    .replace(/\{\{top_institution\}\}/g, topEducation?.institution_name || "")
+    .replace(/\{\{certifications\}\}/g, certifications?.map(c => c.name).join(", ") || "");
+}
 
 export default function CoverLetterList() {
-  const [letters, setLetters] = useState([]);
-  const [editEntry, setEditEntry] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [sampleLetters, setSampleLetters] = useState([]);
+  const [userLetters, setUserLetters] = useState([]);
+  const [filterStyle, setFilterStyle] = useState("");
+  const [filterIndustry, setFilterIndustry] = useState("");
+  const [editingLetter, setEditingLetter] = useState(null); // <-- track which letter is being edited
+  const { showFlash } = useFlash();
+  const cardRefs = useRef({});
+  const navigate = useNavigate();
 
-  const { showFlash } = useFlash(); 
-
-  // Load user's cover letters
   useEffect(() => {
-    const loadCoverLetters = async () => {
+    const loadLetters = async () => {
       try {
-        setLoading(true);
+        const userData = await UserAPI.getAllData();
 
-        const res = CoverLetterAPI.getAll();
-        const mapped = (res.data || []).map((item) => ({
-          id: item._id,
-          title: item.title,
-          company: item.company,
-          position: item.position,
-          content: item.content,
-          created_at: item.created_at,
-        }));
-        setLetters(mapped);
-      } catch (err) {
-        console.error("Failed to load cover letters:", err);
-        setLetters([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadCoverLetters();
-  }, []);
-
-  // Prepare sample letters
-  useEffect(() => {
-    const prepareSamples = async () => {
-      const loadedSamples = [];
-      for (let style of styles) {
-        const group = { style, letters: [] };
-        for (let industry of industries.slice(0, 3)) {
-          const id = `${style}_${industry.replace(/\s/g, "_")}`;
-          try {
-            const content = await renderTemplate(`/templates/${id}.mustache`);
-            group.letters.push({ id, title: `${style} - ${industry}`, content });
-          } catch (err) {
-            console.error("Failed to load template", id, err);
+        // Load sample letters
+        let allSamples = [];
+        for (let style of styles) {
+          for (let industry of industries) {
+            const templateFile = `${style}_${industry.replace(/\s/g, "_")}.html`;
+            try {
+              const rawTemplate = await renderTemplate(templateFile);
+              const populatedContent = populateTemplate(rawTemplate, userData);
+              allSamples.push({ 
+                id: templateFile,
+                title: `${style} - ${industry}`,
+                content: populatedContent,
+                style,
+                industry
+              });
+            } catch (err) {
+              console.error("Failed to load template:", templateFile, err);
+            }
           }
         }
-        loadedSamples.push(group);
+
+        // Apply filters
+        if (filterStyle) allSamples = allSamples.filter(l => l.style === filterStyle);
+        if (filterIndustry) allSamples = allSamples.filter(l => l.industry === filterIndustry);
+
+        // Regroup by style
+        const groupedSamples = allSamples.reduce((acc, letter) => {
+          let group = acc.find(g => g.style === letter.style);
+          if (!group) {
+            group = { style: letter.style, letters: [] };
+            acc.push(group);
+          }
+          group.letters.push(letter);
+          return acc;
+        }, []);
+
+        setSampleLetters(groupedSamples);
+
+        // Load user letters
+        const uuid = localStorage.getItem("uuid");
+        const res = await CoverLetterAPI.getAll(uuid);
+        console.log(res);
+        setUserLetters(res.data || []);
+      } catch (err) {
+        console.log("look up");
+        console.error("Failed to load letters:", err);
       }
-      setSampleLetters(loadedSamples);
     };
-    prepareSamples();
-  }, []);
 
-  const onAdded = async (data) => {
-    const uuid = localStorage.getItem("uuid");
-    if (!uuid) return showFlash("Cannot save cover letter: missing UUID", "error");
-    if (!data.title || !data.content) return showFlash("Title and content are required.", "error");
+    loadLetters();
+  }, [filterStyle, filterIndustry, showFlash]);
 
+  const handleAddSample = async (sample) => {
     try {
-      if (data.id) {
-        // UPDATE
-        const putBody = {
-          title: data.title,
-          company: data.company || "",
-          position: data.position || "",
-          content: data.content,
-        };
-
-        await CoverLetterAPI.update(data.id, putBody);
-        setLetters((prev) => prev.map((l) => (l.id === data.id ? { ...l, ...putBody } : l)));
-        showFlash("Cover letter updated successfully!", "success");
-      } else {
-        // CREATE
-        const payload = {
-          coverletter: {
-            title: data.title,
-            company: data.company || "",
-            position: data.position || "",
-            content: data.content,
-          },
-          uuid,
-        };
-
-        const res = await CoverLetterAPI.add(payload);
-
-        if (res?.data.cover_letter_id) {
-          const newEntry = {
-            id: res.data.cover_letter_id,
-            title: payload.coverletter.title,
-            company: payload.coverletter.company,
-            position: payload.coverletter.position,
-            content: payload.coverletter.content,
-            created_at: new Date().toISOString(),
-          };
-          setLetters((prev) => [newEntry, ...prev]);
-          showFlash("Cover letter created successfully!", "success");
-        } else {
-          showFlash("Saved but server didn't return an ID.", "info");
-        }
-      }
-      setShowForm(false);
-      setEditEntry(null);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const data = { title: sample.title, company: sample.company || "", position: sample.position || "", content: sample.content };
+      const res = await CoverLetterAPI.add(data);
+      setUserLetters(prev => [...prev, { ...data, id: res.data.coverletter_id }]);
+      showFlash("Cover letter added!", "success");
     } catch (err) {
-      console.error("Failed to save cover letter:", err);
-      showFlash("Failed to save cover letter. See console for details.", "error");
+      console.error("Failed to add sample:", err);
+      showFlash("Failed to add cover letter.", "error");
     }
   };
 
-  const onDelete = async (id) => {
-    if (!id) return showFlash("Cannot delete — invalid ID", "error");
-    if (!window.confirm("Are you sure you want to delete this cover letter?")) return;
-
+  const handleDelete = async (id) => {
     try {
       await CoverLetterAPI.delete(id);
-      setLetters((prev) => prev.filter((l) => l.id !== id));
-      showFlash("Cover letter deleted successfully.", "success");
+      setUserLetters(prev => prev.filter(l => l.id !== id));
+      showFlash("Cover letter deleted.", "success");
     } catch (err) {
-      console.error("Delete failed:", err);
-      showFlash("Failed to delete cover letter. See console for details.", "error");
+      console.error("Failed to delete letter:", err);
+      showFlash("Failed to delete cover letter.", "error");
     }
   };
 
-  const handleUseSample = (sample) => {
-    setEditEntry({ ...sample, id: null });
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleEdit = (letter) => {
+    setEditingLetter(letter); // open the form
+  };
+
+  const handleSave = async (letter) => {
+    try {
+      if (letter.id) {
+        // Existing letter → update
+        await CoverLetterAPI.update(letter.id, {
+          title: letter.title,
+          company: letter.company,
+          position: letter.position,
+          content: letter.content
+        });
+        setUserLetters(prev => prev.map(l => l.id === letter.id ? letter : l));
+        showFlash("Cover letter updated!", "success");
+      } else {
+        // New letter → add
+        const res = await CoverLetterAPI.add(letter);
+        setUserLetters(prev => [...prev, { ...letter, id: res.data.coverletter_id }]);
+        showFlash("Cover letter added!", "success");
+      }
+      setEditingLetter(null);
+    } catch (err) {
+      console.error("Failed to save letter:", err);
+      showFlash("Failed to save cover letter.", "error");
+    }
+  };
+
+  const autoResizeIframe = (el) => {
+    if (!el) return;
+    try {
+      const doc = el.contentDocument || el.contentWindow.document;
+      el.style.height = doc.body.scrollHeight + "px";
+    } catch {}
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h1>📝 Cover Letters</h1>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditEntry(null);
-          }}
-          style={{
-            padding: "12px 24px",
-            background: "#4f8ef7",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-          }}
-        >
-          {showForm ? "← Cancel" : "+ Add Cover Letter"}
-        </button>
-      </div>
-
-      {showForm && (
-        <CoverLetterForm
-          editEntry={editEntry}
-          onAdded={onAdded}
-          cancelEdit={() => {
-            setEditEntry(null);
-            setShowForm(false);
-          }}
+    <div>
+      {editingLetter && (
+        <CoverLetterForm 
+          editEntry={editingLetter} 
+          onAdded={handleSave} 
+          cancelEdit={() => setEditingLetter(null)} 
         />
       )}
 
-      {/* User letters */}
-      <section>
-        <h2>Your Cover Letters</h2>
-        {loading ? (
-          <p>Loading cover letters...</p>
-        ) : letters.length === 0 ? (
-          <p>No cover letters yet.</p>
-        ) : (
-          <ul style={{ listStyle: "none", padding: 0 }}>
-            {letters.map((letter) => (
-              <li
-                key={letter.id}
-                style={{
-                  marginBottom: "20px",
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  padding: "12px",
-                  background: "white",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <div>
-                    <h3>{letter.title}</h3>
-                    {letter.company && <p>{letter.company}</p>}
-                    {letter.position && <p>Position: {letter.position}</p>}
-                    {letter.created_at && (
-                      <p style={{ fontSize: "12px", color: "#999" }}>Created: {formatDate(letter.created_at)}</p>
-                    )}
-                  </div>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      onClick={() => {
-                        setEditEntry(letter);
-                        setShowForm(true);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#34c759",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => onDelete(letter.id)}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#ff3b30",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-                {letter.content && <pre style={{ whiteSpace: "pre-wrap", marginTop: "8px" }}>{letter.content}</pre>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {/* User letters first */}
+      <h2>Your Cover Letters</h2>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+        {userLetters.map(letter => (
+  <div key={letter.id} ref={el => (cardRefs.current[letter.id] = el)}
+       style={{ border: "1px solid #ddd", borderRadius: "6px", padding: "16px", background: "#eaf0ff", width: "calc(33% - 10px)", display: "flex", flexDirection: "column" }}>
+    <h4>{letter.title}</h4>
+    <iframe 
+      title={`user-${letter.id}`} 
+      srcDoc={letter.content || "<html><body></body></html>"} 
+      style={{ width: "100%", border: "1px solid #ccc", borderRadius: "6px" }} 
+      onLoad={e => autoResizeIframe(e.target)} 
+    />
+    <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "10px" }}>
+      {/* EDIT BUTTON */}
+      <button
+        onClick={() => navigate(`/cover-letter/edit/${letter.id}`)}
+        style={{ padding: "6px 12px", background: "#ffa500", color: "white", border: "none", borderRadius: "4px" }}
+      >
+        Edit
+      </button>
 
-      {/* Sample templates */}
-      <section style={{ marginTop: "40px" }}>
-        <h2>Sample Cover Letters</h2>
-        {sampleLetters.map((group) => (
-          <div key={group.style} style={{ marginBottom: "30px" }}>
-            <h3 style={{ textTransform: "capitalize" }}>{group.style}</h3>
-            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-              {group.letters.map((sample) => (
-                <div
-                  key={sample.id}
-                  style={{
-                    border: "1px solid #ddd",
-                    borderRadius: "6px",
-                    padding: "12px",
-                    background: "#f9f9f9",
-                    width: "calc(33% - 10px)",
-                    minHeight: "220px",
-                    display: "flex",
-                    flexDirection: "column",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => handleUseSample(sample)}
-                >
-                  <h4>{sample.title}</h4>
-                  <pre
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      fontSize: "14px",
-                      marginTop: "8px",
-                      flexGrow: 1,
-                    }}
-                  >
-                    {sample.content}
-                  </pre>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleUseSample(sample);
-                    }}
-                    style={{
-                      marginTop: "auto",
-                      padding: "6px 12px",
-                      background: "#4f8ef7",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    Use this sample
-                  </button>
-                </div>
-              ))}
-            </div>
+      {/* DELETE BUTTON */}
+      <button
+        onClick={() => handleDelete(letter.id)}
+        style={{ padding: "6px 12px", background: "#f44336", color: "white", border: "none", borderRadius: "4px" }}
+      >
+        Delete
+      </button>
+    </div>
+  </div>
+))}
+      </div>
+
+      {/* Sample letters */}
+      <h2 style={{ marginTop: "40px" }}>Sample Cover Letters</h2>
+      <div style={{ marginBottom: "16px" }}>
+        <label>Style: <select value={filterStyle} onChange={e => setFilterStyle(e.target.value)}><option value="">All</option>{styles.map(s => <option key={s} value={s}>{s}</option>)}</select></label>
+        <label style={{ marginLeft: "16px" }}>Industry: <select value={filterIndustry} onChange={e => setFilterIndustry(e.target.value)}><option value="">All</option>{industries.map(i => <option key={i} value={i}>{i}</option>)}</select></label>
+      </div>
+
+      {sampleLetters.map(group => (
+        <div key={group.style} style={{ marginBottom: "30px" }}>
+          <h3 style={{ textTransform: "capitalize" }}>{group.style}</h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+            {group.letters.map(sample => (
+              <div key={sample.id} ref={el => (cardRefs.current[sample.id] = el)}
+                   style={{ border: "1px solid #ddd", borderRadius: "6px", padding: "16px", background: "#f9f9f9", width: "calc(33% - 10px)", display: "flex", flexDirection: "column" }}>
+                <h4>{sample.title}</h4>
+                <iframe 
+                  title={`sample-${sample.id}`} 
+                  srcDoc={sample.content || "<html><body></body></html>"} 
+                  style={{ width: "100%", border: "1px solid #ccc", borderRadius: "6px" }} 
+                  onLoad={e => autoResizeIframe(e.target)} 
+                />
+                <button onClick={() => handleAddSample(sample)} style={{ marginTop: "10px", padding: "6px 12px", background: "#4f8ef7", color: "white", border: "none", borderRadius: "4px", alignSelf: "center" }}>Use this sample</button>
+              </div>
+            ))}
           </div>
-        ))}
-      </section>
+        </div>
+      ))}
     </div>
   );
 }

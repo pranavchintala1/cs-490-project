@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Cover Letter - Education</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 4px solid #6200ea;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #6200ea;
+        }
+        header p {
+            margin: 5px 0;
+            font-size: 1.2em;
+            color: #555;
+        }
+        .contact-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #777;
+        }
+        main {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            border-bottom: 2px solid #6200ea;
+            padding-bottom: 5px;
+            color: #6200ea;
+            font-size: 1.5em;
+        }
+        .section p {
+            margin: 10px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 2px solid #6200ea;
+        }
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .skills-list span {
+            background: #6200ea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{title}}</p>
+        <div class="contact-info">
+            {{address}} | {{email}} | {{phone}}
+        </div>
+    </header>
+    <main>
+        <section class="section">
+            <h2>Dear Hiring Manager,</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+        <section class="section">
+            <h2>Professional Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+        <section class="section">
+            <h2>Skills</h2>
+            <div class="skills-list">
+                <span>{{skills}}</span>
+            </div>
+        </section>
+        <section class="section">
+            <h2>Experience</h2>
+            <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </section>
+        <section class="section">
+            <h2>Education</h2>
+            <p><strong>{{top_degree}}</strong> in {{top_field}} - {{top_institution}}</p>
+        </section>
+        <section class="section">
+            <h2>Certifications</h2>
+            <p>{{certifications}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
+        <p>Sincerely,<br>{{name}}</p>
+    </footer>
+</body>
+</html>

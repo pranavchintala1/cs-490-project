@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Cover Letter - Software Development</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 4px solid #6200ea;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            color: #6200ea;
+        }
+        header p {
+            margin: 5px 0;
+            font-size: 1.2em;
+            color: #555;
+        }
+        main {
+            padding: 30px;
+        }
+        main h2 {
+            color: #6200ea;
+            border-bottom: 2px solid #6200ea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        main p {
+            margin: 10px 0;
+        }
+        .summary {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #6200ea;
+            margin: 20px 0;
+        }
+        .skills ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li {
+            background: #6200ea;
+            color: white;
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 2px solid #6200ea;
+        }
+        footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{title}}</p>
+        <p>{{email}} | {{phone}} | {{address}}</p>
+    </header>
+    <main>
+        <h2>Dear Hiring Manager,</h2>
+        <p>I am excited to apply for the <strong>{{title}}</strong> role at your esteemed company. With <strong>{{experience_level}}</strong> in <strong>{{industry}}</strong>, I bring a strong foundation in <strong>{{skills}}</strong> to drive innovative solutions and contribute to your team’s success.</p>
+        <div class="summary">
+            <p><em>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</em></p>
+        </div>
+        <div class="skills">
+            <h2>Key Skills</h2>
+            <ul>
+                <li>{{skills}}</li>
+            </ul>
+        </div>
+        <h2>Professional Experience</h2>
+        <p><strong>{{latest_title}}</strong> | {{latest_company}} | {{latest_location}}</p>
+        <p><em>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</em></p>
+        <h2>Education</h2>
+        <p><strong>{{top_degree}}</strong> in {{top_field}} | {{top_institution}}</p>
+        <h2>Certifications</h2>
+        <p>{{certifications}}</p>
+    </main>
+    <footer>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how my skills align with your needs.</p>
+        <p>Sincerely,</p>
+        <p>{{name}}</p>
+    </footer>
+</body>
+</html>
