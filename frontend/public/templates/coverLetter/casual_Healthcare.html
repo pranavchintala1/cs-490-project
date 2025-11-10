@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Healthcare Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            background-color: #e3f2fd;
+            color: #1a73e8;
+        }
+        main {
+            background-color: #ffffff;
+        }
+        footer {
+            text-align: center;
+            background-color: #e3f2fd;
+            color: #1a73e8;
+            font-size: 0.9em;
+        }
+        h1, h2, h3 {
+            color: #1a73e8;
+        }
+        .summary {
+            background-color: #f1f8ff;
+            padding: 15px;
+            border-left: 5px solid #1a73e8;
+            margin: 20px 0;
+        }
+        .skills {
+            background-color: #f1f8ff;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .skills ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li {
+            background: #e3f2fd;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .contact-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p class="contact-info">
+            {{address}} | {{email}} | {{phone}}
+        </p>
+    </header>
+
+    <main>
+        <section class="summary">
+            <h2>Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+
+        <section class="skills">
+            <h2>Skills</h2>
+            <ul>
+                <li>{{skills}}</li>
+            </ul>
+        </section>
+
+        <section class="experience">
+            <h2>Experience</h2>
+            <p><strong>{{latest_title}}</strong> at {{latest_company}} ({{latest_location}})</p>
+            <p>{{experience_level}} in {{industry}}</p>
+        </section>
+
+        <section class="education">
+            <h2>Education</h2>
+            <p><strong>{{top_degree}}</strong> in {{top_field}} from {{top_institution}}</p>
+        </section>
+
+        <section class="certifications">
+            <h2>Certifications</h2>
+            <p>{{certifications}}</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
+        <p>Sincerely,</p>
+        <p>{{name}}</p>
+    </footer>
+</body>
+</html>

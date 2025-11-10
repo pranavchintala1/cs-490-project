@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import ProjectForm from "./ProjectForm";
 import ProjectCard from "./ProjectCard";
-import { apiRequest } from "../../api";
+import ProjectsAPI from "../../api/projects";
+import { useLocation } from "react-router-dom";
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
@@ -14,6 +15,14 @@ export default function ProjectsList() {
   const [loading, setLoading] = useState(true);
   const [expandedCardId, setExpandedCardId] = useState(null);
 
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (location.state?.showForm) {
+      setShowForm(true);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     loadProjects();
   }, []);
@@ -21,23 +30,81 @@ export default function ProjectsList() {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/projects/me?uuid=", "");
-      
-      const transformedProjects = (data || []).map(project => ({
-        id: project._id,
-        project_name: project.project_name,
-        description: project.description,
-        role: project.role,
-        start_date: project.start_date,
-        end_date: project.end_date,
-        skills: project.skills || [],
-        team_size: project.team_size,
-        details: project.details,
-        achievements: project.achievements,
-        industry: project.industry,
-        status: project.status,
-        project_url: project.project_url,
-        media_files: project.media_files || []
+      const res = await ProjectsAPI.getAll();
+
+      const transformedProjects = await Promise.all((res.data || []).map(async project => {
+        // Fetch associated media for each project
+        let mediaFiles = [];
+
+        try {
+          const idsRes = await ProjectsAPI.getMediaIds(project._id);
+          const mediaIds = idsRes.data.media_id_list || [];
+
+          if (mediaIds.length > 0) {
+            const mediaMetadata = await Promise.all(
+              mediaIds.map(async (mediaId) => {
+                try {
+                  const metaRes = await ProjectsAPI.getMedia(mediaId);
+
+                  if (metaRes.status === 200) {
+                    const contentType = metaRes.headers["content-type"];
+                    const blob = metaRes.data;
+                    const url = URL.createObjectURL(blob);
+                    
+                    let filename = `file_${mediaId}`;
+                    const contentDisposition = metaRes.headers["content-disposition"];
+
+                    if (contentDisposition) {
+                      const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                      if (match && match[1]) {
+                        filename = match[1].replace(/['"]/g, '').trim();
+                      }
+                    }
+                    
+                    if (filename === `file_${mediaId}` && contentType) {
+                      const ext = contentType.split('/')[1];
+                      if (ext) {
+                        filename = `image_${mediaId}.${ext}`;
+                      }
+                    }
+                    
+                    return {
+                      media_id: mediaId,
+                      filename: filename,
+                      url: url,
+                      content_type: contentType || blob.type
+                    };
+                  }
+                } catch (error) {
+                  console.error(`Error fetching media ${mediaId}:`, error);
+                }
+                return null;
+              })
+            );
+
+            mediaFiles = mediaMetadata.filter(f => f !== null);
+          }
+        } catch (error) {
+          console.error("Error fetching media for project:", project._id, error);
+        }
+
+        return {
+          id: project._id,
+          project_name: project.project_name,
+          description: project.description,
+          role: project.role,
+          start_date: project.start_date,
+          end_date: project.end_date,
+          skills: project.skills || [],
+          team_size: project.team_size,
+          details: project.details,
+          achievements: project.achievements,
+          industry: project.industry,
+          status: project.status,
+          project_url: project.project_url,
+          thumbnail_id: project.thumbnail_id,
+          media_files: mediaFiles
+        };
       }));
       
       setProjects(transformedProjects);
@@ -49,52 +116,79 @@ export default function ProjectsList() {
     }
   };
 
-  const addProject = async (projectData) => {
-    try {
-      const response = await apiRequest("/api/projects?uuid=", "", {
-        method: "POST",
-        body: JSON.stringify(projectData),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+  const sortProjects = (projectArray) => {
+    return projectArray
+      .map((p) => ({ ...p }))
+      .sort((a, b) => {
+        if (sort === "date_desc") return new Date(b.start_date) - new Date(a.start_date);
+        if (sort === "date_asc") return new Date(a.start_date) - new Date(b.start_date);
+        return 0;
       });
+  };
 
-      if (response && response.project_id) {
+  const addProject = async (projectData, mediaFiles) => {
+    try {
+      const res = await ProjectsAPI.add(projectData);
+
+      if (res && res.data.project_id) {
+        const projectId = res.data.project_id;
+
+        // Upload media files if any
+        if (mediaFiles && mediaFiles.length > 0) {
+          for (const file of mediaFiles) {
+            try {
+              const mediaRes = await ProjectsAPI.uploadMedia(projectId, file);
+
+              if (mediaRes.status !== 200) {
+                console.error("Failed to upload file:", file.name);
+              }
+            } catch (error) {
+              console.error("Error uploading file:", file.name, error);
+            }
+          }
+        }
+
         await loadProjects();
       }
       setShowForm(false);
     } catch (error) {
       console.error("Failed to add project:", error);
-      alert("Failed to add project. Please try again.");
+      alert(error.response?.data?.detail || "Failed to add project. Please try again.");
     }
   };
 
-  const submitEdit = async (projectData) => {
+  const submitEdit = async (projectData, mediaFiles) => {
     try {
-      await apiRequest(`/api/projects?project_id=${editProject.id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify(projectData),
-        headers: {
-          'Content-Type': 'application/json'
+      await ProjectsAPI.update(editProject.id, projectData);
+
+      if (mediaFiles && mediaFiles.length > 0) {
+        for (const file of mediaFiles) {
+          try {
+            const uploadRes = await ProjectsAPI.uploadMedia(editProject.id, file);
+
+            if (uploadRes.status !== 200) {
+              console.error("Failed to upload file:", file.name);
+            }
+          } catch (error) {
+            console.error("Error uploading file:", file.name, error);
+          }
         }
-      });
+      }
 
       await loadProjects();
       setEditProject(null);
       setShowForm(false);
     } catch (error) {
       console.error("Failed to update project:", error);
-      alert("Failed to update project. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update project. Please try again.");
     }
   };
 
   const deleteProject = async (id) => {
     if (!window.confirm("Delete this project?")) return;
-    
+
     try {
-      await apiRequest(`/api/projects?project_id=${id}&uuid=`, "", {
-        method: "DELETE"
-      });
+      await ProjectsAPI.delete(id);
 
       setProjects(projects.filter((p) => p.id !== id));
       if (expandedCardId === id) {
@@ -102,7 +196,7 @@ export default function ProjectsList() {
       }
     } catch (error) {
       console.error("Failed to delete project:", error);
-      alert("Failed to delete project. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete project. Please try again.");
     }
   };
 
@@ -110,28 +204,25 @@ export default function ProjectsList() {
     setExpandedCardId(expandedCardId === projectId ? null : projectId);
   };
 
-  const filteredProjects = projects
-    .filter((p) => {
-      const s = search.toLowerCase();
-      return (
-        p.project_name?.toLowerCase().includes(s) ||
-        p.role?.toLowerCase().includes(s) ||
-        p.description?.toLowerCase().includes(s) ||
-        p.details?.toLowerCase().includes(s) ||
-        (Array.isArray(p.skills) && p.skills.some((t) => t.toLowerCase().includes(s)))
-      );
-    })
-    .filter((p) =>
-      industrySearch
-        ? p.industry?.toLowerCase().includes(industrySearch.toLowerCase())
-        : true
-    )
-    .filter((p) => (statusFilter ? p.status === statusFilter : true))
-    .sort((a, b) => {
-      if (sort === "date_desc") return new Date(b.start_date) - new Date(a.start_date);
-      if (sort === "date_asc") return new Date(a.start_date) - new Date(b.start_date);
-      return 0;
-    });
+  const filteredProjects = sortProjects(
+    projects
+      .filter((p) => {
+        const s = search.toLowerCase();
+        return (
+          p.project_name?.toLowerCase().includes(s) ||
+          p.role?.toLowerCase().includes(s) ||
+          p.description?.toLowerCase().includes(s) ||
+          p.details?.toLowerCase().includes(s) ||
+          (Array.isArray(p.skills) && p.skills.some((t) => t.toLowerCase().includes(s)))
+        );
+      })
+      .filter((p) =>
+        industrySearch
+          ? p.industry?.toLowerCase().includes(industrySearch.toLowerCase())
+          : true
+      )
+      .filter((p) => (statusFilter ? p.status === statusFilter : true))
+  );
 
   if (loading) {
     return (
@@ -298,6 +389,7 @@ export default function ProjectsList() {
                   }}
                   expanded={expandedCardId === p.id}
                   onToggle={handleCardToggle}
+                  onMediaDelete={loadProjects}
                 />
               ))}
             </div>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Cybersecurity Cover Letter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header {
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 30px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.2em;
+        }
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .contact-info {
+            text-align: right;
+            font-size: 0.9em;
+        }
+        .contact-info p {
+            margin: 2px 0;
+        }
+        .summary, .skills, .experience {
+            margin-bottom: 30px;
+        }
+        .summary h2, .skills h2, .experience h2 {
+            color: #4CAF50;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+        }
+        .summary p {
+            font-size: 1.1em;
+        }
+        .skills ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li {
+            background: #e8f5e9;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .experience h3 {
+            margin: 10px 0 5px;
+        }
+        .experience p {
+            margin: 5px 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{title}}</p>
+    </header>
+    <main>
+        <div class="contact-info">
+            <p>{{address}}</p>
+            <p>{{phone}}</p>
+            <p>{{email}}</p>
+        </div>
+        <section class="summary">
+            <h2>Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+        <section class="skills">
+            <h2>Skills</h2>
+            <ul>
+                <li>{{skills}}</li>
+            </ul>
+        </section>
+        <section class="experience">
+            <h2>Experience</h2>
+            <h3>{{latest_title}}</h3>
+            <p>{{latest_company}}, {{latest_location}}</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

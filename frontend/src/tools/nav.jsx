@@ -2,8 +2,7 @@ import React from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Navbar, Nav as BootstrapNav, Container, Button, NavDropdown } from "react-bootstrap";
 import { useFlash } from "../context/flashContext";
-import { sendData } from "../tools/db_commands";
-import { apiRequest } from "../api";
+import AuthAPI from "../api/authentication";
 
 
 const Nav = () => {
@@ -17,15 +16,7 @@ const logout = async () => {
   
 
   try {
-    apiRequest("/api/auth/logout?uuid=", "", {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      }
-
-    );
+    await AuthAPI.logout();
 
     showFlash("Successfully Logged out", "success");
 
@@ -35,18 +26,20 @@ const logout = async () => {
 
   };
 
-    localStorage.removeItem("session");
     localStorage.removeItem("uuid");
+    localStorage.removeItem("session");
 
     navigate("/");
   };
 
   const [showDropdown, setShowDropdown] = React.useState(false);
 
-  React.useEffect(() => {
-    // Automatically show dropdown when on dashboard
-    setShowDropdown(location.pathname.startsWith("/dashboard"));
-  }, [location.pathname]);
+
+  // Why would we want this
+  // React.useEffect(() => {
+  //   // Automatically show dropdown when on dashboard
+  //   setShowDropdown(location.pathname.startsWith("/dashboard"));
+  // }, [location.pathname]);
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
@@ -73,6 +66,7 @@ const logout = async () => {
                   title={
                     <span
                       onClick={(e) => {
+                        e.preventDefault(); // <-- add this line
                         e.stopPropagation(); // prevents dropdown toggle from hijacking the click
                         navigate("/dashboard");
                       }}
@@ -108,9 +102,13 @@ const logout = async () => {
                   Jobs
                 </BootstrapNav.Link>
 
-                <Button 
-                  variant="outline-light" 
-                  onClick={logout} 
+                <BootstrapNav.Link as={NavLink} to="/resumes" className="mx-3">
+                  Resumes
+                </BootstrapNav.Link>
+
+                <Button
+                  variant="outline-light"
+                  onClick={logout}
                   className="ms-2"
                 >
                   Logout

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technical Cover Letter - Healthcare</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        header, main, footer {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        header {
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+        }
+        main {
+            line-height: 1.6;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+        h1, h2, h3 {
+            color: #007bff;
+        }
+        .summary {
+            background: #e8f4ff;
+            padding: 15px;
+            border-left: 5px solid #007bff;
+            margin: 20px 0;
+        }
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .skill {
+            background: #007bff;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .contact-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <div class="contact-info">
+            {{address}} | {{email}} | {{phone}}
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <h2>Application for {{title}} in {{industry}}</h2>
+            <p>Dear Hiring Manager,</p>
+            <p>I am excited to apply for the {{title}} position at your esteemed organization. With {{experience_level}} in the healthcare industry, I am confident in my ability to contribute effectively to your team.</p>
+        </section>
+
+        <section class="summary">
+            <h3>Summary</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+
+        <section>
+            <h3>Professional Experience</h3>
+            <p><strong>{{latest_title}}</strong> at {{latest_company}} ({{latest_location}})</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </section>
+
+        <section>
+            <h3>Skills</h3>
+            <div class="skills">
+                {{#each skills}}
+                    <div class="skill">{{this}}</div>
+                {{/each}}
+            </div>
+        </section>
+
+        <section>
+            <h3>Education</h3>
+            <p><strong>{{top_degree}} in {{top_field}}</strong> - {{top_institution}}</p>
+        </section>
+
+        <section>
+            <h3>Certifications</h3>
+            <p>{{certifications}}</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>Thank you for considering my application. I look forward to the opportunity to discuss how my skills and experiences align with the needs of your team.</p>
+        <p>Sincerely,<br>{{name}}</p>
+    </footer>
+
+    <script>
+        // Sample filler data for placeholders
+        document.addEventListener('DOMContentLoaded', function() {
+            const placeholders = {
+                "{{name}}": "John Doe",
+                "{{email}}": "john.doe@example.com",
+                "{{phone}}": "(123) 456-7890",
+                "{{address}}": "123 Healthcare St, Wellness City, HC 12345",
+                "{{title}}": "Healthcare Data Analyst",
+                "{{industry}}": "Healthcare",
+                "{{experience_level}}": "5+ years",
+                "{{skills}}": ["Data Analysis", "Healthcare Informatics", "Python", "SQL", "Machine Learning"],
+                "{{latest_title}}": "Senior Data Analyst",
+                "{{latest_company}}": "HealthTech Solutions",
+                "{{latest_location}}": "Wellness City",
+                "{{top_degree}}": "Master of Science",
+                "{{top_field}}": "Health Informatics",
+                "{{top_institution}}": "University of Wellness",
+                "{{certifications}}": "Certified Health Data Analyst (CHDA)"
+            };
+
+            Object.keys(placeholders).forEach(key => {
+                const elements = document.querySelectorAll(key);
+                elements.forEach(el => el.textContent = placeholders[key]);
+            });
+        });
+    </script>
+</body>
+</html>

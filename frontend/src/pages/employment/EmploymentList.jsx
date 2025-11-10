@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import EmploymentForm from "./EmploymentForm";
-import { apiRequest } from "../../api";
+import EmploymentAPI from "../../api/employment";
+import { useLocation } from 'react-router-dom';
 
-// Helper to parse date without timezone issues
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
   const [year, month, day] = dateStr.split('-').map(Number);
@@ -14,6 +14,14 @@ export default function EmploymentList() {
   const [editEntry, setEditEntry] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (location.state?.showForm) {
+      setShowForm(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     loadEmployment();
@@ -22,9 +30,9 @@ export default function EmploymentList() {
   const loadEmployment = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest("/api/employment/me?uuid=", "");
+      const res = await EmploymentAPI.getAll();
       
-      const transformedItems = (data || []).map(item => ({
+      const transformedItems = (res.data || []).map(item => ({
         id: item._id,
         title: item.title,
         company: item.company,
@@ -45,15 +53,12 @@ export default function EmploymentList() {
 
   const onUpdate = async (id, patch) => {
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, "", {
-        method: "PUT",
-        body: JSON.stringify(patch)
-      });
+      await EmploymentAPI.update(id, patch);
       
       setItems(items.map(it => it.id === id ? { ...it, ...patch } : it));
     } catch (error) {
       console.error("Failed to update employment:", error);
-      alert("Failed to update employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to update employment. Please try again.");
     }
   };
 
@@ -61,31 +66,24 @@ export default function EmploymentList() {
     if (!window.confirm("Delete this employment entry?")) return;
     
     try {
-      await apiRequest(`/api/employment?employment_id=${id}&uuid=`, "", {
-        method: "DELETE"
-      });
-
+      await EmploymentAPI.delete(id);
       setItems(items.filter(it => it.id !== id));
     } catch (error) {
       console.error("Failed to delete employment:", error);
-      alert("Failed to delete employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to delete employment. Please try again.");
     }
   };
 
   const onAdded = async (data) => {
     try {
       if (data.id) {
-        // Update existing
         await onUpdate(data.id, data);
       } else {
         // Add new
-        const response = await apiRequest("/api/employment?uuid=", "", {
-          method: "POST",
-          body: JSON.stringify(data)
-        });
+        const res = await EmploymentAPI.add(data);
 
-        if (response && response.employment_id) {
-          const newEntry = { ...data, id: response.employment_id };
+        if (res && res.data.employment_id) {
+          const newEntry = { ...data, id: res.data.employment_id };
           setItems([newEntry, ...items]);
         }
       }
@@ -93,13 +91,12 @@ export default function EmploymentList() {
       setEditEntry(null);
     } catch (error) {
       console.error("Failed to save employment:", error);
-      alert("Failed to save employment. Please try again.");
+      alert(error.response?.data?.detail || "Failed to save employment. Please try again.");
     }
   };
 
-  // Sort by start date descending (most recent first)
   const sortedItems = [...items].sort((a, b) => {
-    if (!a.end_date && b.end_date) return -1; // Current positions first
+    if (!a.end_date && b.end_date) return -1;
     if (a.end_date && !b.end_date) return 1;
     const dateA = parseLocalDate(a.start_date);
     const dateB = parseLocalDate(b.start_date);
@@ -173,7 +170,6 @@ export default function EmploymentList() {
         />
       )}
 
-      {/* Only show employment list if form is not shown */}
       {!showForm && (
         <>
           {sortedItems.length === 0 ? (
@@ -188,7 +184,6 @@ export default function EmploymentList() {
             </div>
           ) : (
             <div style={{ position: "relative", marginTop: "40px" }}>
-              {/* Timeline vertical line */}
               <div
                 style={{
                   position: "absolute",
@@ -207,7 +202,6 @@ export default function EmploymentList() {
                   return (
                     <li key={it.id} style={{ marginBottom: "30px", position: "relative", zIndex: 1 }}>
                       <div style={{ display: "flex", alignItems: "flex-start" }}>
-                        {/* Timeline dot */}
                         <div style={{
                           width: "60px",
                           display: "flex",
@@ -227,7 +221,6 @@ export default function EmploymentList() {
                           />
                         </div>
 
-                        {/* Date range */}
                         <div
                           style={{
                             width: "140px",
@@ -250,7 +243,6 @@ export default function EmploymentList() {
                           </div>
                         </div>
 
-                        {/* Content card */}
                         <div
                           style={{
                             border: "2px solid #ddd",

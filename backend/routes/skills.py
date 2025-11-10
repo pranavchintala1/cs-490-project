@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo.errors import DuplicateKeyError
 
-from mongo.skill_dao import skills_dao
+from mongo.skills_dao import skills_dao
 from sessions.session_authorizer import authorize
-from schema import Skill
+from schema.Skill import Skill
 
 skills_router = APIRouter(prefix = "/skills")
 
@@ -43,7 +43,7 @@ async def get_skill(skill_id: str, uuid: str = Depends(authorize)):
 async def get_all_skills(uuid: str = Depends(authorize)):
     try:
         results = await skills_dao.get_all_skills(uuid)
-        # NOTE: do not return http exception for empty skills, as it can lead to inconsistent behavior on the frontend
+        # NOTE: do not raise http exception for empty skills, as it can lead to inconsistent behavior on the frontend
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     

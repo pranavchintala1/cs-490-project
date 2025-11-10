@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Cover Letter - Marketing</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background-color: #ff6f61;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 5px solid #ff9f8a;
+        }
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #ff6f61;
+            color: white;
+            border-top: 5px solid #ff9f8a;
+        }
+        h1, h2, h3 {
+            color: #ff6f61;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .contact-info p {
+            margin: 5px 0;
+        }
+        .summary {
+            background-color: #ffe6e2;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .skills span {
+            background-color: #ff6f61;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        .experience {
+            margin-bottom: 20px;
+        }
+        .experience h3 {
+            margin-bottom: 5px;
+        }
+        .experience p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{title}}</p>
+    </header>
+    <main>
+        <div class="contact-info">
+            <p>{{address}}</p>
+            <p>{{email}} | {{phone}}</p>
+        </div>
+        <section class="summary">
+            <h2>Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+        <section class="skills">
+            <h2>Skills</h2>
+            <span>{{skills}}</span>
+        </section>
+        <section class="experience">
+            <h2>Experience</h2>
+            <h3>{{latest_title}}</h3>
+            <p><strong>{{latest_company}}</strong> - {{latest_location}}</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </section>
+        <section class="education">
+            <h2>Education</h2>
+            <h3>{{top_degree}} in {{top_field}}</h3>
+            <p><strong>{{top_institution}}</strong></p>
+        </section>
+        <section class="certifications">
+            <h2>Certifications</h2>
+            <p>{{certifications}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>
