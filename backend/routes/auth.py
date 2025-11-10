@@ -16,7 +16,8 @@ from mongo.profiles_dao import profiles_dao
 from mongo.forgotPassword import ForgotPassword
 from sessions.session_manager import session_manager
 from sessions.session_authorizer import authorize
-from schema import RegistInfo, LoginCred, Profile
+from schema.Auth import RegistInfo, LoginCred
+from schema.Profile import Profile
 
 import httpx
 from jose import jwt, JWTError
@@ -89,23 +90,6 @@ async def logout(uuid: str = Depends(authorize)):
 async def validate_session(uuid: str = Depends(authorize)):
     return {"detail": "Successfully validated session"}
 
-@auth_router.post("/check-password")
-async def check_password(credentials: LoginCred):
-    try:
-        pass_hash = await auth_dao.get_password(credentials.email.lower())
-
-        uuid = await auth_dao.get_uuid(credentials.email.lower())
-    except Exception as e:
-        raise HTTPException(500, "Encountered internal service error")
-    
-    if not pass_hash:
-        raise HTTPException(401, "Invalid email address")
-    
-    if bcrypt.checkpw(credentials.password.encode("utf-8"), pass_hash.encode("utf-8")):
-        return {"detail": "Valid login"}
-    else:
-        raise HTTPException(401, "Invalid login")
-
 @auth_router.post("/password/forgot", tags = ["profiles"])
 async def forgot_password(email: str = Body(..., embed=True)):
 
@@ -151,7 +135,7 @@ async def update_password(token: str = Body(...),password: str = Body(...)):
 
 
 
-@auth_router.post("/verify-google-token", tags = ["profiles"])
+@auth_router.post("/login/google", tags = ["profiles"])
 async def verify_google_token(token: dict = Body(...)):
 
     credentials = token.get("credential")
@@ -188,9 +172,8 @@ async def verify_google_token(token: dict = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail = f"Unknown Error while authenticating: {str(e)}")
 
-@auth_router.put("/login/microsoft", tags = ["profiles"])
+@auth_router.put("/login/microsoft", tags=["profiles"])
 async def verify_microsoft_token(request: Request):
-
     MICROSOFT_ISSUER = os.getenv("MICROSOFT_ISSUER")
     MICROSOFT_KEYS_URL = os.getenv("MICROSOFT_KEYS_URL")
     MICROSOFT_CLIENT_ID = os.getenv("MICROSOFT_CLIENT_ID")
@@ -199,20 +182,19 @@ async def verify_microsoft_token(request: Request):
     token = data.get("token")
 
     if not token:
-        raise HTTPException(status_code=400, content={"detail": "Missing token"})
+        raise HTTPException(status_code=400, detail="Missing token")
 
     async with httpx.AsyncClient() as client:
         jwks_resp = await client.get(MICROSOFT_KEYS_URL)
         if jwks_resp.status_code != 200:
-            raise HTTPException(status_code=500, content={"detail": "Could not fetch Microsoft keys"})
-
+            raise HTTPException(status_code=500, detail="Could not fetch Microsoft keys")
         jwks = jwks_resp.json()
 
     try:
         header = jwt.get_unverified_header(token)
         key = next((k for k in jwks["keys"] if k["kid"] == header["kid"]), None)
         if not key:
-            return HTTPException(status_code=400, content={"detail": "Key not found"})
+            raise HTTPException(status_code=400, detail="Key not found")
 
         claims = jwt.decode(
             token,
@@ -223,28 +205,36 @@ async def verify_microsoft_token(request: Request):
         )
     except JWTError as e:
         print(e)
-        raise HTTPException(status_code=401, content={"detail": f"Invalid token: {e}"})
+        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
 
     email = claims.get("email") or claims.get("preferred_username")
-    claims["username"] = email # neccesary so register_user doesn't throw a fit.
-    name = claims.get("name")
-    sub = claims.get("sub")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email not found in token")
 
-    data = await auth_dao.get_uuid(email)  # this returns a uuid
+    claims["username"] = email
 
-    if data:  # if the user already exists, still log in because it doesn't matter.
-        uuid = data
+    # Check if user exists in auth
+    existing_user = await auth_dao.get_uuid(email)
+
+    if existing_user:
+        uuid = existing_user
     else:
         uuid = str(uuid4())
-        await auth_dao.add_user(uuid, email, email, "")
-        await profiles_dao.add_profile(uuid, claims)
+        user_data = {
+            "email": email,
+            "username": email,
+            "password": "",  # No password for Microsoft users
+        }
+        await auth_dao.add_user(uuid, user_data)
 
-    if not email:
-        raise HTTPException(status_code=400, content={"detail": "Email not found in token"})
+
+        existing_profile = await profiles_dao.get_profile(uuid)
+        if not existing_profile:
+            await profiles_dao.add_profile(uuid, claims)
 
     session_token = session_manager.begin_session(uuid)
 
     return JSONResponse(
         status_code=200,
         content={"detail": "success", "uuid": uuid, "session_token": session_token},
-    )    
+    )

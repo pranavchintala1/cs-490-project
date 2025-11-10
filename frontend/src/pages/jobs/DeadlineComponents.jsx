@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { sendData } from "../../tools/db_commands";
+// import { sendData } from "../../tools/db_commands";
+import JobsAPI from "../../api/jobs";
 
 export function DeadlineWidget({ jobs, onJobClick }) {
   const today = new Date();
@@ -139,6 +140,18 @@ export function DeadlineCalendar({ jobs }) {
     return date < today;
   };
 
+  const getStatusColor = (status) => {
+    const statusColors = {
+      "Interested": "#9e9e9e",
+      "Applied": "#2196f3",
+      "Screening": "#ff9800",
+      "Interview": "#ff5722",
+      "Offer": "#4caf50",
+      "Rejected": "#f44336"
+    };
+    return statusColors[status] || "#666";
+  };
+
   const monthNames = ["January", "February", "March", "April", "May", "June",
                       "July", "August", "September", "October", "November", "December"];
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -173,18 +186,21 @@ export function DeadlineCalendar({ jobs }) {
               <div
                 key={job.id}
                 style={{
-                  background: isOverdue ? "#f44336" : "#ff9800",
+                  background: getStatusColor(job.status),
                   color: "white",
-                  padding: "2px 4px",
-                  borderRadius: "2px",
-                  marginBottom: "2px",
+                  padding: "3px 5px",
+                  borderRadius: "3px",
+                  marginBottom: "3px",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  whiteSpace: "nowrap"
+                  whiteSpace: "nowrap",
+                  fontSize: "10px",
+                  fontWeight: "600"
                 }}
-                title={`${job.title} - ${job.company}`}
+                title={`${job.title} - ${job.company} (${job.status})`}
               >
-                {job.company}
+                <div style={{ marginBottom: "1px" }}>{job.company}</div>
+                <div style={{ fontSize: "9px", opacity: 0.9 }}>{job.status}</div>
               </div>
             ))}
           </div>
@@ -194,7 +210,7 @@ export function DeadlineCalendar({ jobs }) {
   }
 
   return (
-    <div style={{ background: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
+    <div style={{ background: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", marginBottom: "20px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <button
           onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
@@ -220,18 +236,48 @@ export function DeadlineCalendar({ jobs }) {
         {calendarDays}
       </div>
 
-      <div style={{ marginTop: "20px", fontSize: "12px", color: "#666", display: "flex", gap: "20px", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "20px", height: "20px", background: "#fff3cd", border: "1px solid #ddd", borderRadius: "2px" }}></div>
-          <span>Upcoming Deadline</span>
+      <div style={{ marginTop: "20px", fontSize: "12px", color: "#666" }}>
+        <div style={{ marginBottom: "12px", fontWeight: "600" }}>Status Colors:</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: "16px", height: "16px", background: "#9e9e9e", borderRadius: "2px" }}></div>
+            <span>Interested</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: "16px", height: "16px", background: "#2196f3", borderRadius: "2px" }}></div>
+            <span>Applied</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: "16px", height: "16px", background: "#ff9800", borderRadius: "2px" }}></div>
+            <span>Screening</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: "16px", height: "16px", background: "#ff5722", borderRadius: "2px" }}></div>
+            <span>Interview</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: "16px", height: "16px", background: "#4caf50", borderRadius: "2px" }}></div>
+            <span>Offer</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ width: "16px", height: "16px", background: "#f44336", borderRadius: "2px" }}></div>
+            <span>Rejected</span>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "20px", height: "20px", background: "#ffebee", border: "1px solid #ddd", borderRadius: "2px" }}></div>
-          <span>Overdue</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "20px", height: "20px", border: "2px solid #4f8ef7", borderRadius: "2px" }}></div>
-          <span>Today</span>
+        
+        <div style={{ marginTop: "16px", display: "flex", gap: "20px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "20px", height: "20px", background: "#fff3cd", border: "1px solid #ddd", borderRadius: "2px" }}></div>
+            <span>Upcoming Deadline</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "20px", height: "20px", background: "#ffebee", border: "1px solid #ddd", borderRadius: "2px" }}></div>
+            <span>Overdue</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: "20px", height: "20px", border: "2px solid #4f8ef7", borderRadius: "2px" }}></div>
+            <span>Today</span>
+          </div>
         </div>
       </div>
     </div>
@@ -259,16 +305,18 @@ export function DeadlineReminderModal({ job, onClose, onSave }) {
 
     setIsSending(true);
     try {
-      const response = await sendData(
-        {
-          email: email,
-          jobTitle: job.title,
-          company: job.company,
-          deadline: job.deadline,
-          daysUntil: Math.floor((new Date(job.deadline) - new Date()) / (1000 * 60 * 60 * 24))
-        },
-        "/api/jobs/send-deadline-reminder"
-      );
+      // const response = await sendData(
+      //   {
+      //     email: email,
+      //     jobTitle: job.title,
+      //     company: job.company,
+      //     deadline: job.deadline,
+      //     daysUntil: Math.floor((new Date(job.deadline) - new Date()) / (1000 * 60 * 60 * 24))
+      //   },
+      //   "/api/jobs/send-deadline-reminder"
+      // );
+      // USE AXIOS API, I imported it above...
+      const response = null;
 
       if (response && response.status === 200) {
         alert("✅ Test reminder sent! Check your email.");

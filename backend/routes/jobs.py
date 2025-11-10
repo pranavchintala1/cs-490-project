@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pymongo.errors import DuplicateKeyError
 
-from mongo.job_dao import jobs_dao
+from mongo.jobs_dao import jobs_dao
 from sessions.session_authorizer import authorize
-from schema import Job
+from schema.Job import Job, UrlBody
+from webscrape.job_from_url import job_from_url, URLScrapeError
 
 jobs_router = APIRouter(prefix = "/jobs")
 
@@ -39,7 +40,7 @@ async def get_job(job_id: str, uuid: str = Depends(authorize)):
 async def get_all_jobs(uuid: str = Depends(authorize)):
     try:
         results = await jobs_dao.get_all_jobs(uuid)
-        # NOTE: do not return http exception for empty jobs, as it can lead to inconsistent behavior on the frontend
+        # NOTE: do not raise http exception for empty jobs, as it can lead to inconsistent behavior on the frontend
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
     
@@ -70,3 +71,18 @@ async def delete_job(job_id: str, uuid: str = Depends(authorize)):
     else:
         return {"detail": "Successfully deleted job"}
     
+@jobs_router.post("/import", tags = ["jobs"])
+async def import_from_url(url: UrlBody):
+    if not url.url:
+            raise HTTPException(400, "URL cannot be empty")
+    
+    try:
+        data = await job_from_url(url.url)
+    except URLScrapeError as e:
+        raise HTTPException(400, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, "Ecountered internal service error") from e
+    
+    return data

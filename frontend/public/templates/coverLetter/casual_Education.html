@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casual Cover Letter - Education</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header, main, footer {
+            padding: 20px;
+            margin: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            background-color: #ffeb3b;
+            color: #333;
+            padding: 30px;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        header p {
+            margin: 5px 0;
+            font-size: 1.2em;
+        }
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            border-bottom: 2px solid #ffeb3b;
+            padding-bottom: 5px;
+            font-size: 1.8em;
+            color: #333;
+        }
+        .section p {
+            font-size: 1.1em;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .summary {
+            background-color: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .skills ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .skills ul li {
+            background-color: #ffeb3b;
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>{{name}}</h1>
+        <p>{{title}} | {{industry}}</p>
+        <p>{{email}} | {{phone}} | {{address}}</p>
+    </header>
+    <main>
+        <section class="section summary">
+            <h2>Summary</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </section>
+        <section class="section skills">
+            <h2>Skills</h2>
+            <ul>
+                <li>{{skills}}</li>
+            </ul>
+        </section>
+        <section class="section experience">
+            <h2>Experience</h2>
+            <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        </section>
+        <section class="section education">
+            <h2>Education</h2>
+            <p><strong>{{top_degree}}</strong> in {{top_field}} - {{top_institution}}</p>
+        </section>
+        <section class="section certifications">
+            <h2>Certifications</h2>
+            <p>{{certifications}}</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 {{name}}. All rights reserved.</p>
+    </footer>
+</body>
+</html>

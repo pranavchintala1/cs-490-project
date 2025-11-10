@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formal Cover Letter - Cybersecurity</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            font-size: 28px;
+            margin: 0;
+        }
+        header p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        .contact-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .contact-info p {
+            margin: 5px 0;
+        }
+        main {
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .section p {
+            margin: 0;
+        }
+        footer {
+            text-align: center;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{name}}</h1>
+            <p>{{title}}</p>
+        </header>
+        <div class="contact-info">
+            <p>{{address}}</p>
+            <p>{{phone}} | {{email}}</p>
+        </div>
+        <main>
+            <div class="section">
+                <h2>Dear Hiring Manager,</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            </div>
+            <div class="section">
+                <h2>Professional Summary</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+            </div>
+            <div class="section">
+                <h2>Skills</h2>
+                <p>{{skills}}</p>
+            </div>
+            <div class="section">
+                <h2>Experience</h2>
+                <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            </div>
+            <div class="section">
+                <h2>Education</h2>
+                <p><strong>{{top_degree}}</strong> in {{top_field}}, {{top_institution}}</p>
+            </div>
+            <div class="section">
+                <h2>Certifications</h2>
+                <p>{{certifications}}</p>
+            </div>
+            <div class="section">
+                <p>Sincerely,</p>
+                <p>{{name}}</p>
+            </div>
+        </main>
+        <footer>
+            <p>&copy; 2023 {{name}}. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

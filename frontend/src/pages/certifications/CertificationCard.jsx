@@ -1,6 +1,7 @@
 import React from "react";
+import CertificationsAPI from "../../api/certifications";
 
-export default function CertificationCard({ cert, onDelete, onEdit }) {
+export default function CertificationCard({ cert, onDelete, onEdit, onMediaDelete }) {
   // Helper function to parse date string as local date without timezone issues
   const parseLocalDate = (dateStr) => {
     if (!dateStr) return null;
@@ -37,13 +38,15 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
   }
 
   const handleDownload = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/certifications/download/${encodeURIComponent(cert.id)}?user_id=temp_user`
-      );
-      if (!response.ok) return alert("File not found");
+    if (!cert.media_id) {
+      alert("No document available");
+      return;
+    }
 
-      const blob = await response.blob();
+    try {
+      const res = await CertificationsAPI.getMedia(cert.media_id);
+
+      const blob = res.data;
       const url = URL.createObjectURL(blob);
 
       const link = document.createElement("a");
@@ -52,8 +55,27 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
       link.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error(err);
+      console.error("Error downloading file:", err);
       alert("Error downloading file");
+    }
+  };
+
+  const handleDeleteMedia = async () => {
+    if (!cert.media_id) return;
+    
+    if (!window.confirm("Delete this document?")) return;
+
+    try {
+      await CertificationsAPI.deleteMedia(cert.media_id);
+      alert("Document deleted successfully");
+      
+      // Refresh the certifications list
+      if (onMediaDelete) {
+        onMediaDelete();
+      }
+    } catch (err) {
+      console.error("Error deleting document:", err);
+      alert(err.response?.data?.detail || "Failed to delete document");
     }
   };
 
@@ -140,12 +162,13 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
         <div style={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          flexWrap: "wrap",
+          gap: "8px",
           marginBottom: "12px",
           paddingTop: "8px",
           borderTop: "1px solid #eee"
         }}>
-          <div style={{ fontSize: "13px" }}>
+          <div style={{ fontSize: "13px", width: "100%" }}>
             <strong style={{ color: "#333" }}>Verified:</strong>{" "}
             <span style={{
               color: cert.verified ? "#34c759" : "#ff3b30",
@@ -156,21 +179,42 @@ export default function CertificationCard({ cert, onDelete, onEdit }) {
           </div>
 
           {cert.has_document && (
-            <button
-              onClick={handleDownload}
-              style={{
-                padding: "4px 12px",
-                background: "#2196f3",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "12px",
-                fontWeight: "600"
-              }}
-            >
-              📄 Download
-            </button>
+            <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+              <button
+                onClick={handleDownload}
+                style={{
+                  padding: "6px 12px",
+                  background: "#2196f3",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                  flex: 1
+                }}
+              >
+                📄 Download
+              </button>
+              <button
+                onClick={handleDeleteMedia}
+                style={{
+                  padding: "6px 12px",
+                  background: "#ff9800",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                  flex: 1
+                }}
+              >
+                🗑️ Delete Doc
+              </button>
+            </div>
           )}
         </div>
 

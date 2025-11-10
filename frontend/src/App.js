@@ -12,13 +12,28 @@ import Profile from "./pages/profile";
 import EmploymentList from "./pages/employment/EmploymentList";
 import ForgotPassword from "./pages/forgotPassword";
 import ResetPassword from "./pages/resetPassword";
-import Dashboard from "./pages/dashboard";
 import SkillsList from "./pages/skills/SkillList";
 import EducationList from "./pages/education/EducationList";
 import CertificationList from "./pages/certifications/CertificationList";
 import ProjectsList from "./pages/projects/ProjectList";
 import JobsList from "./pages/jobs/JobList";
+import CoverLetter from "./pages/coverLetter/coverLetter";
+import CoverLetterEditPage from "./pages/coverLetter/CoverLetterEditPage";
+import ResumeList from "./pages/resumes/ResumeList";
+import ResumeCreate from "./pages/resumes/ResumeCreate";
+import ResumeEditor from "./pages/resumes/ResumeEditor";
+import ResumePreviewPage from "./pages/resumes/ResumePreviewPage";
+import VersionManagementPage from "./pages/resumes/VersionManagementPage";
+import SharingAndFeedbackPage from "./pages/resumes/SharingAndFeedbackPage";
+import PublicSharePage from "./pages/resumes/PublicSharePage";
+import ExportResumePage from "./pages/resumes/ExportResumePage";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
+
+// inside your router
+
+
+// import Dashboard from "./pages/dashboard";
+import Dashboard from "./pages/dashboard";
 
 
 export function App() {
@@ -41,12 +56,22 @@ export function App() {
                 <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path = "/resetPassword/:token" element = {<ResetPassword />}/>
                 <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
+                <Route path = "/coverLetter" element = {<CoverLetter />} />
+                <Route path="/cover-letter/edit/:id" element={<CoverLetterEditPage />} />
 
               <Route path="/skills" element={<SkillsList />} />
               <Route path="/education" element={<EducationList />} />
               <Route path="/certifications" element={<CertificationList />} />
               <Route path="/projects" element={<ProjectsList />} />
               <Route path="/jobs" element={<JobsList />} />
+              <Route path="/resumes" element={<ResumeList />} />
+              <Route path="/resumes/create" element={<ResumeCreate />} />
+              <Route path="/resumes/edit/:id" element={<ResumeEditor />} />
+              <Route path="/resumes/preview/:id" element={<ResumePreviewPage />} />
+              <Route path="/resumes/versions/:id" element={<VersionManagementPage />} />
+              <Route path="/resumes/feedback/:id" element={<SharingAndFeedbackPage />} />
+              <Route path="/resumes/public/:token" element={<PublicSharePage />} />
+              <Route path="/resumes/export/:id" element={<ExportResumePage />} />
              </Routes>
             </FlashProvider>
           </>
