@@ -24,5 +24,5 @@ class AIDAO:
 
 
 
-# singleton instance
+# instance to call
 ai_dao = AIDAO()
