@@ -1,10 +1,23 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Optional
 
 from mongo.templates_dao import templates_dao
 from mongo.resumes_dao import resumes_dao
 from sessions.session_authorizer import authorize
+from sessions.session_manager import session_manager
 from schema.Template import Template
+
+# Optional authorization that returns None if auth fails
+async def authorize_optional(uuid: str = Header(None), authorization: str = Header(None)):
+    """Optional authorization that returns None instead of raising exception"""
+    if not uuid or not authorization:
+        return None
+    try:
+        if authorization.startswith("Bearer ") and session_manager.authenticate_session(uuid, authorization.removeprefix("Bearer ").strip()):
+            return uuid
+    except:
+        pass
+    return None
 
 templates_router = APIRouter(prefix="/templates")
 
@@ -33,11 +46,15 @@ async def create_template(template: Template, uuid: str = Depends(authorize)):
 
 
 @templates_router.get("/me", tags=["templates"])
-async def get_user_templates(uuid: str = Depends(authorize)):
+async def get_user_templates(uuid: Optional[str] = Depends(authorize_optional)):
     """
     Get all templates for the current user (including shared ones)
     Related to UC-046
     """
+    # Return empty list if not authenticated
+    if not uuid:
+        return []
+
     try:
         results = await templates_dao.get_user_templates(uuid)
         return results

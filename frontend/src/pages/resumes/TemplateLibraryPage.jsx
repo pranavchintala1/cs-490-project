@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TemplatesAPI from '../../api/templates';
 import ResumesAPI from '../../api/resumes';
 import ResumePreview from '../../components/resumes/ResumePreview';
+import ShareTemplateModal from '../../components/resumes/ShareTemplateModal';
 import '../../styles/resumes.css';
 
 /**
@@ -62,6 +63,7 @@ export default function TemplateLibraryPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [resumeName, setResumeName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [sharingTemplateId, setSharingTemplateId] = useState(null);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -156,7 +158,13 @@ export default function TemplateLibraryPage() {
         name: resumeName.trim(),
         template: template.template_type,
         sections: ['contact', 'summary', 'experience', 'education', 'skills'],
-        contact: {},
+        contact: {
+          name: '',
+          email: '',
+          phone: '',
+          address: '',
+          linkedin: ''
+        },
         summary: '',
         experience: [],
         education: [],
@@ -232,6 +240,16 @@ export default function TemplateLibraryPage() {
 
                 {!template.isBuiltIn && (
                   <div className="template-list-actions">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSharingTemplateId(template._id);
+                      }}
+                      disabled={deletingId === template._id}
+                      className="btn btn-sm btn-info btn-block mb-2"
+                    >
+                      Share
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -313,6 +331,20 @@ export default function TemplateLibraryPage() {
           )}
         </div>
       </div>
+
+      {/* Share Template Modal */}
+      {sharingTemplateId && (
+        <ShareTemplateModal
+          templateId={sharingTemplateId}
+          templateName={templates.find(t => t._id === sharingTemplateId)?.name}
+          onClose={() => setSharingTemplateId(null)}
+          onSuccess={() => {
+            setSharingTemplateId(null);
+            // Optionally refresh templates after successful share
+            alert('Template shared successfully!');
+          }}
+        />
+      )}
     </div>
   );
 }

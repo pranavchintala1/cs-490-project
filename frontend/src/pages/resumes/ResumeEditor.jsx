@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ResumesAPI from '../../api/resumes';
 import ResumePreview from '../../components/resumes/ResumePreview';
+import ContactEditor from '../../components/resumes/ContactEditor';
 import SectionCustomizer from '../../components/resumes/SectionCustomizer';
 import TemplateCustomizer from '../../components/resumes/TemplateCustomizer';
 import ExperienceEditor from '../../components/resumes/ExperienceEditor';
 import SkillsManager from '../../components/resumes/SkillsManager';
+import SaveAsTemplateModal from '../../components/resumes/SaveAsTemplateModal';
 import '../../styles/resumes.css';
 
 /**
@@ -19,9 +21,10 @@ export default function ResumeEditor() {
   const [resume, setResume] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('sections');
+  const [activeTab, setActiveTab] = useState('contact');
   const [saving, setSaving] = useState(false);
   const [contentWidth, setContentWidth] = useState(50); // Percentage width of content
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const layoutRef = useRef(null);
   const isResizing = useRef(false);
 
@@ -178,6 +181,9 @@ export default function ResumeEditor() {
           <button onClick={handleSave} disabled={saving} className="btn btn-success">
             {saving ? 'Saving...' : 'Save Resume'}
           </button>
+          <button onClick={() => setShowSaveTemplateModal(true)} className="btn btn-info">
+            Save as Template
+          </button>
           <button onClick={() => navigate('/resumes')} className="btn btn-secondary">
             Back to Resumes
           </button>
@@ -187,6 +193,14 @@ export default function ResumeEditor() {
       <div className="resume-editor-layout" ref={layoutRef}>
         <div className="editor-sidebar">
           <ul className="nav nav-tabs flex-column">
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'contact' ? 'active' : ''}`}
+                onClick={() => setActiveTab('contact')}
+              >
+                Contact
+              </button>
+            </li>
             <li className="nav-item">
               <button
                 className={`nav-link ${activeTab === 'sections' ? 'active' : ''}`}
@@ -226,6 +240,12 @@ export default function ResumeEditor() {
           className="editor-content"
           style={{ flex: `${contentWidth}%` }}
         >
+          {activeTab === 'contact' && (
+            <ContactEditor
+              contact={resume.contact}
+              onUpdate={(contact) => setResume({...resume, contact})}
+            />
+          )}
           {activeTab === 'sections' && (
             <SectionCustomizer
               sections={resume.sections}
@@ -277,6 +297,19 @@ export default function ResumeEditor() {
           </div>
         </div>
       </div>
+
+      {/* Save as Template Modal */}
+      {showSaveTemplateModal && (
+        <SaveAsTemplateModal
+          resumeId={id}
+          resumeName={resume?.name}
+          onClose={() => setShowSaveTemplateModal(false)}
+          onSuccess={() => {
+            setShowSaveTemplateModal(false);
+            alert('Template saved successfully!');
+          }}
+        />
+      )}
     </div>
   );
 }
