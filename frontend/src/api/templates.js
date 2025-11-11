@@ -158,6 +158,26 @@ const TemplatesAPI = {
   },
 
   /**
+   * Delete a template (alias for delete)
+   */
+  deleteTemplate: async (templateId) => {
+    const response = await fetch(`${API_BASE}?template_id=${templateId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to delete template');
+    }
+
+    return response.json();
+  },
+
+  /**
    * Set a template as default
    */
   setDefaultTemplate: async (templateId) => {
