@@ -178,6 +178,23 @@ async def delete_resume_version(resume_id: str, version_id: str, uuid: str = Dep
     else:
         return {"detail": "Successfully deleted version"}
 
+@resumes_router.put("/{resume_id}/versions/{version_id}/rename", tags = ["resumes"])
+async def rename_resume_version(resume_id: str, version_id: str, name: str, description: str = None, uuid: str = Depends(authorize)):
+    """Rename a resume version"""
+    try:
+        if not name or not name.strip():
+            raise HTTPException(400, "Version name is required")
+        updated = await resumes_dao.rename_resume_version(version_id, name.strip(), description)
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal service error")
+
+    if updated == 0:
+        raise HTTPException(400, "Version not found")
+    else:
+        return {"detail": "Successfully renamed version"}
+
 # RESUME FEEDBACK
 @resumes_router.post("/{resume_id}/feedback", tags = ["resumes"])
 async def add_resume_feedback(resume_id: str, feedback: ResumeFeedback, uuid: str = Depends(authorize)):

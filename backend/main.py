@@ -12,6 +12,7 @@ from routes.jobs import jobs_router
 from routes.coverLetter import coverletter_router
 from routes.user_data import user_router
 from routes.resumes import resumes_router
+from routes.templates import templates_router
 
 app = FastAPI()
 
@@ -41,7 +42,7 @@ app.add_middleware(
 #     response.headers["Cross-Origin-Embedder-Policy"] = "unsafe-none"
 #     return response
 
-app.include_router(auth_router, prefix = api_prefix) 
+app.include_router(auth_router, prefix = api_prefix)
 app.include_router(profiles_router, prefix = api_prefix)
 app.include_router(skills_router, prefix = api_prefix)
 app.include_router(projects_router, prefix = api_prefix)
@@ -52,6 +53,7 @@ app.include_router(jobs_router, prefix = api_prefix)
 app.include_router(coverletter_router,prefix=api_prefix)
 app.include_router(user_router,prefix=api_prefix)
 app.include_router(resumes_router, prefix = api_prefix)
+app.include_router(templates_router, prefix = api_prefix)
 
 # TODO: add user deletion services (deletes all data, requires password authentication)
 # Where to put it though?

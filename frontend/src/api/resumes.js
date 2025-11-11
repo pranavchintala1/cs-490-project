@@ -46,7 +46,14 @@ class ResumesAPI {
         return api.delete(`${BASE_URL}/${resumeId}/versions/${versionId}`);
     }
 
-    
+    renameVersion(resumeId, versionId, name, description = null) {
+        const params = new URLSearchParams({ name });
+        if (description) {
+            params.append('description', description);
+        }
+        return api.put(`${BASE_URL}/${resumeId}/versions/${versionId}/rename?${params.toString()}`);
+    }
+
     addFeedback(resumeId, data) {
         return api.post(`${BASE_URL}/${resumeId}/feedback`, data);
     }
