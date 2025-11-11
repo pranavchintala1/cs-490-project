@@ -6,6 +6,29 @@
 
 const API_BASE = 'http://localhost:8000/api/resumes';
 
+/**
+ * Helper function to get auth headers
+ */
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('session');
+  const uuid = localStorage.getItem('uuid');
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    console.warn('[PDFAPI] No session token found in localStorage');
+  }
+  if (uuid) {
+    headers['uuid'] = uuid;
+  } else {
+    console.warn('[PDFAPI] No uuid found in localStorage');
+  }
+  console.log('[PDFAPI] Auth headers prepared:', { hasToken: !!token, hasUuid: !!uuid });
+  return headers;
+};
+
 const PDFAPI = {
   /**
    * Generate PDF from resume data with options
@@ -16,9 +39,7 @@ const PDFAPI = {
 
       const response = await fetch(`${API_BASE}/${resumeId}/generate-pdf`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         credentials: 'include',
         ...(body && { body: JSON.stringify(body) }),
       });
@@ -43,22 +64,37 @@ const PDFAPI = {
    */
   generatePreviewPDF: async (resumeId, resumeData) => {
     try {
+      console.log('[PDFAPI] Generating preview PDF for resume:', resumeId);
+      const headers = getAuthHeaders();
+      const body = JSON.stringify(resumeData);
+      console.log('[PDFAPI] Request body size:', body.length, 'bytes');
+
       const response = await fetch(`${API_BASE}/${resumeId}/preview-pdf`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         credentials: 'include',
-        body: JSON.stringify(resumeData),
+        body: body,
       });
 
+      console.log('[PDFAPI] Response status:', response.status);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to generate PDF preview');
+        let errorDetail = 'Failed to generate PDF preview';
+        try {
+          const error = await response.json();
+          errorDetail = error.detail || error.message || errorDetail;
+          console.error('[PDFAPI] Error response:', error);
+        } catch (e) {
+          console.error('[PDFAPI] Could not parse error response');
+        }
+        throw new Error(errorDetail);
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log('[PDFAPI] Preview PDF generated successfully');
+      return result;
     } catch (err) {
+      console.error('[PDFAPI] Preview PDF generation error:', err);
       if (err instanceof Error) {
         throw err;
       }
