@@ -23,6 +23,22 @@ import httpx
 from jose import jwt, JWTError
 import os
 
+
+
+
+
+
+
+
+
+import time
+
+
+
+
+
+
+
 auth_router = APIRouter(prefix = "/auth")
 
 @auth_router.post("/register", tags = ["profiles"])
@@ -100,7 +116,19 @@ async def forgot_password(email: str = Body(..., embed=True)):
             fp = ForgotPassword() # ugly naming scheme fix later.
             token = fp.send_email(email.lower())
             uuid = str(uuid4())
+            print("REACHED CALL")
             await fp.store_link(uuid,email.lower(),token)
+            
+            
+            
+            
+            time.sleep(30)
+            await fp.verify_link(token)
+            
+            
+            
+            
+            
             return True
     except Exception as e:
         print(e)

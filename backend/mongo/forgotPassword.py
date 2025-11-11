@@ -170,15 +170,40 @@ class ForgotPassword:
             "expires": expires,
         }
 
+        print("REACHED FUNCTION")
+        print (user_id)
         await self.collection.replace_one({"_id": user_id}, doc, upsert=True)
+        try:
+            result = await self.collection.replace_one({"_id": user_id}, doc, upsert=True)
+            print("Matched:", result.matched_count, "Modified:", result.modified_count)
+        except Exception as e:
+            print("Error storing token:", e)
+
         await self.collection.create_index("expires", expireAfterSeconds=0)
+        
+        
+        data = await self.collection.find_one({"token": db_token})
+            
+        if not data:
+            print("Token not found in DB")
+            return None, None
+
+        print("STORE TOKEN", db_token)
+        
+        print("expires:", data["expires"])
+        
+        
+        
 
     async def verify_link(self, token: str):
         """Verify if a reset link token is valid and not expired."""
+        
+        
+        
         try:
             db_token = hashlib.sha256(token.encode()).hexdigest()
             data = await self.collection.find_one({"token": db_token})
-            
+            print("VERIFY TOKEN", db_token)
             if not data:
                 print("Token not found in DB")
                 return None, None
@@ -193,11 +218,13 @@ class ForgotPassword:
                 return None, None
             if data["expires"] < datetime.now():
                 await self.collection.delete_one({"token": db_token})
+                print("DELETE 1")
                 return None, None
 
             email = data["email"]
             uuid = await auth_dao.get_uuid(email)
             await self.collection.delete_one({"token": db_token})
+            print("DELETE 2")
             return uuid, data["expires"]
         except Exception as e:
             print("Error verifying token:", e)

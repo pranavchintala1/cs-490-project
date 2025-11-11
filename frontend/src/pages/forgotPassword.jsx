@@ -10,9 +10,10 @@ const ForgotPassword = () => {
     const {
         handleSubmit,
         register,
-        formState: { errors },
+        formState: { errors, isSubmitting },
         reset,
     } = useForm();
+    
 
     const { flash, showFlash } = useFlash();
 
@@ -62,8 +63,9 @@ const ForgotPassword = () => {
             />
             <input
                 type="submit"
+                disabled={isSubmitting}
                 className="btn btn-success w-100 fw-semibold"
-                value="Send Reset Link"
+                value={isSubmitting ? "Sending..." : "Send Reset Link"}
             />
             </form>
         </div>
