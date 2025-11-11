@@ -121,6 +121,15 @@ from mongo.dao_setup import db_client, RESET_LINKS
 from mongo.auth_dao import auth_dao
 
 
+
+
+
+
+import json
+from bson import json_util
+
+
+
 class ForgotPassword:
     def __init__(self):
         load_dotenv()
@@ -161,7 +170,7 @@ class ForgotPassword:
     async def store_link(self, user_id: str, email: str, token: str):
         """Store a hashed reset token in MongoDB with a 1-hour expiration."""
         db_token = hashlib.sha256(token.encode()).hexdigest()
-        expires = datetime.now() + timedelta(hours=1)
+        expires = datetime.now(tz=timezone.utc) + timedelta(hours=1)
 
         doc = {
             "_id": user_id,
@@ -172,10 +181,14 @@ class ForgotPassword:
 
         print("REACHED FUNCTION")
         print (user_id)
-        await self.collection.replace_one({"_id": user_id}, doc, upsert=True)
+        #await self.collection.replace_one({"_id": user_id}, doc, upsert=True)
         try:
-            result = await self.collection.replace_one({"_id": user_id}, doc, upsert=True)
-            print("Matched:", result.matched_count, "Modified:", result.modified_count)
+            #print("Storing document in MongoDB:")
+            #print(json.dumps(doc, indent=4, default=json_util.default))
+
+            await self.collection.replace_one({"_id": user_id}, doc, upsert=True)
+            #print("Matched:", result.matched_count, "Modified:", result.modified_count)
+            
         except Exception as e:
             print("Error storing token:", e)
 
@@ -194,38 +207,52 @@ class ForgotPassword:
         
         
         
+        
 
     async def verify_link(self, token: str):
-        """Verify if a reset link token is valid and not expired."""
-        
-        
-        
         try:
             db_token = hashlib.sha256(token.encode()).hexdigest()
             data = await self.collection.find_one({"token": db_token})
-            print("VERIFY TOKEN", db_token)
+            
+            print(db_token)
             if not data:
-                print("Token not found in DB")
+                print("NO DATA")
                 return None, None
-
-            print("Token found!")
-            print("expires:", data["expires"])
-            print("now:", datetime.utcnow())
-
+                
+            # Use UTC for comparison
+            
+            print(data["expires"])
+            print(datetime.now(timezone.utc))
             
             
-            if not data:
-                return None, None
-            if data["expires"] < datetime.now():
+            expires = data["expires"].replace(tzinfo=timezone.utc)
+            if expires < datetime.now(timezone.utc):
                 await self.collection.delete_one({"token": db_token})
-                print("DELETE 1")
                 return None, None
 
             email = data["email"]
             uuid = await auth_dao.get_uuid(email)
-            await self.collection.delete_one({"token": db_token})
-            print("DELETE 2")
+            # await self.collection.delete_one({"token": db_token})
+            print("RETURNING SOMETHING")
             return uuid, data["expires"]
+        except Exception as e:
+            print("Error verifying token:", e)
+            return None, None
+
+
+
+
+
+    async def delete_link(self, token: str):
+        try:
+            db_token = hashlib.sha256(token.encode()).hexdigest()
+            data = await self.collection.find_one({"token": db_token})
+            print("IN DELETE")
+            print(db_token)
+            if not data:
+                print("NO DATA")
+                return
+            await self.collection.delete_one({"token": db_token})
         except Exception as e:
             print("Error verifying token:", e)
             return None, None
