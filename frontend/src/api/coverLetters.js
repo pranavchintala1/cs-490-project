@@ -18,6 +18,10 @@ class CoverLetterAPI {
     return api.post(BASE_URL, data);
   }
 
+  upload(data){
+    return api.post(`${BASE_URL}/upload`,data);
+  }
+
   // PUT update an existing cover letter
   update(coverLetterId, data) {
     return api.put(`${BASE_URL}/${coverLetterId}`, data);
