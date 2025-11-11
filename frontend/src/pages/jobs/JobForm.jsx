@@ -103,11 +103,11 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       }
       if (data.description)
         setDescription(data.description.substring(0, 2000));
+   
+      setUrl(importUrl.trim());
 
       setScrapeError("");
-      alert(
-        "Job details imported successfully! Please review and fill in remaining required fields."
-      );
+      alert("Job imported. Please review and fill in remaining required fields.");
     } catch (error) {
       const errorMessage =
         error.response?.data?.detail ||

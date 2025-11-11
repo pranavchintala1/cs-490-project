@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Nav from "./tools/nav";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
@@ -39,6 +39,8 @@ import Dashboard from "./pages/dashboard";
 
 
 export function App() {
+  const location = useLocation();
+  
   return (
     <div className="App">
       <header>
@@ -47,7 +49,7 @@ export function App() {
     
           <FlashProvider>
             <FlashMessage />
-              <Nav />
+              <Nav key={location.pathname} />
               <Routes>
                 <Route path = "/" element = {<Home />} />
                 <Route path = "/register" element = {<Register />} />
