@@ -660,8 +660,23 @@ h1, h2 {
   justify-content: center;
   overflow: auto;
   padding: 1rem;
-  background: white;
+  background: #f8f9fa;
   border-radius: 6px;
+}
+
+.pdf-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.pdf-loading-spinner .spinner-border {
+  width: 3rem;
+  height: 3rem;
 }
 
 .editor-preview-document {
