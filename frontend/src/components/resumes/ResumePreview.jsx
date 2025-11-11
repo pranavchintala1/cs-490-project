@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ResumeSectionWrapper from './ResumeSectionWrapper';
 import '../../styles/resumes.css';
 
 /**
  * ResumePreview Component
  * Displays formatted resume preview based on selected template
  * Supports three template types: Chronological, Functional, and Hybrid
+ * Supports drag-and-drop reordering of sections
  * Related to UC-046, UC-053
  */
-export default function ResumePreview({ resume }) {
+export default function ResumePreview({ resume, onSectionReorder }) {
+  const [draggedSection, setDraggedSection] = useState(null);
+
   if (!resume) {
     return <div className="resume-preview-empty">No resume data</div>;
   }
 
-  const { contact, summary, experience, skills, education, colors, fonts, template } = resume;
+  const { contact, summary, experience, skills, education, colors, fonts, template, sections } = resume;
 
   // Apply custom colors and fonts if provided
   const styles = {
@@ -22,8 +26,44 @@ export default function ResumePreview({ resume }) {
     '--body-font': fonts?.body || 'Calibri',
   };
 
-  // Helper function to render contact information
-  const renderContactInfo = () => (
+  // Drag-and-drop handlers
+  const handleDragStart = (e, sectionId) => {
+    setDraggedSection(sectionId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, targetSectionId) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, targetSectionId) => {
+    e.preventDefault();
+    if (!draggedSection || draggedSection === targetSectionId || !onSectionReorder) {
+      return;
+    }
+
+    // Reorder sections
+    const sectionList = [...(sections || [])];
+    const draggedIndex = sectionList.indexOf(draggedSection);
+    const targetIndex = sectionList.indexOf(targetSectionId);
+
+    if (draggedIndex > -1 && targetIndex > -1) {
+      // Remove dragged item and insert at target position
+      sectionList.splice(draggedIndex, 1);
+      sectionList.splice(targetIndex, 0, draggedSection);
+      onSectionReorder(sectionList);
+    }
+
+    setDraggedSection(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedSection(null);
+  };
+
+  // Helper function to render contact information content
+  const renderContactInfoContent = () => (
     <>
       {contact && (
         <div className="resume-header">
@@ -42,8 +82,22 @@ export default function ResumePreview({ resume }) {
     </>
   );
 
-  // Helper function to render experience section
-  const renderExperience = () => (
+  // Wrapped contact section for drag-and-drop
+  const renderContactInfo = () => (
+    <ResumeSectionWrapper
+      sectionId="contact"
+      isDragging={draggedSection === 'contact'}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {renderContactInfoContent()}
+    </ResumeSectionWrapper>
+  );
+
+  // Helper function to render experience section content
+  const renderExperienceContent = () => (
     <>
       {experience && experience.length > 0 && (
         <div className="resume-section">
@@ -69,8 +123,22 @@ export default function ResumePreview({ resume }) {
     </>
   );
 
-  // Helper function to render education section
-  const renderEducation = () => (
+  // Wrapped experience section for drag-and-drop
+  const renderExperience = () => (
+    <ResumeSectionWrapper
+      sectionId="experience"
+      isDragging={draggedSection === 'experience'}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {renderExperienceContent()}
+    </ResumeSectionWrapper>
+  );
+
+  // Helper function to render education section content
+  const renderEducationContent = () => (
     <>
       {education && education.length > 0 && (
         <div className="resume-section">
@@ -89,8 +157,22 @@ export default function ResumePreview({ resume }) {
     </>
   );
 
-  // Helper function to render skills section
-  const renderSkills = () => (
+  // Wrapped education section for drag-and-drop
+  const renderEducation = () => (
+    <ResumeSectionWrapper
+      sectionId="education"
+      isDragging={draggedSection === 'education'}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {renderEducationContent()}
+    </ResumeSectionWrapper>
+  );
+
+  // Helper function to render skills section content
+  const renderSkillsContent = () => (
     <>
       {skills && skills.length > 0 && (
         <div className="resume-section">
@@ -111,8 +193,22 @@ export default function ResumePreview({ resume }) {
     </>
   );
 
-  // Helper function to render summary section
-  const renderSummary = () => (
+  // Wrapped skills section for drag-and-drop
+  const renderSkills = () => (
+    <ResumeSectionWrapper
+      sectionId="skills"
+      isDragging={draggedSection === 'skills'}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {renderSkillsContent()}
+    </ResumeSectionWrapper>
+  );
+
+  // Helper function to render summary section content
+  const renderSummaryContent = () => (
     <>
       {summary && (
         <div className="resume-section">
@@ -123,42 +219,59 @@ export default function ResumePreview({ resume }) {
     </>
   );
 
-  // CHRONOLOGICAL TEMPLATE: Traditional format with experience first (current Harvard style)
-  const renderChronological = () => (
+  // Wrapped summary section for drag-and-drop
+  const renderSummary = () => (
+    <ResumeSectionWrapper
+      sectionId="summary"
+      isDragging={draggedSection === 'summary'}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {renderSummaryContent()}
+    </ResumeSectionWrapper>
+  );
+
+  // Map section IDs to render functions
+  const sectionRenderMap = {
+    contact: renderContactInfo,
+    summary: renderSummary,
+    experience: renderExperience,
+    education: renderEducation,
+    skills: renderSkills,
+  };
+
+  // Generic section renderer - respects section order
+  const renderSectionsByOrder = (sectionOrder) => (
     <>
-      {renderContactInfo()}
-      {renderSummary()}
-      {renderExperience()}
-      {renderEducation()}
-      {renderSkills()}
+      {sectionOrder && sectionOrder.map((sectionId) => {
+        const renderFunc = sectionRenderMap[sectionId];
+        return renderFunc ? <div key={sectionId}>{renderFunc()}</div> : null;
+      })}
     </>
   );
+
+  // CHRONOLOGICAL TEMPLATE: Traditional format with experience first (current Harvard style)
+  const renderChronological = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return renderSectionsByOrder(sectionOrder);
+  };
 
   // FUNCTIONAL TEMPLATE: Skills-focused, minimal experience listing
-  const renderFunctional = () => (
-    <>
-      {renderContactInfo()}
-      {renderSummary()}
-      {renderSkills()}
-      {renderExperience()}
-      {renderEducation()}
-    </>
-  );
+  const renderFunctional = () => {
+    const defaultOrder = ['contact', 'summary', 'skills', 'experience', 'education'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return renderSectionsByOrder(sectionOrder);
+  };
 
   // HYBRID TEMPLATE: Balance between skills and experience
-  const renderHybrid = () => (
-    <>
-      {renderContactInfo()}
-      {renderSummary()}
-      <div className="resume-section-row">
-        <div className="resume-section-left">
-          {renderSkills()}
-        </div>
-      </div>
-      {renderExperience()}
-      {renderEducation()}
-    </>
-  );
+  const renderHybrid = () => {
+    const defaultOrder = ['contact', 'summary', 'skills', 'experience', 'education'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return renderSectionsByOrder(sectionOrder);
+  };
 
   // Select which template to render
   const getTemplateContent = () => {
