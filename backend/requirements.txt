@@ -27,6 +27,8 @@ httplib2==0.31.0
 httpx==0.28.1
 idna==3.11
 oauthlib==3.3.1
+PyPDF2
+python-docx
 playwright==1.55.0
 proto-plus==1.26.1
 protobuf==6.33.0
@@ -38,9 +40,11 @@ pydantic_core==2.41.4
 pyee==13.0.0
 pymongo==4.15.3
 pyparsing==3.2.5
+python-docx
 python-dotenv==1.1.1
 python-jose==3.3.0
 python-multipart==0.0.20
+reportlab
 requests==2.32.5
 requests-file==3.0.1
 requests-oauthlib==2.0.0
@@ -55,3 +59,6 @@ typing_extensions==4.15.0
 uritemplate==4.2.0
 urllib3==2.5.0
 uvicorn==0.38.0
+weasyprint
+
+
