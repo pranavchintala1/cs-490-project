@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ResumesAPI from '../../api/resumes';
+import PDFAPI from '../../api/pdf';
 import ResumePreview from '../../components/resumes/ResumePreview';
 import ContactEditor from '../../components/resumes/ContactEditor';
 import SummaryEditor from '../../components/resumes/SummaryEditor';
@@ -26,8 +27,12 @@ export default function ResumeEditor() {
   const [saving, setSaving] = useState(false);
   const [contentWidth, setContentWidth] = useState(50); // Percentage width of content
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
   const layoutRef = useRef(null);
   const isResizing = useRef(false);
+  const pdfTimeoutRef = useRef(null);
 
   // Fetch resume from backend
   useEffect(() => {
@@ -103,6 +108,45 @@ export default function ResumeEditor() {
       document.removeEventListener('mouseup', handleResizeEnd);
     };
   }, []);
+
+  // PDF generation with debouncing (500ms after changes stop)
+  useEffect(() => {
+    if (!resume || !id) return;
+
+    // Clear existing timeout
+    if (pdfTimeoutRef.current) {
+      clearTimeout(pdfTimeoutRef.current);
+    }
+
+    // Set new timeout for PDF generation
+    pdfTimeoutRef.current = setTimeout(async () => {
+      try {
+        setPdfLoading(true);
+        setPdfError(null);
+
+        const result = await PDFAPI.generatePreviewPDF(id, resume);
+
+        if (result.success && result.pdf) {
+          const blobUrl = PDFAPI.getPDFBlobURL(result.pdf);
+          setPdfUrl(blobUrl);
+        } else {
+          setPdfError('Failed to generate PDF preview');
+        }
+      } catch (err) {
+        console.error('PDF generation error:', err);
+        setPdfError(err.message || 'Failed to generate PDF preview');
+      } finally {
+        setPdfLoading(false);
+      }
+    }, 500); // 500ms debounce
+
+    // Cleanup
+    return () => {
+      if (pdfTimeoutRef.current) {
+        clearTimeout(pdfTimeoutRef.current);
+      }
+    };
+  }, [resume, id]);
 
   const handleSave = async () => {
     try {
@@ -300,20 +344,43 @@ export default function ResumeEditor() {
           style={{ flex: `${100 - contentWidth}%` }}
         >
           <div className="preview-header-bar">
-            <h3>Live Preview</h3>
-            <button onClick={handleFullPrintView} className="btn btn-sm btn-outline-primary">
-              Full Print View
-            </button>
+            <h3>Live PDF Preview</h3>
+            {pdfLoading && <span className="badge bg-info">Generating...</span>}
+            {pdfError && <span className="badge bg-danger">Error</span>}
           </div>
-          <div className="editor-preview-container">
-            <div className="editor-preview-document">
-              <ResumePreview
-                resume={resume}
-                onSectionReorder={(newSectionOrder) =>
-                  setResume({...resume, sections: newSectionOrder})
-                }
-              />
+
+          {pdfError && (
+            <div className="alert alert-warning m-3 mb-0" role="alert">
+              <small>
+                <strong>Preview Error:</strong> {pdfError}
+              </small>
             </div>
+          )}
+
+          <div className="editor-preview-container">
+            {pdfUrl ? (
+              <iframe
+                src={pdfUrl}
+                title="Resume PDF Preview"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  borderRadius: '6px',
+                }}
+              />
+            ) : pdfLoading ? (
+              <div className="pdf-loading-spinner">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading PDF...</span>
+                </div>
+                <p className="text-muted mt-3">Generating your resume...</p>
+              </div>
+            ) : (
+              <div className="pdf-loading-spinner">
+                <p className="text-muted">PDF preview will appear here</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
