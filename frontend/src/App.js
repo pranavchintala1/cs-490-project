@@ -20,13 +20,13 @@ import JobsList from "./pages/jobs/JobList";
 import CoverLetter from "./pages/coverLetter/coverLetter";
 import CoverLetterEditPage from "./pages/coverLetter/CoverLetterEditPage";
 import ResumeList from "./pages/resumes/ResumeList";
-import ResumeCreate from "./pages/resumes/ResumeCreate";
 import ResumeEditor from "./pages/resumes/ResumeEditor";
 import ResumePreviewPage from "./pages/resumes/ResumePreviewPage";
 import VersionManagementPage from "./pages/resumes/VersionManagementPage";
 import SharingAndFeedbackPage from "./pages/resumes/SharingAndFeedbackPage";
 import PublicSharePage from "./pages/resumes/PublicSharePage";
 import ExportResumePage from "./pages/resumes/ExportResumePage";
+import TemplateLibraryPage from "./pages/resumes/TemplateLibraryPage";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
@@ -57,7 +57,6 @@ export function App() {
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path = "/resetPassword/:token" element = {<ResetPassword />}/>
-                <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
                 <Route path = "/coverLetter" element = {<CoverLetter />} />
                 <Route path="/cover-letter/edit/:id" element={<CoverLetterEditPage />} />
 
@@ -67,13 +66,14 @@ export function App() {
               <Route path="/projects" element={<ProjectsList />} />
               <Route path="/jobs" element={<JobsList />} />
               <Route path="/resumes" element={<ResumeList />} />
-              <Route path="/resumes/create" element={<ResumeCreate />} />
+              <Route path="/resumes/templates" element={<TemplateLibraryPage />} />
               <Route path="/resumes/edit/:id" element={<ResumeEditor />} />
               <Route path="/resumes/preview/:id" element={<ResumePreviewPage />} />
               <Route path="/resumes/versions/:id" element={<VersionManagementPage />} />
               <Route path="/resumes/feedback/:id" element={<SharingAndFeedbackPage />} />
               <Route path="/resumes/public/:token" element={<PublicSharePage />} />
               <Route path="/resumes/export/:id" element={<ExportResumePage />} />
+              <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
              </Routes>
             </FlashProvider>
           </>

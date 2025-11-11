@@ -1,0 +1,318 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import TemplatesAPI from '../../api/templates';
+import ResumesAPI from '../../api/resumes';
+import ResumePreview from '../../components/resumes/ResumePreview';
+import '../../styles/resumes.css';
+
+/**
+ * TemplateLibraryPage Component
+ * Browse and preview resume templates side-by-side
+ * Related to UC-046: Resume Template Management
+ */
+
+// Sample resume data to demonstrate templates
+const SAMPLE_RESUME = {
+  contact: {
+    name: 'John Smith',
+    email: 'john.smith@email.com',
+    phone: '(555) 123-4567',
+    address: 'San Francisco, CA',
+    linkedin: 'linkedin.com/in/johnsmith'
+  },
+  summary: 'Experienced software engineer with 5+ years building scalable web applications. Passionate about clean code and mentoring junior developers.',
+  experience: [
+    {
+      id: 1,
+      position: 'Senior Software Engineer',
+      company: 'Tech Corp',
+      startDate: 'Jan 2022',
+      endDate: 'Present',
+      description: 'Led development of microservices architecture, improving system performance by 40%'
+    },
+    {
+      id: 2,
+      position: 'Software Engineer',
+      company: 'StartupXYZ',
+      startDate: 'Jun 2019',
+      endDate: 'Dec 2021',
+      description: 'Built and maintained customer-facing web applications using React and Node.js'
+    }
+  ],
+  education: [
+    {
+      id: 1,
+      degree: 'Bachelor of Science',
+      field: 'Computer Science',
+      school: 'State University',
+      year: '2019'
+    }
+  ],
+  skills: ['JavaScript', 'React', 'Node.js', 'Python', 'AWS', 'Docker', 'PostgreSQL', 'Git'],
+  colors: { primary: '#1a1a1a', accent: '#2c3e50' },
+  fonts: { heading: 'Calibri', body: 'Calibri' }
+};
+
+export default function TemplateLibraryPage() {
+  const navigate = useNavigate();
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [resumeName, setResumeName] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      // Predefined templates for demo
+      const builtInTemplates = [
+        {
+          _id: 'chrono-demo',
+          name: 'Chronological',
+          template_type: 'chronological',
+          description: 'Traditional format: Summary first, then work experience in reverse chronological order. Best for candidates with consistent career progression.',
+          is_default: false,
+          isBuiltIn: true
+        },
+        {
+          _id: 'func-demo',
+          name: 'Functional',
+          template_type: 'functional',
+          description: 'Skills-focused format: Emphasizes skills and achievements. Best for career changers or those with employment gaps.',
+          is_default: false,
+          isBuiltIn: true
+        },
+        {
+          _id: 'hybrid-demo',
+          name: 'Hybrid',
+          template_type: 'hybrid',
+          description: 'Balanced format: Combines skills section with chronological work history. Best for showcasing both abilities and experience.',
+          is_default: false,
+          isBuiltIn: true
+        }
+      ];
+
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await TemplatesAPI.getUserTemplates();
+        const userTemplates = response.data || response;
+        // Combine built-in templates with user templates
+        setTemplates([...builtInTemplates, ...userTemplates]);
+        // Select first template by default
+        setSelectedTemplate(builtInTemplates[0]);
+      } catch (err) {
+        // Properly extract error message
+        let errorMessage = 'Failed to load user templates';
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === 'string') {
+          errorMessage = err;
+        } else if (err?.detail) {
+          errorMessage = err.detail;
+        }
+        setError(errorMessage);
+        // Still show built-in templates even if user templates fail to load
+        setTemplates(builtInTemplates);
+        setSelectedTemplate(builtInTemplates[0]);
+        console.error('Error loading user templates:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
+  const handleDeleteTemplate = async (templateId) => {
+    if (!window.confirm('Are you sure you want to delete this template?')) {
+      return;
+    }
+
+    try {
+      setDeletingId(templateId);
+      await TemplatesAPI.deleteTemplate(templateId);
+      setTemplates(templates.filter(t => t._id !== templateId));
+      if (selectedTemplate?._id === templateId) {
+        setSelectedTemplate(builtInTemplates[0]);
+      }
+    } catch (err) {
+      alert('Failed to delete template: ' + err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleCreateResume = async (template) => {
+    if (!resumeName.trim()) {
+      alert('Please enter a resume name');
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const result = await ResumesAPI.add({
+        name: resumeName.trim(),
+        template: template.template_type,
+        sections: ['contact', 'summary', 'experience', 'education', 'skills'],
+        contact: {},
+        summary: '',
+        experience: [],
+        education: [],
+        skills: [],
+        colors: { primary: '#1a1a1a', accent: '#2c3e50' },
+        fonts: { heading: 'Calibri', body: 'Calibri' },
+      });
+
+      const resumeId = result.data?._id || result.data?.resume_id || result._id;
+      navigate(`/resumes/edit/${resumeId}`);
+    } catch (err) {
+      alert('Failed to create resume: ' + err.message);
+      console.error('Error creating resume:', err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleSetDefault = async (templateId) => {
+    try {
+      await TemplatesAPI.setDefaultTemplate(templateId);
+      setTemplates(templates.map(t => ({
+        ...t,
+        is_default: t._id === templateId
+      })));
+    } catch (err) {
+      alert('Failed to set default template: ' + err.message);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center p-5">Loading templates...</div>;
+  }
+
+  // Create demo resume with selected template
+  const demoResume = selectedTemplate ? {
+    ...SAMPLE_RESUME,
+    template: selectedTemplate.template_type
+  } : null;
+
+  return (
+    <div className="template-library-container">
+      <div className="template-library-header">
+        <div>
+          <h1>Resume Templates</h1>
+          <p className="text-muted">Browse and preview template styles</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="alert alert-danger m-4" role="alert">
+          {error}
+        </div>
+      )}
+
+      <div className="template-library-layout">
+        {/* Left Side: Template List */}
+        <div className="template-list-panel">
+          <h3>Available Templates</h3>
+          <div className="template-list">
+            {templates.map((template) => (
+              <div
+                key={template._id}
+                className={`template-list-item ${selectedTemplate?._id === template._id ? 'active' : ''}`}
+                onClick={() => setSelectedTemplate(template)}
+              >
+                <div className="template-list-header">
+                  <h4>{template.name}</h4>
+                  {template.is_default && <span className="badge bg-primary">Default</span>}
+                </div>
+                <p className="template-type-badge">{template.template_type}</p>
+                <p className="template-description">{template.description}</p>
+
+                {!template.isBuiltIn && (
+                  <div className="template-list-actions">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteTemplate(template._id);
+                      }}
+                      disabled={deletingId === template._id}
+                      className="btn btn-sm btn-danger btn-block"
+                    >
+                      {deletingId === template._id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Side: Template Preview */}
+        <div className="template-preview-panel">
+          {selectedTemplate ? (
+            <>
+              <div className="template-preview-header">
+                <h2>{selectedTemplate.name} Preview</h2>
+                <p className="text-muted">This is how your resume will look with this template</p>
+              </div>
+
+              {/* Resume Name Input */}
+              <div className="form-group mb-3">
+                <label htmlFor="resumeName" className="form-label">
+                  Resume Name
+                </label>
+                <input
+                  id="resumeName"
+                  type="text"
+                  className="form-control form-control-lg"
+                  placeholder="e.g., Software Engineer Resume, Product Manager Resume"
+                  value={resumeName}
+                  onChange={(e) => setResumeName(e.target.value)}
+                  disabled={creating}
+                />
+              </div>
+
+              {/* Live Preview */}
+              <div className="template-preview-box">
+                {demoResume && <ResumePreview resume={demoResume} />}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="template-preview-actions">
+                <button
+                  onClick={() => handleCreateResume(selectedTemplate)}
+                  disabled={creating || !resumeName.trim()}
+                  className="btn btn-primary btn-lg btn-block mb-2"
+                >
+                  {creating ? 'Creating...' : 'Use This Template'}
+                </button>
+                {!selectedTemplate.is_default && !selectedTemplate.isBuiltIn && (
+                  <button
+                    onClick={() => handleSetDefault(selectedTemplate._id)}
+                    disabled={creating}
+                    className="btn btn-outline-secondary btn-lg btn-block"
+                  >
+                    Set as Default
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate('/resumes')}
+                  disabled={creating}
+                  className="btn btn-secondary btn-lg btn-block"
+                >
+                  Back to Resumes
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="template-preview-empty">
+              <p>Select a template to preview</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

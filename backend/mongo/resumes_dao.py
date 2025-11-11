@@ -87,6 +87,17 @@ class ResumeDAO:
         result = await self.versions_collection.delete_one({"_id": ObjectId(version_id)})
         return result.deleted_count
 
+    async def rename_resume_version(self, version_id: str, name: str, description: str = None) -> int:
+        """Rename a resume version"""
+        update_data = {"name": name}
+        if description is not None:
+            update_data["description"] = description
+        updated = await self.versions_collection.update_one(
+            {"_id": ObjectId(version_id)},
+            {"$set": update_data}
+        )
+        return updated.matched_count
+
     # RESUME FEEDBACK
     async def add_resume_feedback(self, data: dict) -> str:
         time = datetime.now(timezone.utc)

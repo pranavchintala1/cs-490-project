@@ -110,6 +110,12 @@ export default function ResumeCreate() {
           >
             {loading ? 'Creating...' : 'Create Resume'}
           </button>
+          <button
+            onClick={() => navigate('/resumes/templates')}
+            className="btn btn-info btn-lg"
+          >
+            Preview Templates
+          </button>
           <button onClick={() => navigate('/resumes')} className="btn btn-secondary btn-lg">
             Cancel
           </button>

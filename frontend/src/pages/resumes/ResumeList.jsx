@@ -111,7 +111,7 @@ export default function ResumeList() {
 
       <div className="resume-list-header">
         <h1>My Resumes</h1>
-        <Link to="/resumes/create" className="btn btn-primary">
+        <Link to="/resumes/templates" className="btn btn-primary">
           + Create New Resume
         </Link>
       </div>
@@ -128,7 +128,7 @@ export default function ResumeList() {
 
       {filteredResumes.length === 0 ? (
         <div className="alert alert-info">
-          <p>No resumes found. <Link to="/resumes/create">Create your first resume</Link></p>
+          <p>No resumes found. <Link to="/resumes/templates">Create your first resume</Link></p>
         </div>
       ) : (
         <div className="resume-cards-grid">
