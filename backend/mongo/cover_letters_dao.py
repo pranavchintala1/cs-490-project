@@ -10,7 +10,6 @@ class CoverLettersDAO:
         return data["_id"]
 
     async def get_cover_letter(self, letter_id: str, uuid: str) -> dict | None:
-
         return await self.collection.find_one({"_id": letter_id, "uuid": uuid})
 
     async def get_all_cover_letters(self, user_uuid: str) -> list[dict]:
