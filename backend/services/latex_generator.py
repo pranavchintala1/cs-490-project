@@ -10,6 +10,37 @@ import os
 from pathlib import Path
 
 
+def initialize_tectonic_bundle():
+    """
+    Pre-initialize Tectonic bundle by running a simple compile.
+    This downloads the bundle if it's not already cached.
+    Call this once on startup if internet is available.
+    """
+    try:
+        print("[LaTeXGenerator] Attempting to initialize Tectonic bundle...")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            test_tex = os.path.join(tmpdir, 'test.tex')
+            with open(test_tex, 'w') as f:
+                f.write(r'\documentclass{article}\begin{document}Test\end{document}')
+
+            result = subprocess.run(
+                ['tectonic', '--outdir', tmpdir, test_tex],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+
+            if result.returncode == 0:
+                print("[LaTeXGenerator] Tectonic bundle initialized successfully")
+                return True
+            else:
+                print(f"[LaTeXGenerator] Bundle initialization failed: {result.stderr[:200]}")
+                return False
+    except Exception as e:
+        print(f"[LaTeXGenerator] Could not initialize bundle: {e}")
+        return False
+
+
 class LaTeXGenerator:
     """Generate professional LaTeX resumes from resume data"""
 
@@ -22,6 +53,9 @@ class LaTeXGenerator:
         Returns:
             LaTeX document string
         """
+        if not resume_data:
+            raise ValueError("Resume data is empty")
+
         contact = resume_data.get('contact', {})
         summary = resume_data.get('summary', '')
         experience = resume_data.get('experience', [])
@@ -33,6 +67,8 @@ class LaTeXGenerator:
         add_watermark = resume_data.get('watermark', False)
         print_optimized = resume_data.get('print_optimized', False)
 
+        print(f"[LaTeXGenerator] Generating LaTeX for resume with contact: {bool(contact)}, experience items: {len(experience)}, education items: {len(education)}")
+
         # Color definitions
         primary_color = colors.get('primary', '1a1a1a')
         accent_color = colors.get('accent', '2c3e50')
@@ -41,39 +77,14 @@ class LaTeXGenerator:
         primary_color = primary_color.lstrip('#')
         accent_color = accent_color.lstrip('#')
 
-        # Start LaTeX document
-        # Use print-optimized settings if requested
-        documentclass = r"\documentclass[11pt]{article}" if not print_optimized else r"\documentclass[11pt,draft]{article}"
-
-        latex = documentclass + r"""
+        # Start LaTeX document - use minimal setup for compatibility
+        latex = r"""\documentclass[11pt]{article}
 \usepackage[margin=0.5in]{geometry}
 \usepackage{xcolor}
-\usepackage{hyperref}
-\usepackage{enumitem}
-\usepackage{ragged2e}
-"""
 
-        # Add watermark package if watermark is enabled
-        if add_watermark:
-            latex += r"""\usepackage{draftwatermark}
-\SetWatermarkText{Resume}
-\SetWatermarkScale{0.15}
-\SetWatermarkColor[gray]{0.9}
-"""
-
-        # Print optimization: reduce colors and optimize for printing
-        if print_optimized:
-            latex += r"""% Print optimization: convert colors to grayscale
-\usepackage{calc}
-"""
-
-        latex += r"""
 % Define colors
 \definecolor{primary}{HTML}{""" + primary_color + r"""}
 \definecolor{accent}{HTML}{""" + accent_color + r"""}
-
-% Hyperlink color
-\hypersetup{colorlinks=true, linkcolor=primary, urlcolor=primary}
 
 % Section formatting
 \newcommand{\sectiontitle}[1]{
@@ -104,17 +115,19 @@ class LaTeXGenerator:
             if contact.get('phone'):
                 contact_details.append(contact['phone'])
             if contact.get('email'):
-                contact_details.append(f"\\href{{mailto:{contact['email']}}}{{{contact['email']}}}")
+                # Simple email without hyperref
+                contact_details.append(contact['email'])
             if contact.get('address'):
                 contact_details.append(contact['address'])
             if contact.get('linkedin'):
+                # Simple linkedin without hyperref
                 linkedin_url = contact['linkedin']
-                if not linkedin_url.startswith('http'):
-                    linkedin_url = f"https://{linkedin_url}"
-                contact_details.append(f"\\href{{{linkedin_url}}}{{LinkedIn}}")
+                if linkedin_url.startswith('http'):
+                    linkedin_url = linkedin_url.split('/')[-1]
+                contact_details.append(f"LinkedIn: {linkedin_url}")
 
             if contact_details:
-                contact_lines.append(" \\textbar\\ ".join(contact_details))
+                contact_lines.append(" | ".join(contact_details))
 
             return "\n".join(contact_lines)
 
@@ -129,11 +142,13 @@ class LaTeXGenerator:
 
             exp_text = "\\sectiontitle{PROFESSIONAL EXPERIENCE}\n"
             for exp in experience:
-                exp_text += f"\\noindent\\textbf{{{exp.get('position', 'Job Title')}}} \n"
-                exp_text += f"\\textit{{{exp.get('company', 'Company')}}} \\hfill {exp.get('startDate', '')} -- {exp.get('endDate', '')}\n"
+                exp_text += f"\\textbf{{{exp.get('position', 'Job Title')}}} \\\n"
+                exp_text += f"\\textit{{{exp.get('company', 'Company')}}} {exp.get('startDate', '')} -- {exp.get('endDate', '')}\\\n"
 
                 if exp.get('description'):
-                    exp_text += f"{exp['description']}\n\n"
+                    exp_text += f"{exp['description']}\n"
+
+                exp_text += "\n"
 
             return exp_text
 
@@ -196,7 +211,7 @@ class LaTeXGenerator:
     @staticmethod
     def compile_to_pdf(latex_content, output_path):
         """
-        Compile LaTeX to PDF using Tectonic
+        Compile LaTeX to PDF using Tectonic or pdflatex
         Args:
             latex_content: LaTeX document string
             output_path: Path where PDF should be saved
@@ -210,16 +225,16 @@ class LaTeXGenerator:
                 with open(tex_file, 'w', encoding='utf-8') as f:
                     f.write(latex_content)
 
-                # Compile with Tectonic
-                result = subprocess.run(
-                    ['tectonic', '--outdir', tmpdir, tex_file],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
+                # Try Tectonic first
+                success = LaTeXGenerator._try_tectonic(tmpdir, tex_file)
 
-                if result.returncode != 0:
-                    print(f"Tectonic error: {result.stderr}")
+                # If Tectonic fails, try pdflatex
+                if not success:
+                    print("[LaTeXGenerator] Tectonic failed, trying pdflatex...")
+                    success = LaTeXGenerator._try_pdflatex(tmpdir, tex_file)
+
+                if not success:
+                    print("[LaTeXGenerator] Both Tectonic and pdflatex failed")
                     return False
 
                 # Copy PDF to output location
@@ -234,10 +249,80 @@ class LaTeXGenerator:
             return False
 
         except subprocess.TimeoutExpired:
-            print("LaTeX compilation timed out")
+            print("[LaTeXGenerator] LaTeX compilation timed out (10 seconds)")
             return False
         except Exception as e:
-            print(f"Error during LaTeX compilation: {e}")
+            print(f"[LaTeXGenerator] Error during compilation: {type(e).__name__}: {e}")
+            return False
+
+    @staticmethod
+    def _try_tectonic(tmpdir, tex_file):
+        """Try to compile using Tectonic"""
+        try:
+            result = subprocess.run(
+                ['tectonic', '--only-cached', '--outdir', tmpdir, tex_file],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode == 0:
+                print("[LaTeXGenerator] Tectonic compilation successful")
+                return True
+
+            print(f"[LaTeXGenerator] Tectonic error (--only-cached): {result.stderr[:200]}")
+
+            # Try without --only-cached if internet might be available
+            result = subprocess.run(
+                ['tectonic', '--outdir', tmpdir, tex_file],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode == 0:
+                print("[LaTeXGenerator] Tectonic compilation successful (with bundle download)")
+                return True
+
+            print(f"[LaTeXGenerator] Tectonic error: {result.stderr[:200]}")
+            return False
+
+        except FileNotFoundError:
+            print("[LaTeXGenerator] Tectonic not found")
+            return False
+        except subprocess.TimeoutExpired:
+            print("[LaTeXGenerator] Tectonic timed out")
+            return False
+        except Exception as e:
+            print(f"[LaTeXGenerator] Tectonic error: {e}")
+            return False
+
+    @staticmethod
+    def _try_pdflatex(tmpdir, tex_file):
+        """Try to compile using pdflatex (fallback)"""
+        try:
+            result = subprocess.run(
+                ['pdflatex', '-interaction=nonstopmode', '-output-directory', tmpdir, tex_file],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+
+            if result.returncode == 0:
+                print("[LaTeXGenerator] pdflatex compilation successful")
+                return True
+
+            print(f"[LaTeXGenerator] pdflatex error: {result.stderr[:200]}")
+            return False
+
+        except FileNotFoundError:
+            print("[LaTeXGenerator] pdflatex not found (install MiKTeX or TeX Live)")
+            return False
+        except subprocess.TimeoutExpired:
+            print("[LaTeXGenerator] pdflatex timed out")
+            return False
+        except Exception as e:
+            print(f"[LaTeXGenerator] pdflatex error: {e}")
             return False
 
     @staticmethod

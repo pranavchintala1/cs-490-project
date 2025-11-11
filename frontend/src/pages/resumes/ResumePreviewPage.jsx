@@ -113,6 +113,9 @@ export default function ResumePreviewPage() {
           <button onClick={() => navigate(`/resumes/edit/${id}`)} className="btn btn-primary">
             Edit Resume
           </button>
+          <button onClick={() => navigate(`/resumes/export/${id}`)} className="btn btn-success">
+            Export Resume
+          </button>
           <button onClick={() => navigate('/resumes')} className="btn btn-secondary">
             Back
           </button>

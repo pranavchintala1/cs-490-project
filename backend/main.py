@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from services.latex_generator import initialize_tectonic_bundle
 from routes.auth import auth_router
 from routes.profiles import profiles_router
 from routes.skills import skills_router
@@ -56,6 +57,14 @@ app.include_router(user_router,prefix=api_prefix)
 app.include_router(resumes_router, prefix = api_prefix)
 app.include_router(pdf_router, prefix = api_prefix)
 app.include_router(templates_router, prefix = api_prefix)
+
+# Initialize Tectonic bundle on startup (if internet available)
+@app.on_event("startup")
+async def startup_event():
+    """Initialize Tectonic LaTeX bundle on startup"""
+    print("[Startup] Initializing Tectonic bundle...")
+    initialize_tectonic_bundle()
+    print("[Startup] Backend ready!")
 
 # TODO: add user deletion services (deletes all data, requires password authentication)
 # Where to put it though?

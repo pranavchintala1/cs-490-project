@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ResumesAPI from '../../api/resumes';
 import PDFAPI from '../../api/pdf';
-import ResumePreview from '../../components/resumes/ResumePreview';
 import ContactEditor from '../../components/resumes/ContactEditor';
 import SummaryEditor from '../../components/resumes/SummaryEditor';
 import ReorderSectionsEditor from '../../components/resumes/ReorderSectionsEditor';
@@ -134,7 +133,16 @@ export default function ResumeEditor() {
         }
       } catch (err) {
         console.error('PDF generation error:', err);
-        setPdfError(err.message || 'Failed to generate PDF preview');
+        // Extract meaningful error message from various error types
+        let errorMsg = 'Failed to generate PDF preview';
+        if (err instanceof Error) {
+          errorMsg = err.message;
+        } else if (typeof err === 'string') {
+          errorMsg = err;
+        } else if (err?.message) {
+          errorMsg = err.message;
+        }
+        setPdfError(errorMsg);
       } finally {
         setPdfLoading(false);
       }
@@ -192,10 +200,6 @@ export default function ResumeEditor() {
     }
   };
 
-  const handleFullPrintView = () => {
-    setContentWidth(25);
-  };
-
   if (loading) {
     return <div className="container mt-5"><h2>Loading resume...</h2></div>;
   }
@@ -228,6 +232,9 @@ export default function ResumeEditor() {
           </button>
           <button onClick={() => setShowSaveTemplateModal(true)} className="btn btn-info">
             Save as Template
+          </button>
+          <button onClick={() => navigate(`/resumes/export/${id}`)} className="btn btn-success">
+            Export Resume
           </button>
           <button onClick={() => navigate('/resumes')} className="btn btn-secondary">
             Back to Resumes

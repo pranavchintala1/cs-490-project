@@ -181,6 +181,9 @@ export default function ResumeList() {
                 <Link to={`/resumes/preview/${resume._id}`} className="btn btn-sm btn-info">
                   Preview
                 </Link>
+                <Link to={`/resumes/export/${resume._id}`} className="btn btn-sm btn-success">
+                  Export
+                </Link>
                 <Link to={`/resumes/versions/${resume._id}`} className="btn btn-sm btn-warning">
                   Versions
                 </Link>
