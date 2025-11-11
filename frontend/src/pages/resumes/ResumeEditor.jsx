@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ResumesAPI from '../../api/resumes';
 import ResumePreview from '../../components/resumes/ResumePreview';
 import ContactEditor from '../../components/resumes/ContactEditor';
+import SummaryEditor from '../../components/resumes/SummaryEditor';
+import ReorderSectionsEditor from '../../components/resumes/ReorderSectionsEditor';
 import TemplateCustomizer from '../../components/resumes/TemplateCustomizer';
 import ExperienceEditor from '../../components/resumes/ExperienceEditor';
 import SkillsManager from '../../components/resumes/SkillsManager';
@@ -202,6 +204,22 @@ export default function ResumeEditor() {
             </li>
             <li className="nav-item">
               <button
+                className={`nav-link ${activeTab === 'summary' ? 'active' : ''}`}
+                onClick={() => setActiveTab('summary')}
+              >
+                Summary
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'sections' ? 'active' : ''}`}
+                onClick={() => setActiveTab('sections')}
+              >
+                Sections
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
                 className={`nav-link ${activeTab === 'experience' ? 'active' : ''}`}
                 onClick={() => setActiveTab('experience')}
               >
@@ -235,6 +253,18 @@ export default function ResumeEditor() {
             <ContactEditor
               contact={resume.contact}
               onUpdate={(contact) => setResume({...resume, contact})}
+            />
+          )}
+          {activeTab === 'summary' && (
+            <SummaryEditor
+              summary={resume.summary}
+              onUpdate={(summary) => setResume({...resume, summary})}
+            />
+          )}
+          {activeTab === 'sections' && (
+            <ReorderSectionsEditor
+              sections={resume.sections}
+              onUpdate={(sections) => setResume({...resume, sections})}
             />
           )}
           {activeTab === 'experience' && (
