@@ -28,6 +28,8 @@ import SharingAndFeedbackPage from "./pages/resumes/SharingAndFeedbackPage";
 import PublicSharePage from "./pages/resumes/PublicSharePage";
 import ExportResumePage from "./pages/resumes/ExportResumePage";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
+import "bootstrap-icons/font/bootstrap-icons.css";
+
 
 // inside your router
 
