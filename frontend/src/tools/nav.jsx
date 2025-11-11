@@ -19,7 +19,7 @@ const Nav = () => {
 
   console.log(token)
   React.useEffect(() => {
-    if (location.pathname === "/login" || location.pathname === "/register") {
+    if (location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/resetPassword" || location.pathname === "/forgotPassword") {
     return;
     }
     console.log("ENTERING EFFECT")
