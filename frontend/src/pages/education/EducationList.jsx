@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import EducationForm from "./EducationForm";
 import EducationAPI from "../../api/education";
 import { useLocation } from "react-router-dom";
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 const degreeEmojis = {
   "High School Degree": "🏫",
@@ -129,24 +130,74 @@ export default function EducationList() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-        <h1 style={{ margin: 0, color: "#333" }}>🎓 Education History</h1>
-        <p>Loading education...</p>
+      <div className="dashboard-gradient min-vh-100 py-4">
+        <Container>
+          <h1 className="text-center text-white fw-bold mb-5 display-4">
+            Education History
+          </h1>
+          <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+            <Spinner animation="border" variant="light" className="mb-3" />
+            <p className="text-white fs-5">Loading Education History data...</p>
+          </div>
+        </Container>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <div
+    <div
+      style={{
+        background: "linear-gradient(135deg, #005e9e, #00c28a)",
+        minHeight: "100vh",
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        padding: "40px 20px",
+        boxSizing: "border-box",
+        }}
+    >
+
+    <div style={{ width: "100%", maxWidth: "1200px", }}>
+
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column", // ✅ stacks title & button vertically on small screens
+        alignItems: "center",
+        flexWrap: "wrap",
+        textAlign: "center",
+        gap: "15px", // adds clean spacing
+        marginBottom: "30px",
+      }}
+    >
+      
+    {/* Wrap title + underline together */}
+    <div style={{ display: "inline-block" }}>
+      <h1
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px"
+          margin: 0,
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+          fontFamily: '"Playfair Display", serif',
+          WebkitTextFillColor: "#ffffff", // ensures true white text
         }}
       >
-        <h1 style={{ margin: 0, color: "#333" }}>🎓 Education History</h1>
+        🎓 Education History
+      </h1>
+
+      {/* Gradient underline centered under text */}
+      <div
+        style={{
+          width: "120px", // you can tweak this 
+          height: "4px",
+          margin: "6px auto 0",
+          borderRadius: "2px",
+          background: "linear-gradient(90deg, #00c28a, #005e9e)", 
+        }}
+      />
+    </div>
         <button
           onClick={() => {
             setShowForm(!showForm);
@@ -446,6 +497,7 @@ export default function EducationList() {
           )}
         </>
       )}
+    </div>
     </div>
   );
 }

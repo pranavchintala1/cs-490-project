@@ -6,40 +6,111 @@ import AuthAPI from "../api/authentication";
 
 
 const Nav = () => {
+  console.log("NAV RELOADING")
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { showFlash } = useFlash();
   const token = localStorage.getItem("session");
-
-const logout = async () => {
-  const uuid = localStorage.getItem("uuid");
   
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [showDropdown, setShowDropdown] = React.useState(false);
 
-  try {
-    await AuthAPI.logout();
+  console.log(token)
+  React.useEffect(() => {
+    const excludedPaths = ["/login", "/register", "/forgotPassword", "/resetPassword"];
 
-    showFlash("Successfully Logged out", "success");
+    const shouldSkip = excludedPaths.some(prefix =>
+      location.pathname.startsWith(prefix)
+    );
 
-  } catch (error) {
-    showFlash(error.detail,"error");
-    console.error("Logout failed:", error);
+    
 
-  };
+    console.log("ENTERING EFFECT")
+    const validateSession = async () => {
+      if (!token) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        localStorage.removeItem("uuid");
+        localStorage.removeItem("session");
+        setIsAuthenticated(false);
+        
+        if (shouldSkip) {
+          return;
+        }
+        navigate("/");
+        return;
+      }
+
+      try {
+        const response = await AuthAPI.validateSession();
+        // console.log(response)
+        
+        if (response.status === 200) {
+          setIsAuthenticated(true);
+        } else {
+          // Non-200 response
+          localStorage.removeItem("uuid");
+          localStorage.removeItem("session");
+          setIsAuthenticated(false);
+          if (shouldSkip) {
+            return;
+          }
+          navigate("/");
+        }
+      } catch (error) {
+        // Request failed
+        console.error("Session validation failed:", error);
+        localStorage.removeItem("uuid");
+        localStorage.removeItem("session");
+        setIsAuthenticated(false);
+        if (shouldSkip) {
+          return;
+        }
+        navigate("/");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    validateSession();
+  }, [token, navigate]);
+
+  const logout = async () => {
+    const uuid = localStorage.getItem("uuid");
+
+    try {
+      await AuthAPI.logout();
+      showFlash("Successfully Logged out", "success");
+    } catch (error) {
+      showFlash(error.detail, "error");
+      console.error("Logout failed:", error);
+    }
 
     localStorage.removeItem("uuid");
     localStorage.removeItem("session");
-
+    setIsAuthenticated(false);
     navigate("/");
   };
 
-  const [showDropdown, setShowDropdown] = React.useState(false);
-
-
-  // Why would we want this
-  // React.useEffect(() => {
-  //   // Automatically show dropdown when on dashboard
-  //   setShowDropdown(location.pathname.startsWith("/dashboard"));
-  // }, [location.pathname]);
+  // Optional: Show loading state while validating
+  if (isLoading) {
+    return (
+      <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
+        <Container fluid>
+          <Navbar.Brand as={NavLink} to="/" className="d-flex align-items-center">
+            <img 
+              src="/image.png" 
+              alt="Metamorphosis logo"
+              style={{ height: "50px", marginRight: "10px" }}
+            />
+            Metamorphosis
+          </Navbar.Brand>
+        </Container>
+      </Navbar>
+    );
+  }
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
@@ -56,7 +127,7 @@ const logout = async () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <BootstrapNav className="ms-auto gap-3">
-            {token ? (
+            {isAuthenticated ? (
               <>
                 <BootstrapNav.Link as={NavLink} to="/profile" className="mx-3">
                   Profile
@@ -66,8 +137,8 @@ const logout = async () => {
                   title={
                     <span
                       onClick={(e) => {
-                        e.preventDefault(); // <-- add this line
-                        e.stopPropagation(); // prevents dropdown toggle from hijacking the click
+                        e.preventDefault();
+                        e.stopPropagation();
                         navigate("/dashboard");
                       }}
                       style={{ cursor: "pointer" }}

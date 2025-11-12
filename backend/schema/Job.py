@@ -1,10 +1,17 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
+
+class Company(BaseModel):
+    size: Optional[str] = None
+    industry: Optional[str] = None
+    location: Optional[str] = None
+    website: Optional[str] = None
+    description: Optional[str] = None
+    image: Optional[str] = None  # Base64 encoded image data
 
 class Job(BaseModel):
-    # job specific data
     title: Optional[str] = None
-    company: Optional[str] = None
+    company: Optional[Union[str, dict]] = None  # Can be string name or dict with company data
     location: Optional[str] = None
     salary: Optional[str] = None
     url: Optional[str] = None
@@ -12,8 +19,6 @@ class Job(BaseModel):
     industry: Optional[str] = None
     job_type: Optional[str] = None
     description: Optional[str] = None
-    
-    # purely user generated data
     status: Optional[str] = None
     notes: Optional[str] = None
     contacts: Optional[str] = None
@@ -23,6 +28,7 @@ class Job(BaseModel):
     archived: Optional[bool] = False
     archive_reason: Optional[str] = None
     archive_date: Optional[str] = None
+    company_data: Optional[Union[dict, Company]] = None  # Can be dict or Company object
 
 class UrlBody(BaseModel):
     url: str

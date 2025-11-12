@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Nav from "./tools/nav";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
@@ -29,6 +29,7 @@ import ExportResumePage from "./pages/resumes/ExportResumePage";
 import TemplateLibraryPage from "./pages/resumes/TemplateLibraryPage";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
 // inside your router
@@ -39,6 +40,8 @@ import Dashboard from "./pages/dashboard";
 
 
 export function App() {
+  const location = useLocation();
+  
   return (
     <div className="App">
       <header>
@@ -47,7 +50,7 @@ export function App() {
     
           <FlashProvider>
             <FlashMessage />
-              <Nav />
+              <Nav key={location.pathname} />
               <Routes>
                 <Route path = "/" element = {<Home />} />
                 <Route path = "/register" element = {<Register />} />
@@ -73,8 +76,7 @@ export function App() {
               <Route path="/resumes/feedback/:id" element={<SharingAndFeedbackPage />} />
               <Route path="/resumes/public/:token" element={<PublicSharePage />} />
               <Route path="/resumes/export/:id" element={<ExportResumePage />} />
-              <Route path ="*" element={<h2>404 - Page Not Found</h2>} />
-             </Routes>
+              </Routes>
             </FlashProvider>
           </>
 

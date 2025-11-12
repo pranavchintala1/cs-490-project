@@ -26,6 +26,24 @@ class JobsAPI {
     importFromUrl(url) {
         return api.post(`${BASE_URL}/import`, {url});
     }
+
+    sendDeadlineReminder(reminderData) {
+        return api.post(`${BASE_URL}/send-deadline-reminder`, reminderData);
+    }
+
+    scheduleReminders() {
+        return api.post(`${BASE_URL}/schedule-reminders`);
+    }
+
+    uploadCompanyImage(jobId, file) {
+        const formData = new FormData();
+        formData.append("media", file);
+        return api.post(`${BASE_URL}/upload-company-image?job_id=${jobId}`);
+    }
+
+    downloadCompanyImage(jobId) {
+        return api.post(`${BASE_URL}/upload-company-image?job_id=${jobId}`);
+    }
 }
 
 export default new JobsAPI();
