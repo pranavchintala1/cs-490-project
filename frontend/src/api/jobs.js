@@ -26,6 +26,14 @@ class JobsAPI {
     importFromUrl(url) {
         return api.post(`${BASE_URL}/import`, {url});
     }
+
+    sendDeadlineReminder(reminderData) {
+        return api.post(`${BASE_URL}/send-deadline-reminder`, reminderData);
+    }
+
+    scheduleReminders() {
+        return api.post(`${BASE_URL}/schedule-reminders`);
+    }
 }
 
 export default new JobsAPI();
