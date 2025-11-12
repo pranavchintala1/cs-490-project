@@ -227,21 +227,77 @@ export default function ProjectsList() {
   if (loading) {
     return (
       <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto", textAlign: "center" }}>
-        <h1 style={{ margin: 0, color: "#333" }}>🚀 Special Projects</h1>
+          <h1
+            style={{
+            margin: 0,
+            color: '#ffffff',
+            fontWeight: 700,
+            fontSize: '2.5rem',
+            fontFamily: '"Playfair Display", serif',
+            WebkitTextFillColor: '#ffffff', // ensures true white text, overrides Bootstrap
+            }}
+          >
+          🚀 Special Projects
+          </h1>
         <p>Loading projects...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
-      <div style={{
+    <div
+      style={{
+        background: "linear-gradient(135deg, #005e9e, #00c28a)",
+        minHeight: "100vh",
+        width: "100%",
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        padding: "40px 20px",
+        boxSizing: "border-box",
+        }}
+    >
+
+    <div style={{ width: "100%", maxWidth: "1200px", }}>
+
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column", //stacks title & button vertically on small screens
         alignItems: "center",
-        marginBottom: "20px"
-      }}>
-        <h1 style={{ margin: 0, color: "#333" }}>🚀 Special Projects</h1>
+        flexWrap: "wrap",
+        textAlign: "center",
+        gap: "15px", // adds clean spacing
+        marginBottom: "30px",
+      }}
+    >
+      
+    {/* Wrap title + underline together */}
+    <div style={{ display: "inline-block" }}>
+      <h1
+        style={{
+          margin: 0,
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+          fontFamily: '"Playfair Display", serif',
+          WebkitTextFillColor: "#ffffff", // ensures true white text
+        }}
+      >
+        🚀 Special Projects
+      </h1>
+
+      {/* the underline under the text */}
+      <div
+        style={{
+          width: "120px", // you can tweak this 
+          height: "4px",
+          margin: "6px auto 0",
+          borderRadius: "2px",
+          background: "linear-gradient(90deg, #00c28a, #005e9e)", // green → blue
+        }}
+      />
+    </div>
         <button
           onClick={() => {
             setShowForm(!showForm);
@@ -279,13 +335,15 @@ export default function ProjectsList() {
             background: "#f9f9f9",
             padding: "16px",
             borderRadius: "8px",
-            marginBottom: "20px"
+            marginBottom: "20px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
           }}>
             <div style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
+              display: "flex",
+              flexWrap: "wrap", 
+              justifyContent: "center",
+              alignItems: "center",
               gap: "12px",
-              alignItems: "center"
             }}>
               <input
                 placeholder="🔍 Search projects..."
@@ -341,14 +399,16 @@ export default function ProjectsList() {
               <button
                 onClick={() => window.print()}
                 style={{
-                  padding: "10px 16px",
-                  background: "#666",
+                  flex: "0 1 100px",
+                  padding: "10px 20px",
+                  background: "#4f4f4f",
                   color: "white",
                   border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
+                  borderRadius: "6px",
+                  fontWeight: "bold",
                   fontSize: "14px",
-                  fontWeight: "600"
+                  cursor: "pointer",
+                  minWidth: "100px",
                 }}
               >
                 🖨️ Print
@@ -396,6 +456,7 @@ export default function ProjectsList() {
           )}
         </>
       )}
+    </div>
     </div>
   );
 }
