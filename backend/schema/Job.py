@@ -23,6 +23,12 @@ class Job(BaseModel):
     archived: Optional[bool] = False
     archive_reason: Optional[str] = None
     archive_date: Optional[str] = None
+    
+    #reminderDays: Optional[int] = 3
+    #emailReminder: Optional[bool] = True
+    #reminderEmail: Optional[str] = None
+    #lastReminderSent: Optional[str] = None
+    #reminderSentForDeadline: Optional[str] = None
 
 class UrlBody(BaseModel):
     url: str
