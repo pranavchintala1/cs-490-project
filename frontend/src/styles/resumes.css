@@ -2343,7 +2343,295 @@ h1, h2 {
   }
 }
 
-/* ===== TEMPLATE-SPECIFIC LAYOUT STYLES ===== */
+/* ===== TEMPLATE-SPECIFIC STYLES - 5 DISTINCT DESIGNS ===== */
+
+/* ===== 1. PROFESSIONAL-CLEAN: Traditional corporate style ===== */
+.resume-preview.template-professional-clean {
+  font-family: 'Georgia', serif;
+  color: #1a1a1a;
+  line-height: 1.6;
+  background: white;
+}
+
+.resume-preview.template-professional-clean .resume-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #003366;
+}
+
+.resume-preview.template-professional-clean .resume-name {
+  font-family: 'Georgia', serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #003366;
+  margin-bottom: 8px;
+}
+
+.resume-preview.template-professional-clean .contact-line {
+  font-size: 12px;
+  color: #555;
+  letter-spacing: 0.5px;
+}
+
+.resume-preview.template-professional-clean .section-heading {
+  font-family: 'Georgia', serif;
+  font-size: 13px;
+  font-weight: bold;
+  color: #003366;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #003366;
+  margin-top: 15px;
+  margin-bottom: 8px;
+  padding-bottom: 3px;
+}
+
+.resume-preview.template-professional-clean .job-title,
+.resume-preview.template-professional-clean .degree {
+  font-weight: bold;
+  color: #003366;
+  font-size: 11px;
+}
+
+/* ===== 2. MODERN-BOLD: Contemporary design with strong colors ===== */
+.resume-preview.template-modern-bold {
+  font-family: 'Segoe UI', sans-serif;
+  color: #2c3e50;
+}
+
+.resume-preview.template-modern-bold .resume-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px;
+  text-align: center;
+  margin: -40px -40px 25px -40px;
+  border-radius: 0;
+}
+
+.resume-preview.template-modern-bold .resume-name {
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.resume-preview.template-modern-bold .contact-line {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.resume-preview.template-modern-bold .section-heading {
+  background-color: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  border-left: 5px solid #667eea;
+  padding: 8px 12px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.resume-preview.template-modern-bold .job-title,
+.resume-preview.template-modern-bold .degree {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* ===== 3. MINIMAL-ZEN: Ultra-minimalist design ===== */
+.resume-preview.template-minimal-zen {
+  font-family: 'Helvetica Neue', sans-serif;
+  color: #000;
+  line-height: 1.5;
+  letter-spacing: 0.3px;
+}
+
+.resume-preview.template-minimal-zen .resume-header {
+  text-align: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border: none;
+}
+
+.resume-preview.template-minimal-zen .resume-name {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.resume-preview.template-minimal-zen .contact-line {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: #333;
+}
+
+.resume-preview.template-minimal-zen .section-heading {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #000;
+  border: none;
+  border-bottom: 1px solid #000;
+  padding: 3px 0;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.resume-preview.template-minimal-zen .job-title,
+.resume-preview.template-minimal-zen .degree {
+  font-size: 10px;
+  font-weight: 600;
+  color: #000;
+}
+
+.resume-preview.template-minimal-zen .date-range,
+.resume-preview.template-minimal-zen .graduation-year {
+  font-size: 10px;
+}
+
+.resume-preview.template-minimal-zen .company-name,
+.resume-preview.template-minimal-zen .school-name {
+  font-size: 10px;
+  color: #333;
+}
+
+.resume-preview.template-minimal-zen .experience-entry,
+.resume-preview.template-minimal-zen .education-entry {
+  margin-bottom: 6px;
+}
+
+/* ===== 4. CREATIVE-VIBRANT: Colorful with dual accent colors ===== */
+.resume-preview.template-creative-vibrant {
+  font-family: 'Trebuchet MS', sans-serif;
+  color: #1a1a1a;
+}
+
+.resume-preview.template-creative-vibrant .resume-header {
+  background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  padding: 30px;
+  text-align: left;
+  margin: -40px -40px 25px -40px;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.resume-preview.template-creative-vibrant .resume-name {
+  font-size: 36px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+  letter-spacing: 0px;
+}
+
+.resume-preview.template-creative-vibrant .contact-line {
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.resume-preview.template-creative-vibrant .section-heading {
+  color: #ff6b6b;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 3px solid #ff6b6b;
+  padding-bottom: 6px;
+  margin-top: 18px;
+  margin-bottom: 12px;
+}
+
+.resume-preview.template-creative-vibrant .job-title,
+.resume-preview.template-creative-vibrant .degree {
+  color: #ff6b6b;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.resume-preview.template-creative-vibrant .date-range,
+.resume-preview.template-creative-vibrant .graduation-year {
+  color: #888;
+  font-weight: 500;
+}
+
+.resume-preview.template-creative-vibrant .company-name,
+.resume-preview.template-creative-vibrant .school-name {
+  color: #555;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* ===== 5. ACADEMIC-FORMAL: Research/academic style ===== */
+.resume-preview.template-academic-formal {
+  font-family: 'Calibri', serif;
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
+.resume-preview.template-academic-formal .resume-header {
+  text-align: center;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #333;
+}
+
+.resume-preview.template-academic-formal .resume-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.resume-preview.template-academic-formal .contact-line {
+  font-size: 11px;
+  color: #333;
+  letter-spacing: 0px;
+}
+
+.resume-preview.template-academic-formal .section-heading {
+  font-size: 12px;
+  font-weight: bold;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 3px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.resume-preview.template-academic-formal .job-title,
+.resume-preview.template-academic-formal .degree {
+  font-weight: bold;
+  color: #1a1a1a;
+  font-size: 11px;
+}
+
+.resume-preview.template-academic-formal .company-name,
+.resume-preview.template-academic-formal .school-name {
+  font-style: italic;
+  color: #333;
+  font-size: 10px;
+}
+
+.resume-preview.template-academic-formal .experience-entry,
+.resume-preview.template-academic-formal .education-entry {
+  margin-bottom: 8px;
+}
+
+/* ===== LEGACY LAYOUT SUPPORT ===== */
 
 /* SIDEBAR-MODERN: Sidebar + main content layout */
 .resume-preview.template-sidebar-modern .sidebar-column {
@@ -2436,5 +2724,16 @@ h1, h2 {
   .resume-preview.template-two-column .right-column {
     border-left: none;
     padding-left: 0;
+  }
+
+  /* Responsive adjustments for main 5 templates */
+  .resume-preview.template-modern-bold .resume-header {
+    margin: -15px -15px 15px -15px;
+    padding: 20px;
+  }
+
+  .resume-preview.template-creative-vibrant .resume-header {
+    margin: -15px -15px 15px -15px;
+    padding: 20px;
   }
 }

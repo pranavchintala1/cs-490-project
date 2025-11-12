@@ -361,15 +361,18 @@ export default function ResumePreview({ resume, onSectionReorder }) {
 
   // Select which template to render
   const getTemplateContent = () => {
-    // Map new template IDs to dedicated render functions with distinct layouts
+    // Map new template IDs to dedicated render functions with distinct visual styles
     const templateRenderMap = {
-      'sidebar-modern': renderSidebarModern,    // Sidebar layout with main content
-      'two-column': renderTwoColumn,            // Two-column layout
-      'minimalist-clean': renderMinimal,        // Ultra-clean, minimal spacing
-      'modern-gradient': renderModernGradient,  // Modern with gradient divider
-      'academic-clean': renderProfessional,     // Professional academic style
-      'bold-creative': renderBoldCreative,      // Creative with bold header
-      'compact-dense': renderMinimal,           // Compact, minimal layout
+      'professional-clean': renderProfessional,    // Traditional corporate style
+      'modern-bold': renderModern,                 // Contemporary design with gradient header
+      'minimal-zen': renderMinimal,                // Ultra-minimalist design
+      'creative-vibrant': renderCreative,          // Colorful and visually engaging
+      'academic-formal': renderTechnical,          // Formal academic style
+      // Legacy templates for backward compatibility
+      'sidebar-modern': renderSidebarModern,
+      'two-column': renderTwoColumn,
+      'modern-gradient': renderModernGradient,
+      'bold-creative': renderBoldCreative,
     };
 
     // Use template-specific render function if available

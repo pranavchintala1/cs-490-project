@@ -152,9 +152,15 @@ export default function TemplateLibraryPage() {
 
     try {
       setCreating(true);
+
+      // Copy template's colors and fonts if available, otherwise use defaults
+      const templateColors = template.colors || { primary: '#1a1a1a', accent: '#2c3e50' };
+      const templateFonts = template.fonts || { heading: 'Calibri', body: 'Calibri' };
+
       const result = await ResumesAPI.add({
         name: resumeName.trim(),
         template: template.template_type,
+        templateId: template.id,  // Store the template ID for rendering
         sections: ['contact', 'summary', 'experience', 'education', 'skills'],
         contact: {
           name: '',
@@ -167,8 +173,8 @@ export default function TemplateLibraryPage() {
         experience: [],
         education: [],
         skills: [],
-        colors: { primary: '#1a1a1a', accent: '#2c3e50' },
-        fonts: { heading: 'Calibri', body: 'Calibri' },
+        colors: templateColors,
+        fonts: templateFonts,
       });
 
       const resumeId = result.data?._id || result.data?.resume_id || result._id;
