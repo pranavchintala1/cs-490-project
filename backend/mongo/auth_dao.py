@@ -10,12 +10,12 @@ class UserAuthenticationDAO:
 
     async def get_password(self, email: str) -> str | None:
         user_data = await self.collection.find_one({"email": email})
-        return user_data["password"] if user_data else None
+        return user_data.get("password") if user_data else None
     
     async def get_password_by_uuid(self, uuid: str) -> str | None:
         user_data = await self.collection.find_one({"_id": uuid})
-        return user_data["password"] if user_data else None
-        
+        return user_data.get("password") if user_data else None
+    
     async def get_uuid(self, email: str) -> str | None:
         result = await self.collection.find_one({"email": email})
         return result["_id"] if result else None

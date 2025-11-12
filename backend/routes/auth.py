@@ -129,7 +129,7 @@ async def reset_password(token: str):
 async def update_password(token: str = Body(...),password: str = Body(...), old_token: str=Body(...)):
 
     try:
-        old_data = await profiles_dao.get_profile(token)
+        old_data = await profiles_dao.get_profile(token) or {}
         old_data["password"] = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         await auth_dao.update_password(token,old_data)
         fp = ForgotPassword()
@@ -151,11 +151,16 @@ async def verify_google_token(token: dict = Body(...)):
     try:
 
         idinfo = id_token.verify_oauth2_token(credentials, requests.Request()) # returns user data such as email and profile picture
+        print(idinfo["email"])
 
         data = await auth_dao.get_uuid(idinfo["email"]) # this returns a uuid
+        print("DATA")
+        print(data)
+        pass_exists = None
 
         if (data): # if the user already exists, still log in because it doesn't matter.
             uuid = data
+            pass_exists = await auth_dao.get_password_by_uuid(uuid)
         else:
 
             uuid = str(uuid4())
@@ -165,11 +170,14 @@ async def verify_google_token(token: dict = Body(...)):
             await profiles_dao.add_profile(uuid, idinfo)
         
         session_token = session_manager.begin_session(uuid)
+        print("here is it")
+        print(data != None and pass_exists)
 
         return {
             "detail": "success",
             "uuid":uuid,
-            "session_token": session_token
+            "session_token": session_token,
+            "has_password": data != None and pass_exists, #If the user's profile exists AND they have a password set...
         }
 
     except ValueError:
@@ -224,15 +232,17 @@ async def verify_microsoft_token(request: Request):
 
     # Check if user exists in auth
     existing_user = await auth_dao.get_uuid(email)
+    pass_exists = None
 
     if existing_user:
         uuid = existing_user
+        pass_exists = await auth_dao.get_password_by_uuid(uuid)
     else:
         uuid = str(uuid4())
         user_data = {
             "email": email,
             "username": email,
-            "password": "",  # No password for Microsoft users
+            "password": "",  # No password for Microsoft users, yet.
         }
         await auth_dao.add_user(uuid, user_data)
 
@@ -245,5 +255,5 @@ async def verify_microsoft_token(request: Request):
 
     return JSONResponse(
         status_code=200,
-        content={"detail": "success", "uuid": uuid, "session_token": session_token},
+        content={"detail": "success", "uuid": uuid, "session_token": session_token,"has_password":existing_user!=None and pass_exists},
     )
