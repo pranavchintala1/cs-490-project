@@ -29,6 +29,7 @@ import PublicSharePage from "./pages/resumes/PublicSharePage";
 import ExportResumePage from "./pages/resumes/ExportResumePage";
 import { FlashProvider, FlashMessage } from "./context/flashContext";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 
 // inside your router
@@ -76,7 +77,7 @@ export function App() {
               <Route path="/resumes/feedback/:id" element={<SharingAndFeedbackPage />} />
               <Route path="/resumes/public/:token" element={<PublicSharePage />} />
               <Route path="/resumes/export/:id" element={<ExportResumePage />} />
-             </Routes>
+              </Routes>
             </FlashProvider>
           </>
 
