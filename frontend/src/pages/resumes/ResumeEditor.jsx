@@ -616,6 +616,7 @@ export default function ResumeEditor() {
           onReject={handleRejectSuggestion}
           onClose={handleCloseAiPanel}
           loading={aiLoading}
+          experienceCount={resume?.experience?.length || 0}
         />
       )}
 
