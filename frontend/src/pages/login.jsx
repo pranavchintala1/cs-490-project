@@ -37,18 +37,40 @@ function Login() {
     }
   };
 
-  const OAuthSubmit = async (data) => {
-    try {
-      const res = await AuthAPI.loginGoogle(data);
+  const OAuthSubmit = async (credentialResponse) => {
+  // Make sure a credential exists
+  if (!credentialResponse?.credential) {
+    showFlash("Google login failed: no credential returned", "error");
+    return;
+  }
 
-      localStorage.setItem("session", res.data.session_token);
-      localStorage.setItem("uuid", res.data.uuid);
+  try {
+    const res = await AuthAPI.loginGoogle({
+      credential: credentialResponse.credential,
+    });
 
-      navigate(`/profile`);
-    } catch (error) {
-      showFlash(error, "error");
+    if (res.status !== 200) {
+      showFlash(res.data?.detail || "Google login failed", "error");
+      return;
     }
-  };
+
+    localStorage.setItem("session", res.data.session_token);
+    localStorage.setItem("uuid", res.data.uuid);
+
+    // If user has no password yet, navigate to set-password page
+    if (!res.data.has_password) {
+      navigate("/set-password");
+      return;
+    }
+
+    // Otherwise, go to profile
+    navigate("/profile");
+  } catch (error) {
+    console.error("Google login error:", error);
+    showFlash(error?.response?.data?.detail || "Google login failed", "error");
+  }
+};
+
 
   async function handleMicrosoftLogin() {
     try {
@@ -81,6 +103,12 @@ function Login() {
 
       localStorage.setItem("session", res.data.session_token);
       localStorage.setItem("uuid", res.data.uuid);
+
+      if (!res.data.has_password){
+        navigate(`/set-password`);
+        return;
+      }
+
 
       navigate("/profile");
     } catch (err) {
@@ -126,9 +154,10 @@ function Login() {
         <div className="oauth-buttons mt-3">
           <div className="google-login mb-2">
             <GoogleLogin
-              onSuccess={(credentialResponse) => OAuthSubmit(credentialResponse)}
-              onError={() => console.log("Login Failed")}
+              onSuccess={OAuthSubmit} // passes the credentialResponse automatically
+              onError={() => showFlash("Google login failed", "error")}
             />
+
           </div>
 
           <button

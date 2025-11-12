@@ -249,9 +249,6 @@ class ForgotPassword:
             data = await self.collection.find_one({"token": db_token})
             print("IN DELETE")
             print(db_token)
-            if not data:
-                print("NO DATA")
-                return
             await self.collection.delete_one({"token": db_token})
         except Exception as e:
             print("Error verifying token:", e)
