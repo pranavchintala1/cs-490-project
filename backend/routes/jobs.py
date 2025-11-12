@@ -1,12 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends, Body
+from fastapi import APIRouter, HTTPException, Depends, Body, UploadFile, File
+from fastapi.responses import StreamingResponse
 from pymongo.errors import DuplicateKeyError
 from datetime import datetime, timezone
-import smtplib
+import smtplib, os
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import os
+from io import BytesIO
 
 from mongo.jobs_dao import jobs_dao
+from mongo.media_dao import media_dao
 from sessions.session_authorizer import authorize
 from schema.Job import Job, UrlBody
 from webscrape.job_from_url import job_from_url, URLScrapeError
@@ -254,6 +256,36 @@ async def import_from_url(url: UrlBody):
         raise HTTPException(500, "Ecountered internal service error") from e
     
     return data
+
+@jobs_router.post("/upload-company-image", tags = ["jobs"])
+async def upload_image(job_id: str, media: UploadFile = File(...), uuid: str = Depends(authorize)):
+    try:
+        media_id = await media_dao.add_media(job_id, media.filename, await media.read(), media.content_type)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not media_id:
+        raise HTTPException(500, "Unable to upload media")
+    
+    return {"detail": "Sucessfully uploaded file", "media_id": media_id}
+
+@jobs_router.post("/download-company-image", tags = ["jobs"])
+async def download_image(media_id: str, uuid: str = Depends(authorize)):
+    try:
+        media = await media_dao.get_media(media_id)
+    except Exception as e:
+        raise HTTPException(500, "Encountered interal service error")
+    
+    if not media:
+        raise HTTPException(400, "Could not find requested media")
+    
+    return StreamingResponse(
+        BytesIO(media["contents"]),
+        media_type = media["content_type"],
+        headers = {
+            "Content-Disposition": f"inline; filename=\"{media['filename']}\""
+        }
+    )
 
 # SIMPLE EMAIL REMINDER - Just sends immediately when you click "Send Test"
 @jobs_router.post("/send-deadline-reminder", tags=["jobs"])

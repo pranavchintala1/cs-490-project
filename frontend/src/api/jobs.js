@@ -34,6 +34,16 @@ class JobsAPI {
     scheduleReminders() {
         return api.post(`${BASE_URL}/schedule-reminders`);
     }
+
+    uploadCompanyImage(jobId, file) {
+        const formData = new FormData();
+        formData.append("media", file);
+        return api.post(`${BASE_RULE}/upload-company-image?job_id=${jobId}`);
+    }
+
+    downloadCompanyImage(jobId) {
+        return api.post(`${BASE_RULE}/upload-company-image?job_id=${jobId}`);
+    }
 }
 
 export default new JobsAPI();
