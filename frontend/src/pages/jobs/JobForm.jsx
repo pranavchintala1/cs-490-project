@@ -4,10 +4,11 @@ import JobsAPI from "../../api/jobs";
 export default function JobForm({ addJob, editJob, cancelEdit }) {
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
+  const [companyData, setCompanyData] = useState(null);
   const [location, setLocation] = useState("");
   const [salary, setSalary] = useState("");
-  const [url, setUrl] = useState(""); // Job posting URL
-  const [importUrl, setImportUrl] = useState(""); // Separate import URL
+  const [url, setUrl] = useState("");
+  const [importUrl, setImportUrl] = useState("");
   const [deadline, setDeadline] = useState("");
   const [industry, setIndustry] = useState("");
   const [jobType, setJobType] = useState("");
@@ -20,11 +21,13 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
   const [id, setId] = useState(null);
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
   const [scrapeError, setScrapeError] = useState("");
+  const [companyImageFile, setCompanyImageFile] = useState(null);
 
   useEffect(() => {
     if (editJob) {
       setTitle(editJob.title || "");
       setCompany(editJob.company || "");
+      setCompanyData(editJob.companyData || null);
       setLocation(editJob.location || "");
       setSalary(editJob.salary || "");
       setUrl(editJob.url || "");
@@ -44,6 +47,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
   const resetForm = () => {
     setTitle("");
     setCompany("");
+    setCompanyData(null);
     setLocation("");
     setSalary("");
     setUrl("");
@@ -59,6 +63,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     setInterviewNotes("");
     setId(null);
     setScrapeError("");
+    setCompanyImageFile(null);
   };
 
   const validateUrl = (urlString) => {
@@ -88,11 +93,16 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     try {
       const response = await JobsAPI.importFromUrl(importUrl.trim());
       const data = response.data;
+      
+      console.log("Scraped data:", data);
 
+      // Set basic job fields - company is a STRING, company_data is an OBJECT
       if (data.title) setTitle(data.title);
-      if (data.company) setCompany(data.company);
+      if (data.company) setCompany(data.company); // This is the company NAME string
       if (data.location) setLocation(data.location);
       if (data.salary) setSalary(data.salary);
+      
+      // Set job type
       if (data.job_type) {
         const normalizedType = data.job_type.toLowerCase();
         if (normalizedType.includes("full")) setJobType("Full-Time");
@@ -100,14 +110,26 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
         else if (normalizedType.includes("intern")) setJobType("Internship");
         else if (normalizedType.includes("contract")) setJobType("Contract");
         else if (normalizedType.includes("freelance")) setJobType("Freelance");
+        else setJobType("Full-Time");
       }
-      if (data.description)
-        setDescription(data.description.substring(0, 2000));
+      
+      // Set industry - prioritize from main data, fallback to company_data
+      if (data.industry) {
+        setIndustry(data.industry);
+      } else if (data.company_data?.industry) {
+        setIndustry(data.company_data.industry);
+      }
+      
+      if (data.description) setDescription(data.description.substring(0, 2000));
+      
+      // Store the company_data object (with size, location, website, etc.)
+      if (data.company_data) {
+        setCompanyData(data.company_data);
+      }
    
       setUrl(importUrl.trim());
-
       setScrapeError("");
-      alert("Job imported. Please review and fill in remaining required fields.");
+      alert("Job imported successfully! Company information has been loaded.");
     } catch (error) {
       const errorMessage =
         error.response?.data?.detail ||
@@ -120,8 +142,9 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!title.trim()) return alert("Job title is required");
     if (!company.trim()) return alert("Company name is required");
     if (!location.trim()) return alert("Location is required");
@@ -130,9 +153,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     if (!deadline) return alert("Application deadline is required");
 
     if (url.trim() && !validateUrl(url.trim())) {
-      return alert(
-        "Please enter a valid Job Posting URL starting with http:// or https://"
-      );
+      return alert("Please enter a valid Job Posting URL starting with http:// or https://");
     }
 
     const now = new Date().toISOString();
@@ -152,25 +173,63 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       contacts: contacts.trim() || undefined,
       salary_notes: salaryNotes.trim() || undefined,
       interview_notes: interviewNotes.trim() || undefined,
+      company_data: companyData || undefined,
     };
 
-    if (editJob) {
-      jobData.id = id;
-      const statusChanged = editJob.status !== status;
-      if (statusChanged) {
-        jobData.status_history = [
-          ...(editJob.status_history || []),
-          [status, now],
-        ];
+    try {
+      if (editJob) {
+        jobData.id = id;
+        const statusChanged = editJob.status !== status;
+        if (statusChanged) {
+          jobData.status_history = [
+            ...(editJob.status_history || []),
+            [status, now],
+          ];
+        }
+        
+        await editJob.submit(jobData);
+        
+        // Upload company image if there's a new file and we have company data with image
+        if (companyImageFile && id) {
+          try {
+            await JobsAPI.uploadCompanyImage(id, companyImageFile);
+          } catch (err) {
+            console.error("Failed to upload company image:", err);
+          }
+        }
+      } else {
+        jobData.status_history = [[status, now]];
+        
+        // Add job first to get the job ID
+        const result = await addJob(jobData);
+        
+        // If we have a company image from scraping, upload it
+        if (companyData?.image && result?.id) {
+          try {
+            // Convert base64 to blob
+            const base64Data = companyData.image;
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/png' });
+            const file = new File([blob], `${company}_logo.png`, { type: 'image/png' });
+            
+            await JobsAPI.uploadCompanyImage(result.id, file);
+          } catch (err) {
+            console.error("Failed to upload scraped company image:", err);
+          }
+        }
       }
-      editJob.submit(jobData);
-    } else {
-      jobData.status_history = [[status, now]];
-      addJob(jobData);
-    }
 
-    resetForm();
-    cancelEdit && cancelEdit();
+      resetForm();
+      cancelEdit && cancelEdit();
+    } catch (error) {
+      console.error("Failed to submit job:", error);
+      alert(error.response?.data?.detail || "Failed to save job. Please try again.");
+    }
   };
 
   const inputStyle = {
@@ -225,8 +284,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           🔗 Quick Import from URL
         </h3>
         <p style={{ fontSize: "13px", color: "#666", marginBottom: "12px" }}>
-          Paste a job posting URL from Indeed, LinkedIn, or Glassdoor to
-          auto-fill the form
+          Paste a job posting URL from Indeed to auto-fill the form (includes company info!)
         </p>
 
         <label style={labelStyle}>Import URL</label>
@@ -289,6 +347,52 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           </button>
         </div>
       </div>
+
+      {/* Company Info Preview (if scraped) */}
+      {companyData && (
+        <div
+          style={{
+            ...sectionStyle,
+            background: "#f0f7ff",
+            border: "2px solid #4f8ef7",
+          }}
+        >
+          <h3 style={{ marginTop: 0, fontSize: "16px", color: "#1976d2" }}>
+            🏢 Company Information (Imported)
+          </h3>
+          
+          {companyData.image && (
+            <div style={{ marginBottom: "12px", textAlign: "center" }}>
+              <img 
+                src={`data:image/png;base64,${companyData.image}`}
+                alt="Company logo"
+                style={{ maxWidth: "150px", maxHeight: "80px", objectFit: "contain", borderRadius: "4px" }}
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            </div>
+          )}
+          
+          <div style={{ fontSize: "14px", color: "#333" }}>
+            {companyData.size && <p style={{ margin: "4px 0" }}><strong>👥 Size:</strong> {companyData.size}</p>}
+            {companyData.industry && <p style={{ margin: "4px 0" }}><strong>🏭 Industry:</strong> {companyData.industry}</p>}
+            {companyData.location && <p style={{ margin: "4px 0" }}><strong>📍 HQ:</strong> {companyData.location}</p>}
+            {companyData.website && (
+              <p style={{ margin: "4px 0" }}>
+                <strong>🌐 Website:</strong> <a href={companyData.website} target="_blank" rel="noopener noreferrer" style={{ color: "#4f8ef7" }}>{companyData.website}</a>
+              </p>
+            )}
+            {companyData.description && (
+              <p style={{ margin: "8px 0 4px 0", fontSize: "13px", color: "#555" }}>
+                <strong>About:</strong> {companyData.description.substring(0, 200)}{companyData.description.length > 200 ? "..." : ""}
+              </p>
+            )}
+          </div>
+          
+          <p style={{ fontSize: "12px", color: "#666", marginTop: "12px", marginBottom: 0 }}>
+            💡 This company information will be saved with your job application
+          </p>
+        </div>
+      )}
 
       {/* Basic Information */}
       <div style={sectionStyle}>

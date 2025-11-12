@@ -44,46 +44,83 @@ async def job_from_url(url: str):
 async def indeed_scrape(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
 
+    # Extract job title
     title_span = soup.select_one(".jobsearch-JobInfoHeader-title span")
     title = title_span.find(text = True, recursive = False) if title_span else None
-    company = soup.select_one('[data-testid="jobsearch-CompanyInfoContainer"] a')
+    
+    # Extract company NAME (this is the string we need)
+    company_element = soup.select_one('[data-testid="jobsearch-CompanyInfoContainer"] a')
+    company_name = company_element.get_text(strip=True) if company_element else None
+    
+    # Extract location
     location = soup.select_one('[data-testid="inlineHeader-companyLocation"] div')
 
-    info = soup.select_one("#salaryInfoAndJobType")
+    # Extract salary and job type - Multiple strategies
     salary = None
     job_type = None
     
+    # Strategy 1: Try the salaryInfoAndJobType section
+    info = soup.select_one("#salaryInfoAndJobType")
     if info:
-        spans = info.find_all("span")
-        if len(spans) > 0:
-            salary = spans[0]
-        if len(spans) > 1:
-            job_type = spans[1]
+        # Get all text from all elements
+        all_text = info.get_text(separator="|", strip=True)
+        parts = [p.strip() for p in all_text.split("|") if p.strip()]
+        
+        for part in parts:
+            # Check for salary
+            if not salary and ("$" in part or "hour" in part.lower() or "year" in part.lower() or "month" in part.lower()):
+                salary = part
+            # Check for job type
+            if not job_type and any(keyword in part.lower() for keyword in ["full-time", "full time", "part-time", "part time", "contract", "temporary", "internship", "freelance"]):
+                job_type = part
     
+    # Strategy 2: Look for salary in metadata or attribute fields
+    if not salary:
+        salary_meta = soup.select_one('[data-testid="viewJobBodyJobCompensation"]')
+        if salary_meta:
+            salary = salary_meta.get_text(strip=True)
+    
+    # Strategy 3: Look for job type in metadata or attribute fields  
+    if not job_type:
+        job_type_meta = soup.select_one('[data-testid="viewJobBodyJobDetailsJobType"]')
+        if job_type_meta:
+            job_type = job_type_meta.get_text(strip=True)
+    
+    # Extract application deadline - only if explicitly stated
+    deadline = None
+    
+    # Look for explicit deadline text only
+    import re
+    deadline_elements = soup.find_all(string=re.compile(r'(apply by|closes? on|deadline|due date)', re.IGNORECASE))
+    for elem in deadline_elements:
+        parent_text = elem.parent.get_text(strip=True) if elem.parent else ""
+        # Try to extract date from text
+        date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})', parent_text)
+        if date_match:
+            deadline = date_match.group(1)
+            break
+    
+    # Extract description
     description = soup.select_one("#jobDescriptionText")
+    
+    # Get company page URL
     href = soup.select_one('[data-testid="inlineHeader-companyName"] a')
     company_url = href.get("href") if href else None
 
-    # Safely extract job_type text
-    job_type_text = None
-    if job_type:
-        stripped_strings = list(job_type.stripped_strings)
-        if len(stripped_strings) > 1:
-            job_type_text = stripped_strings[1]
-
-    # company data  
+    # Get full company data (size, industry, HQ, website, description, image)
     company_data = await indeed_company_info(company_url) if company_url else None
 
+    # Return company name as string AND company_data as separate object
     return {
         "title": title.get_text(strip = True) if title else None,
-        "company": company.get_text(strip = True) if company else None,
+        "company": company_name,
+        "company_data": company_data,
         "location": location.get_text(strip = True) if location else None,
-        "salary": salary.get_text(strip = True) if salary else None,
+        "salary": salary,
         "deadline": None,
-        "industry": company_data["industry"],
-        "job_type": job_type_text,
+        "industry": company_data.get("industry") if company_data else None,
+        "job_type": job_type,
         "description": description.get_text(strip = True) if description else None,
-        "company": company_data, # --> object containing all company info
     }
 
 async def indeed_company_info(url: str):
@@ -107,21 +144,36 @@ async def indeed_company_info(url: str):
     # company headquarters location
     headquarters_div = soup.select_one('li[data-testid="companyInfo-headquartersLocation"] > span:nth-of-type(1)')
 
-    # company description
-    homepage_link = soup.select_one('li[data-testid="companyInfo-companyWebsite"] > div:nth-of-type(2) > a').get("href")
+    # company website
+    homepage_link_element = soup.select_one('li[data-testid="companyInfo-companyWebsite"] > div:nth-of-type(2) > a')
+    homepage_link = homepage_link_element.get("href") if homepage_link_element else None
 
-    # company homepage more-text less-text
-    description = soup.select_one('div[data-testid="less-text"] > p').get_text(strip = True)
+    # company description
+    description_element = soup.select_one('div[data-testid="less-text"] > p')
+    description = description_element.get_text(strip = True) if description_element else None
 
     # profile image
-    image_url = soup.select_one('div[data-testid="cmp-HeaderLayout"] img').get("src")
-    res = requests.get(image_url)
-    res.raise_for_status()
-
-    img_b64 = base64.b64encode(res.content).decode("utf-8")
+    image_element = soup.select_one('div[data-testid="cmp-HeaderLayout"] img')
+    image_url = image_element.get("src") if image_element else None
+    
+    img_b64 = None
+    if image_url:
+        try:
+            # Handle relative URLs by prepending Indeed's base URL
+            if image_url.startswith('/'):
+                image_url = f"https://www.indeed.com{image_url}"
+            elif not image_url.startswith('http'):
+                image_url = f"https://www.indeed.com/{image_url}"
+            
+            res = requests.get(image_url)
+            res.raise_for_status()
+            img_b64 = base64.b64encode(res.content).decode("utf-8")
+        except Exception as e:
+            print(f"Failed to fetch company image: {e}")
+            img_b64 = None
     
     return {
-        "size": f"{comparator} {company_size}",
+        "size": f"{comparator} {company_size}".strip() if company_size else None,
         "industry": industry_div.get_text(strip = True) if industry_div else None,
         "location": headquarters_div.get_text(strip = True) if headquarters_div else None,
         "website": homepage_link,
