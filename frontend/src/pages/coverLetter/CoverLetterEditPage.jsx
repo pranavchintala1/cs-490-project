@@ -22,34 +22,32 @@ export default function EditCoverLetterPage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Stats and History
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [readabilityScore, setReadabilityScore] = useState(0);
   const [versionHistory, setVersionHistory] = useState([]);
   const [autoSaveStatus, setAutoSaveStatus] = useState("saved");
-  const [grammarIssues, setGrammarIssues] = useState([]);
   const [selectedWord, setSelectedWord] = useState(null);
   const [synonyms, setSynonyms] = useState([]);
   const [showSynonyms, setShowSynonyms] = useState(false);
 
-  // Load letter data from API
+  // AI Suggestions state
+  const [aiSuggestions, setAiSuggestions] = useState("");
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
+
+  // Load cover letter
   useEffect(() => {
     if (!id) return;
-
     const loadLetter = async () => {
       try {
         const res = await CoverLetterAPI.get(id);
         const letter = res.data;
-
         setTitle(letter.title || "");
         setCompany(letter.company || "");
         setPosition(letter.position || "");
         contentRef.current = letter.content || "";
         setHtmlContent(letter.content || "");
-
         setVersionHistory([{ timestamp: new Date(), content: letter.content }]);
-
         setLetterLoaded(true);
       } catch (err) {
         console.error(err);
@@ -57,55 +55,28 @@ export default function EditCoverLetterPage() {
         navigate("/coverletter");
       }
     };
-
     loadLetter();
   }, [id, navigate, showFlash]);
 
-  // Calculate statistics
   const calculateStats = (text) => {
     const plainText = text.replace(/<[^>]*>/g, "");
-    const words = plainText.trim().split(/\s+/).filter(w => w.length > 0);
+    const words = plainText.trim().split(/\s+/).filter(Boolean);
     const chars = plainText.length;
-    
-    setWordCount(words.length);
-    setCharCount(chars);
-    
     const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const avgWordsPerSentence = words.length / (sentences.length || 1);
     const score = Math.max(0, Math.min(100, 100 - (avgWordsPerSentence * 5)));
+    setWordCount(words.length);
+    setCharCount(chars);
     setReadabilityScore(Math.round(score));
-
-    checkGrammar(plainText);
   };
 
-  const checkGrammar = (text) => {
-    const issues = [];
-    const patterns = [
-      { regex: /\b(their|there|they're)\b/gi, msg: "Check usage of their/there/they're" },
-      { regex: /\b(your|you're)\b/gi, msg: "Check usage of your/you're" },
-      { regex: /\b(its|it's)\b/gi, msg: "Check usage of its/it's" },
-      { regex: /\s{2,}/g, msg: "Multiple spaces detected" },
-      { regex: /([.!?])\s+([a-z])/g, msg: "Sentence should start with capital" },
-    ];
-
-    patterns.forEach(pattern => {
-      if (pattern.regex.test(text)) {
-        issues.push(pattern.msg);
-      }
-    });
-
-    setGrammarIssues([...new Set(issues)].slice(0, 5));
-  };
-
-  // Populate iframe
+  // Iframe editor setup
   useEffect(() => {
     if (!iframeRef.current || !letterLoaded || editorMode !== "visual") return;
-
     const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
     doc.open();
     doc.write(contentRef.current);
     doc.close();
-
     doc.body.contentEditable = "true";
 
     const onInput = () => {
@@ -127,40 +98,26 @@ export default function EditCoverLetterPage() {
 
     doc.body.addEventListener("input", onInput);
     doc.body.addEventListener("mouseup", onMouseUp);
-
     return () => {
       doc.body.removeEventListener("input", onInput);
       doc.body.removeEventListener("mouseup", onMouseUp);
     };
   }, [letterLoaded, editorMode]);
 
-  // Auto-save functionality
+  // Auto-save
   useEffect(() => {
     const autoSaveInterval = setInterval(() => {
-      if (autoSaveStatus === "unsaved" && contentRef.current) {
-        performAutoSave();
-      }
+      if (autoSaveStatus === "unsaved" && contentRef.current) performAutoSave();
     }, 30000);
-
     return () => clearInterval(autoSaveInterval);
   }, [autoSaveStatus]);
 
   const performAutoSave = async () => {
     setAutoSaveStatus("saving");
     try {
-      await CoverLetterAPI.update(id, {
-        title,
-        company,
-        position,
-        content: contentRef.current,
-      });
+      await CoverLetterAPI.update(id, { title, company, position, content: contentRef.current });
       setAutoSaveStatus("saved");
-      
-      setVersionHistory(prev => [...prev, { 
-        timestamp: new Date(), 
-        content: contentRef.current 
-      }].slice(-10));
-      
+      setVersionHistory(prev => [...prev, { timestamp: new Date(), content: contentRef.current }].slice(-10));
     } catch (err) {
       console.error("Auto-save failed:", err);
       setAutoSaveStatus("unsaved");
@@ -170,34 +127,27 @@ export default function EditCoverLetterPage() {
   const fetchSynonyms = async (word) => {
     try {
       const res = await AIAPI.generateText({
-        prompt: `Generate 4 synonyms for the word "${word}" as a comma-separated list. Only return the words, nothing else.`,
-        system_message: "You are a helpful assistant that generates synonyms."
+        prompt: `Generate 4 synonyms for "${word}", return as a comma-separated list only.`,
+        system_message: "You are a helpful assistant generating synonyms."
       });
-
-      const syns = res.data.result
-        .split(",")
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-      
+      const syns = (res.data.result || res.data.response || res.data.text || "").split(",").map(s => s.trim()).filter(Boolean);
       setSynonyms(syns);
     } catch (err) {
-      console.error("Failed to fetch synonyms:", err);
+      console.error(err);
+      setSynonyms([]);
     }
   };
 
   const replaceSynonym = (synonym) => {
     if (!iframeRef.current || !selectedWord) return;
-    
     const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
     const selection = doc.getSelection();
-    
     if (selection.rangeCount > 0) {
       selection.deleteFromDocument();
       const span = doc.createElement("span");
       span.textContent = synonym;
       selection.getRangeAt(0).insertNode(span);
     }
-    
     setShowSynonyms(false);
     contentRef.current = doc.documentElement.innerHTML;
     calculateStats(doc.documentElement.innerHTML);
@@ -206,23 +156,29 @@ export default function EditCoverLetterPage() {
   const restoreVersion = (version) => {
     contentRef.current = version.content;
     setHtmlContent(version.content);
-    
-    if (iframeRef.current && editorMode === "visual") {
-      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
-      doc.open();
-      doc.write(version.content);
-      doc.close();
-      doc.body.contentEditable = "true";
+    if (editorMode === "visual") {
+      setEditorMode("html");
+      setTimeout(() => {
+        setEditorMode("visual");
+        setTimeout(() => {
+          if (iframeRef.current) {
+            const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
+            doc.open();
+            doc.write(version.content);
+            doc.close();
+            doc.body.contentEditable = "true";
+          }
+        }, 50);
+      }, 50);
     }
-    
     calculateStats(version.content);
+    setAutoSaveStatus("unsaved");
     showFlash("Version restored", "success");
   };
 
   const applyFormatting = (command, value = null) => {
     const doc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow.document;
     if (!doc) return;
-
     doc.execCommand(command, false, value);
     doc.body.focus();
   };
@@ -230,35 +186,19 @@ export default function EditCoverLetterPage() {
   const insertList = (type) => {
     const doc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow.document;
     if (!doc) return;
-
     doc.execCommand(type === "ul" ? "insertUnorderedList" : "insertOrderedList");
     doc.body.focus();
   };
 
   const handleSave = async () => {
     try {
-      let contentToSave = contentRef.current;
-      
-      if (editorMode === "visual" && iframeRef.current) {
-        const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
-        contentToSave = doc.documentElement.innerHTML;
-      } else if (editorMode === "html") {
-        contentToSave = htmlContent;
-      }
+      const contentToSave = editorMode === "visual" && iframeRef.current
+        ? iframeRef.current.contentDocument.documentElement.innerHTML
+        : htmlContent;
 
-      await CoverLetterAPI.update(id, {
-        title,
-        company,
-        position,
-        content: contentToSave,
-      });
-      
+      await CoverLetterAPI.update(id, { title, company, position, content: contentToSave });
       setAutoSaveStatus("saved");
-      setVersionHistory(prev => [...prev, { 
-        timestamp: new Date(), 
-        content: contentToSave 
-      }].slice(-10));
-      
+      setVersionHistory(prev => [...prev, { timestamp: new Date(), content: contentToSave }].slice(-10));
       showFlash("Cover letter saved!", "success");
       navigate("/coverletter");
     } catch (err) {
@@ -267,44 +207,78 @@ export default function EditCoverLetterPage() {
     }
   };
 
-  const sendAISuggestion = async (userPrompt) => {
-    const plainText = contentRef.current.replace(/<[^>]*>/g, "");
-    
-    return AIAPI.generateText({
-      prompt: userPrompt,
-      system_message: `You are a professional cover letter editor. Here is the current cover letter:\n\n${plainText.substring(0, 500)}...\n\nThe user is applying for a ${position} position at ${company}. Help them improve their cover letter based on their request.`
-    });
-  };
-
-  const handleAISuggestion = async () => {
-    if (!aiPrompt.trim()) {
-      showFlash("Please enter a prompt for AI suggestions", "error");
-      return;
-    }
-
+  // 🔹 Generate Cover Letter
+  const handleGenerateCoverLetter = async () => {
     setAiLoading(true);
     try {
-      const res = await sendAISuggestion(aiPrompt);
-      const suggestion = res.data.response;
+      const res = await AIAPI.generateText({
+        prompt: `
+User instructions: "${aiPrompt}"
+Personalize for company "${company}" and role "${position}".
+Preserve all HTML and inline styles.
+Return ONLY updated HTML content.
+DO NOT ADD YOUR OWN STYLINGS OR HTML ELEMENTS OR CSS. ONLY WHAT WAS ORIGINALLY THERE. 
+Return ONLY HTML content.
+Don't invent any personal details/certifications/education/skills. Only use what you are given in the cover letter.
 
-      
+Current letter content:
+${contentRef.current}
+        `,
+        system_message: `
+You are a professional cover letter writer.
+Preserve all HTML and inline styles.
+DO NOT ADD YOUR OWN STYLINGS OR HTML ELEMENTS OR CSS. ONLY WHAT WAS ORIGINALLY THERE. 
+Return ONLY HTML content.
+Don't invent any personal details/certifications/education/skills. Only use what you are given.
+`
+      });
+
+      const generated = res.data.response || res.data.result || res.data.text || "";
       if (iframeRef.current && editorMode === "visual") {
         const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
-        doc.body.focus();
-        const para = doc.createElement("p");
-        para.innerHTML = `<em style="color: #9c27b0;">💡 Suggestion: ${suggestion}</em>`;
-        doc.body.appendChild(para);
-        
-        // Update the content reference to preserve state
+        doc.body.innerHTML = generated;
         contentRef.current = doc.documentElement.innerHTML;
         setHtmlContent(doc.documentElement.innerHTML);
+        calculateStats(doc.documentElement.innerHTML);
         setAutoSaveStatus("unsaved");
       }
-      
+
       setAiPrompt("");
+      showFlash("Cover letter generated successfully.", "success");
     } catch (err) {
-      console.error("AI suggestion error:", err);
-      showFlash("Failed to get AI suggestion.", "error");
+      console.error(err);
+      showFlash("Failed to generate cover letter.", "error");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // 🔹 AI Suggestions handler (text-only)
+  const handleAISuggestions = async () => {
+    if (!contentRef.current) return;
+    setAiLoading(true);
+    try {
+      const res = await AIAPI.generateText({
+        prompt: `
+Provide text-only suggestions for improving this cover letter content.
+Do NOT change HTML structure, CSS, or inline styles.
+
+Current letter content:
+${contentRef.current}
+      `,
+      system_message: `
+You are a helpful AI assistant providing suggestions for improving cover letters.
+Return plain text suggestions only. Do not mention html/css elements or tags in your suggestions. So you should not comment on the html at all. So no <h1> or <p> mentions, for example.
+      `
+    });
+
+    const suggestions = res.data.response || res.data.result || res.data.text || "";
+    setAiSuggestions(suggestions);
+    setShowAISuggestions(true);
+    showFlash("AI suggestions generated.", "success");
+    } catch (err) {
+      console.error(err);
+      showFlash("Failed to generate AI suggestions.", "error");
     } finally {
       setAiLoading(false);
     }
@@ -315,358 +289,138 @@ export default function EditCoverLetterPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <h2>Edit Cover Letter</h2>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          {autoSaveStatus === "saved" && (
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#34c759" }}>
-              <CheckCircle size={16} />
-              <span style={{ fontSize: "12px" }}>Auto-saved</span>
-            </div>
-          )}
-          {autoSaveStatus === "saving" && (
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#ff9500" }}>
-              <Clock size={16} />
-              <span style={{ fontSize: "12px" }}>Saving...</span>
-            </div>
-          )}
-          {autoSaveStatus === "unsaved" && (
-            <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#ff3b30" }}>
-              <AlertCircle size={16} />
-              <span style={{ fontSize: "12px" }}>Unsaved changes</span>
-            </div>
-          )}
+          {autoSaveStatus === "saved" && <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#34c759" }}><CheckCircle size={16} /><span style={{ fontSize: "12px" }}>Auto-saved</span></div>}
+          {autoSaveStatus === "saving" && <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#ff9500" }}><Clock size={16} /><span style={{ fontSize: "12px" }}>Saving...</span></div>}
+          {autoSaveStatus === "unsaved" && <div style={{ display: "flex", alignItems: "center", gap: "5px", color: "#ff3b30" }}><AlertCircle size={16} /><span style={{ fontSize: "12px" }}>Unsaved changes</span></div>}
         </div>
       </div>
 
       {/* Form Fields */}
       <div style={{ marginBottom: "20px" }}>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          style={{ width: "100%", marginBottom: "10px", padding: "10px", fontSize: "14px" }}
-        />
+        <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" style={{ width: "100%", marginBottom: "10px", padding: "10px", fontSize: "14px" }} />
         <div style={{ display: "flex", gap: "10px" }}>
-          <input
-            type="text"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder="Company"
-            style={{ flex: 1, padding: "10px", fontSize: "14px" }}
-          />
-          <input
-            type="text"
-            value={position}
-            onChange={(e) => setPosition(e.target.value)}
-            placeholder="Position"
-            style={{ flex: 1, padding: "10px", fontSize: "14px" }}
-          />
+          <input type="text" value={company} onChange={e => setCompany(e.target.value)} placeholder="Company" style={{ flex: 1, padding: "10px", fontSize: "14px" }} />
+          <input type="text" value={position} onChange={e => setPosition(e.target.value)} placeholder="Position" style={{ flex: 1, padding: "10px", fontSize: "14px" }} />
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "20px" }}>
-        {/* Main Editor */}
         <div>
-          {/* Editor Mode Selector */}
           <div style={{ marginBottom: "15px", display: "flex", gap: "10px" }}>
-            <button
-              onClick={() => setEditorMode("visual")}
-              style={{
-                padding: "8px 16px",
-                background: editorMode === "visual" ? "#2196f3" : "#ccc",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
-              Visual Editor
-            </button>
-            <button
-              onClick={() => setEditorMode("html")}
-              style={{
-                padding: "8px 16px",
-                background: editorMode === "html" ? "#2196f3" : "#ccc",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer"
-              }}
-            >
-              HTML Editor
-            </button>
+            <button onClick={() => setEditorMode("visual")} style={{ padding: "8px 16px", background: editorMode === "visual" ? "#2196f3" : "#ccc", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>Visual Editor</button>
+            <button onClick={() => setEditorMode("html")} style={{ padding: "8px 16px", background: editorMode === "html" ? "#2196f3" : "#ccc", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>HTML Editor</button>
           </div>
 
-          {/* Visual Editor */}
           {editorMode === "visual" && (
             <>
-              {/* Toolbar */}
-              <div style={{
-                display: "flex",
-                gap: "5px",
-                padding: "10px",
-                background: "#f5f5f5",
-                borderRadius: "4px",
-                marginBottom: "10px",
-                flexWrap: "wrap",
-                alignItems: "center"
-              }}>
-                <button onClick={() => applyFormatting("undo")} title="Undo" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  <Undo2 size={16} />
-                </button>
-                <button onClick={() => applyFormatting("redo")} title="Redo" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  <Redo2 size={16} />
-                </button>
-
+              <div style={{ display: "flex", gap: "5px", padding: "10px", background: "#f5f5f5", borderRadius: "4px", marginBottom: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                <button onClick={() => applyFormatting("undo")} title="Undo" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><Undo2 size={16} /></button>
+                <button onClick={() => applyFormatting("redo")} title="Redo" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><Redo2 size={16} /></button>
                 <div style={{ width: "1px", height: "20px", background: "#ccc", margin: "0 5px" }} />
-
-                <button onClick={() => applyFormatting("bold")} title="Bold" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  <Bold size={16} />
-                </button>
-                <button onClick={() => applyFormatting("italic")} title="Italic" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  <Italic size={16} />
-                </button>
-                <button onClick={() => applyFormatting("underline")} title="Underline" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  <Underline size={16} />
-                </button>
-
+                <button onClick={() => applyFormatting("bold")} title="Bold" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><Bold size={16} /></button>
+                <button onClick={() => applyFormatting("italic")} title="Italic" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><Italic size={16} /></button>
+                <button onClick={() => applyFormatting("underline")} title="Underline" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><Underline size={16} /></button>
                 <div style={{ width: "1px", height: "20px", background: "#ccc", margin: "0 5px" }} />
-
-                <button onClick={() => insertList("ul")} title="Bullet List" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  <List size={16} />
-                </button>
-                <button onClick={() => insertList("ol")} title="Numbered List" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  1.
-                </button>
-
-                <select
-                  onChange={(e) => applyFormatting("formatBlock", e.target.value)}
-                  defaultValue="p"
-                  style={{ padding: "6px 10px", cursor: "pointer", borderRadius: "3px", border: "1px solid #ccc" }}
+                <button onClick={() => insertList("ul")} title="Bullet List" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><List size={16} /></button>
+                <button onClick={() => insertList("ol")} title="Numbered List" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><List size={16} style={{ transform: "rotate(90deg)" }} /></button>
+                <div style={{ width: "1px", height: "20px", background: "#ccc", margin: "0 5px" }} />
+                <button onClick={() => setShowAIHelper(!showAIHelper)} title="AI Helper" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px", background: showAIHelper ? "#e0f7fa" : "white" }}><Zap size={16} /></button>
+                <button onClick={handleSave} title="Save Now" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}><Save size={16} /></button>
+                <button 
+                  onClick={() => navigate("/coverletter")} 
+                  title="Cancel" 
+                  style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px", marginLeft: "5px", background: "#ff3b30", color: "white" }}
                 >
-                  <option value="p">Paragraph</option>
-                  <option value="h1">Heading 1</option>
-                  <option value="h2">Heading 2</option>
-                  <option value="h3">Heading 3</option>
-                </select>
-
-                <button
-                  onClick={() => setShowAIHelper(!showAIHelper)}
-                  style={{
-                    marginLeft: "auto",
-                    padding: "8px 12px",
-                    background: "#9c27b0",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px"
-                  }}
-                >
-                  <Zap size={16} />
-                  AI Helper
+                  Cancel
                 </button>
               </div>
 
-              {/* AI Helper Panel */}
-              {showAIHelper && (
-                <div style={{
-                  background: "#f9f3f0",
-                  border: "2px solid #9c27b0",
-                  borderRadius: "6px",
-                  padding: "15px",
-                  marginBottom: "15px"
-                }}>
-                  <h4 style={{ margin: "0 0 10px 0" }}>✨ AI Assistant</h4>
-                  <textarea
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="e.g., 'Make this section more impactful' or 'Add a line about leadership skills'"
-                    style={{
-                      width: "100%",
-                      minHeight: "60px",
-                      padding: "10px",
-                      marginBottom: "10px",
-                      borderRadius: "4px",
-                      border: "1px solid #ddd"
-                    }}
-                  />
-                  <button
-                    onClick={handleAISuggestion}
-                    disabled={aiLoading}
-                    style={{
-                      padding: "8px 16px",
-                      background: "#9c27b0",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: aiLoading ? "not-allowed" : "pointer",
-                      opacity: aiLoading ? 0.6 : 1
-                    }}
-                  >
-                    {aiLoading ? "Generating..." : "Get Suggestions"}
-                  </button>
+              <iframe ref={iframeRef} title="Cover Letter Editor" style={{ width: "100%", height: "500px", border: "1px solid #ccc", borderRadius: "4px", background: "white" }}></iframe>
+
+              {showSynonyms && synonyms.length > 0 && (
+                <div style={{ position: "absolute", background: "white", border: "1px solid #ccc", borderRadius: "4px", padding: "8px", top: "100px", right: "20px", width: "200px", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}>
+                  <strong>Synonyms:</strong>
+                  <ul style={{ listStyle: "none", padding: 0, marginTop: "5px" }}>
+                    {synonyms.map((syn, idx) => (
+                      <li key={idx} onClick={() => replaceSynonym(syn)} style={{ cursor: "pointer", marginBottom: "4px", color: "#2196f3" }}>{syn}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
-
-              {/* WYSIWYG Editor */}
-              <iframe
-                ref={iframeRef}
-                style={{
-                  width: "100%",
-                  minHeight: "600px",
-                  border: "1px solid #ccc",
-                  borderRadius: "6px",
-                  marginBottom: "15px"
-                }}
-              />
             </>
           )}
 
-          {/* HTML Editor */}
           {editorMode === "html" && (
-            <textarea
-              value={htmlContent}
-              onChange={(e) => {
-                setHtmlContent(e.target.value);
-                contentRef.current = e.target.value;
-                calculateStats(e.target.value);
-                setAutoSaveStatus("unsaved");
-              }}
-              style={{
-                width: "100%",
-                minHeight: "600px",
-                padding: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
-                marginBottom: "15px",
-                fontFamily: "monospace",
-                fontSize: "12px"
-              }}
-            />
+            <textarea value={htmlContent} onChange={(e) => { setHtmlContent(e.target.value); contentRef.current = e.target.value; calculateStats(e.target.value); setAutoSaveStatus("unsaved"); }} style={{ width: "100%", height: "500px", fontFamily: "monospace", fontSize: "14px", border: "1px solid #ccc", borderRadius: "4px", padding: "10px" }} />
           )}
-
-          {/* Action Buttons */}
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              onClick={handleSave}
-              style={{
-                padding: "10px 20px",
-                background: "#34c759",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}
-            >
-              <Save size={16} />
-              Save Changes
-            </button>
-            <button
-              onClick={() => navigate("/coverletter")}
-              style={{
-                padding: "10px 20px",
-                background: "#ff3b30",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontWeight: "bold"
-              }}
-            >
-              Cancel
-            </button>
-          </div>
         </div>
 
-        {/* Sidebar */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-          {/* Statistics */}
-          <div style={{ background: "#f5f5f5", padding: "15px", borderRadius: "6px" }}>
-            <h4 style={{ margin: "0 0 10px 0" }}>📊 Statistics</h4>
-            <div style={{ fontSize: "12px", lineHeight: "1.8" }}>
-              <div>Words: <strong>{wordCount}</strong></div>
-              <div>Characters: <strong>{charCount}</strong></div>
-              <div>Readability: <strong>{readabilityScore}%</strong></div>
+        <div>
+          {showAIHelper && (
+            <div style={{ border: "1px solid #ccc", borderRadius: "8px", padding: "15px", background: "#fafafa" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                <Zap size={18} />
+                <h4 style={{ margin: 0 }}>AI Helper</h4>
+              </div>
+
+              <textarea 
+                value={aiPrompt} 
+                onChange={(e) => setAiPrompt(e.target.value)} 
+                placeholder="Optionally, provide instructions to improve the cover letter..." 
+                style={{ width: "100%", height: "100px", padding: "8px", marginBottom: "10px", borderRadius: "4px" }} 
+              />
+
+              {/* Generate Cover Letter button */}
+              <button 
+                onClick={handleGenerateCoverLetter} 
+                disabled={aiLoading} 
+                style={{ width: "100%", padding: "8px", background: "#2196f3", color: "white", border: "none", borderRadius: "4px", cursor: aiLoading ? "not-allowed" : "pointer", marginBottom: "10px" }}
+              >
+                {aiLoading ? "Generating..." : "Generate Cover Letter"}
+              </button>
+
+              {/* AI Suggestions button */}
+              <button 
+                onClick={handleAISuggestions} 
+                disabled={aiLoading} 
+                style={{ width: "100%", padding: "8px", background: "#ffeb3b", color: "black", border: "none", borderRadius: "4px", cursor: aiLoading ? "not-allowed" : "pointer" }}
+              >
+                💡 Suggestions
+              </button>
             </div>
+          )}
+
+          {showAISuggestions && (
+            <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "4px", background: "#fff" }}>
+              <h5>AI Suggestions</h5>
+              <p style={{ whiteSpace: "pre-wrap" }}>{aiSuggestions}</p>
+              <button 
+                onClick={() => setShowAISuggestions(false)} 
+                style={{ marginTop: "10px", padding: "6px 10px", borderRadius: "4px", border: "none", background: "#2196f3", color: "white", cursor: "pointer" }}
+              >
+                Close
+              </button>
+            </div>
+          )}
+
+          <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "4px", background: "#fff" }}>
+            <h5>Stats</h5>
+            <p>Words: {wordCount}</p>
+            <p>Characters: {charCount}</p>
+            <p>Readability: {readabilityScore}</p>
           </div>
 
-          {/* Grammar Issues */}
-          {grammarIssues.length > 0 && (
-            <div style={{ background: "#fff3cd", padding: "15px", borderRadius: "6px", border: "1px solid #ffc107" }}>
-              <h4 style={{ margin: "0 0 10px 0", color: "#856404" }}>⚠️ Grammar Check</h4>
-              <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "12px" }}>
-                {grammarIssues.map((issue, i) => (
-                  <li key={i} style={{ color: "#856404", marginBottom: "5px" }}>{issue}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "4px", background: "#fff" }}>
+            <h5>Version History</h5>
+            <ul style={{ listStyle: "none", padding: 0 }}>
+              {versionHistory.map((v, idx) => (
+                <li key={idx} style={{ cursor: "pointer", color: "#2196f3", marginBottom: "5px" }} onClick={() => restoreVersion(v)}>
+                  {v.timestamp.toLocaleString()}
+                </li>
+              ))}
+            </ul>
+          </div>
 
-          {/* Synonyms */}
-          {showSynonyms && selectedWord && (
-            <div style={{ background: "#e3f2fd", padding: "15px", borderRadius: "6px", border: "1px solid #2196f3" }}>
-              <h4 style={{ margin: "0 0 10px 0" }}>🔤 Synonyms for "{selectedWord}"</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {synonyms.length > 0 ? (
-                  synonyms.map((syn, i) => (
-                    <button
-                      key={i}
-                      onClick={() => replaceSynonym(syn)}
-                      style={{
-                        padding: "8px 12px",
-                        background: "#2196f3",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "12px",
-                        textAlign: "left"
-                      }}
-                    >
-                      {syn}
-                    </button>
-                  ))
-                ) : (
-                  <p style={{ fontSize: "12px", margin: 0, color: "#666" }}>No synonyms found</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Version History */}
-          {versionHistory.length > 1 && (
-            <div style={{ background: "#f5f5f5", padding: "15px", borderRadius: "6px" }}>
-              <h4 style={{ margin: "0 0 10px 0" }}>⏱️ Version History</h4>
-              <div style={{ fontSize: "11px", maxHeight: "200px", overflowY: "auto" }}>
-                {versionHistory.map((version, i) => (
-                  <button
-                    key={i}
-                    onClick={() => restoreVersion(version)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      padding: "8px",
-                      marginBottom: "5px",
-                      background: "#fff",
-                      border: "1px solid #ddd",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      fontSize: "11px"
-                    }}
-                  >
-                    {version.timestamp.toLocaleTimeString()}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
