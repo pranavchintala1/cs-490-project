@@ -38,11 +38,11 @@ class JobsAPI {
     uploadCompanyImage(jobId, file) {
         const formData = new FormData();
         formData.append("media", file);
-        return api.post(`${BASE_RULE}/upload-company-image?job_id=${jobId}`);
+        return api.post(`${BASE_URL}/upload-company-image?job_id=${jobId}`);
     }
 
     downloadCompanyImage(jobId) {
-        return api.post(`${BASE_RULE}/upload-company-image?job_id=${jobId}`);
+        return api.post(`${BASE_URL}/upload-company-image?job_id=${jobId}`);
     }
 }
 
