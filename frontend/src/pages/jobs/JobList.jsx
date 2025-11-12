@@ -14,6 +14,7 @@ import JobCard from "./JobCard";
 import { DeadlineWidget, DeadlineCalendar, DeadlineReminderModal } from "./DeadlineComponents";
 import JobsAPI from "../../api/jobs";
 import ProfilesAPI from "../../api/profiles";
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 export default function JobList() {
   const [jobs, setJobs] = useState([]);
@@ -588,20 +589,16 @@ export default function JobList() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto", textAlign: "center" }}>
-          <h1
-            style={{
-            margin: 0,
-            color: '#ffffff',
-            fontWeight: 700,
-            fontSize: '2.5rem',
-            fontFamily: '"Playfair Display", serif',
-            WebkitTextFillColor: '#ffffff', // ensures true white text, overrides Bootstrap
-            }}
-          >
-          Job Opportunities Tracker
+      <div className="dashboard-gradient min-vh-100 py-4">
+        <Container>
+          <h1 className="text-center text-white fw-bold mb-5 display-4">
+            Jobs
           </h1>
-        <p>Loading jobs...</p>
+          <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+            <Spinner animation="border" variant="light" className="mb-3" />
+            <p className="text-white fs-5">Loading Jobs data...</p>
+          </div>
+        </Container>
       </div>
     );
   }

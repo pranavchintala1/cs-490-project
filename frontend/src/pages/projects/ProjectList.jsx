@@ -3,6 +3,7 @@ import ProjectForm from "./ProjectForm";
 import ProjectCard from "./ProjectCard";
 import ProjectsAPI from "../../api/projects";
 import { useLocation } from "react-router-dom";
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
@@ -226,20 +227,16 @@ export default function ProjectsList() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto", textAlign: "center" }}>
-          <h1
-            style={{
-            margin: 0,
-            color: '#ffffff',
-            fontWeight: 700,
-            fontSize: '2.5rem',
-            fontFamily: '"Playfair Display", serif',
-            WebkitTextFillColor: '#ffffff', // ensures true white text, overrides Bootstrap
-            }}
-          >
-          🚀 Special Projects
+      <div className="dashboard-gradient min-vh-100 py-4">
+        <Container>
+          <h1 className="text-center text-white fw-bold mb-5 display-4">
+            Special Projects
           </h1>
-        <p>Loading projects...</p>
+          <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+            <Spinner animation="border" variant="light" className="mb-3" />
+            <p className="text-white fs-5">Loading Special Projects data...</p>
+          </div>
+        </Container>
       </div>
     );
   }
