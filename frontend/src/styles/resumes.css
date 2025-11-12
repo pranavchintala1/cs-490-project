@@ -2342,3 +2342,99 @@ h1, h2 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== TEMPLATE-SPECIFIC LAYOUT STYLES ===== */
+
+/* SIDEBAR-MODERN: Sidebar + main content layout */
+.resume-preview.template-sidebar-modern .sidebar-column {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 6px;
+}
+
+.resume-preview.template-sidebar-modern .sidebar-column .resume-section {
+  margin-bottom: 15px;
+}
+
+.resume-preview.template-sidebar-modern .sidebar-column .section-heading {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.resume-preview.template-sidebar-modern .main-column {
+  padding-left: 10px;
+}
+
+/* TWO-COLUMN: Equal columns layout */
+.resume-preview.template-two-column .left-column {
+  padding-right: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.resume-preview.template-two-column .right-column {
+  padding-left: 10px;
+}
+
+.resume-preview.template-two-column .left-column .resume-section,
+.resume-preview.template-two-column .right-column .resume-section {
+  margin-bottom: 12px;
+}
+
+/* MODERN-GRADIENT: Gradient divider accent */
+.resume-preview.template-modern-gradient .gradient-divider {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.resume-preview.template-modern-gradient .section-heading {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* BOLD-CREATIVE: Bold colored header */
+.resume-preview.template-bold-creative .creative-header {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.resume-preview.template-bold-creative .creative-header .resume-name {
+  color: white;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.resume-preview.template-bold-creative .creative-header .contact-line {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+}
+
+.resume-preview.template-bold-creative .creative-header .separator {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.resume-preview.template-bold-creative .section-heading {
+  border-left: 4px solid;
+  padding-left: 10px;
+  font-weight: 600;
+}
+
+/* Responsive adjustments for column layouts */
+@media (max-width: 768px) {
+  .resume-preview.template-sidebar-modern > div,
+  .resume-preview.template-two-column > div {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px !important;
+  }
+
+  .resume-preview.template-sidebar-modern .sidebar-column,
+  .resume-preview.template-two-column .left-column {
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 15px;
+  }
+
+  .resume-preview.template-two-column .right-column {
+    border-left: none;
+    padding-left: 0;
+  }
+}

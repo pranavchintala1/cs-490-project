@@ -16,7 +16,7 @@ export default function ResumePreview({ resume, onSectionReorder }) {
     return <div className="resume-preview-empty">No resume data</div>;
   }
 
-  const { contact, summary, experience, skills, education, colors, fonts, template, sections } = resume;
+  const { contact, summary, experience, skills, education, colors, fonts, template, templateId, sections } = resume;
 
   // Apply custom colors and fonts if provided
   const styles = {
@@ -252,43 +252,161 @@ export default function ResumePreview({ resume, onSectionReorder }) {
     </>
   );
 
-  // CHRONOLOGICAL TEMPLATE: Traditional format with experience first (current Harvard style)
-  const renderChronological = () => {
+  // PROFESSIONAL TEMPLATE: Clean and traditional business style
+  const renderProfessional = () => {
     const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
   };
 
-  // FUNCTIONAL TEMPLATE: Skills-focused, minimal experience listing
-  const renderFunctional = () => {
-    const defaultOrder = ['contact', 'summary', 'skills', 'experience', 'education'];
+  // MODERN TEMPLATE: Sleek, contemporary design
+  const renderModern = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
   };
 
-  // HYBRID TEMPLATE: Balance between skills and experience
-  const renderHybrid = () => {
-    const defaultOrder = ['contact', 'summary', 'skills', 'experience', 'education'];
+  // MINIMAL TEMPLATE: Ultra-clean and space-efficient
+  const renderMinimal = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
+  };
+
+  // CREATIVE TEMPLATE: Colorful and visually engaging
+  const renderCreative = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return renderSectionsByOrder(sectionOrder);
+  };
+
+  // TECHNICAL TEMPLATE: Code-inspired and developer-friendly
+  const renderTechnical = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return renderSectionsByOrder(sectionOrder);
+  };
+
+  // SIDEBAR-MODERN TEMPLATE: Sidebar layout with main content
+  const renderSidebarModern = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '30% 70%', gap: '20px' }}>
+        <div className="sidebar-column">
+          {renderContactInfo()}
+          {renderSectionsByOrder(['skills'])}
+        </div>
+        <div className="main-column">
+          {renderSectionsByOrder(sectionOrder.filter(s => s !== 'contact' && s !== 'skills'))}
+        </div>
+      </div>
+    );
+  };
+
+  // TWO-COLUMN TEMPLATE: Equal two-column layout
+  const renderTwoColumn = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    const leftSections = ['contact', 'summary', 'skills'];
+    const rightSections = ['experience', 'education'];
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div className="left-column">
+          {renderSectionsByOrder(sectionOrder.filter(s => leftSections.includes(s)))}
+        </div>
+        <div className="right-column">
+          {renderSectionsByOrder(sectionOrder.filter(s => rightSections.includes(s)))}
+        </div>
+      </div>
+    );
+  };
+
+  // MODERN-GRADIENT TEMPLATE: Modern with accent highlights
+  const renderModernGradient = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return (
+      <div className="modern-gradient-layout">
+        {renderContactInfo()}
+        <div className="gradient-divider" style={{
+          height: '3px',
+          background: `linear-gradient(90deg, ${colors?.primary || '#667eea'}, ${colors?.accent || '#764ba2'})`,
+          margin: '15px 0'
+        }} />
+        {renderSectionsByOrder(sectionOrder.filter(s => s !== 'contact'))}
+      </div>
+    );
+  };
+
+  // BOLD-CREATIVE TEMPLATE: Creative with bold accents
+  const renderBoldCreative = () => {
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
+    return (
+      <div className="bold-creative-layout">
+        <div className="creative-header" style={{
+          backgroundColor: colors?.accent || '#ff6b6b',
+          padding: '20px',
+          color: 'white',
+          borderRadius: '8px',
+          marginBottom: '20px'
+        }}>
+          {renderContactInfoContent()}
+        </div>
+        {renderSectionsByOrder(sectionOrder.filter(s => s !== 'contact'))}
+      </div>
+    );
   };
 
   // Select which template to render
   const getTemplateContent = () => {
+    // Map new template IDs to dedicated render functions with distinct layouts
+    const templateRenderMap = {
+      'sidebar-modern': renderSidebarModern,    // Sidebar layout with main content
+      'two-column': renderTwoColumn,            // Two-column layout
+      'minimalist-clean': renderMinimal,        // Ultra-clean, minimal spacing
+      'modern-gradient': renderModernGradient,  // Modern with gradient divider
+      'academic-clean': renderProfessional,     // Professional academic style
+      'bold-creative': renderBoldCreative,      // Creative with bold header
+      'compact-dense': renderMinimal,           // Compact, minimal layout
+    };
+
+    // Use template-specific render function if available
+    if (templateId && templateRenderMap[templateId]) {
+      const renderFunc = templateRenderMap[templateId];
+      return renderFunc();
+    }
+
+    // For old template field (backward compatibility)
     switch (template?.toLowerCase()) {
-      case 'functional':
-        return renderFunctional();
-      case 'hybrid':
-        return renderHybrid();
+      case 'professional':
+        return renderProfessional();
+      case 'modern':
+        return renderModern();
+      case 'minimal':
+        return renderMinimal();
+      case 'creative':
+        return renderCreative();
+      case 'technical':
+        return renderTechnical();
       case 'chronological':
+      case 'functional':
+      case 'hybrid':
+        return renderProfessional();
       default:
-        return renderChronological();
+        return renderProfessional();
     }
   };
 
+  // Use new templateId if available, otherwise fall back to old template field for backward compatibility
+  const templateClass = templateId
+    ? templateId.toLowerCase()
+    : template?.toLowerCase() || 'professional';
+
   return (
     <div className="resume-preview-container">
-      <div className="resume-preview" style={styles}>
+      <div className={`resume-preview template-${templateClass}`} style={styles}>
         {getTemplateContent()}
       </div>
     </div>
