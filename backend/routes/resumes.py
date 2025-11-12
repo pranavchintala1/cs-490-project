@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pymongo.errors import DuplicateKeyError
 
 from mongo.resumes_dao import resumes_dao
 from sessions.session_authorizer import authorize
 from schema.Resume import Resume, ResumeVersion, ResumeFeedback, ResumeShare
+from services.resume_validator import ResumeValidator
+from services.ai_generator import AIGenerator
 
 resumes_router = APIRouter(prefix = "/resumes")
 
@@ -134,6 +136,239 @@ async def set_default_resume(resume_id: str, uuid: str = Depends(authorize)):
     else:
         return {"detail": "Successfully set default resume"}
 
+# RESUME VALIDATION
+@resumes_router.post("/{resume_id}/validate", tags = ["resumes"])
+async def validate_resume(resume_id: str, uuid: str = Depends(authorize)):
+    """
+    Comprehensive resume validation and ATS scoring
+    Related to UC-053: Resume Preview and Validation
+
+    Returns:
+    {
+        valid: bool,
+        score: 0-100 (overall validation score),
+        ats_score: 0-100 (ATS compatibility score),
+        errors: [critical issues],
+        warnings: [non-critical issues],
+        suggestions: [improvement recommendations],
+        missing_sections: [incomplete sections],
+        metrics: {word_count, character_count, page estimate, etc},
+        summary: readable summary
+    }
+    """
+    try:
+        # Fetch resume to verify ownership
+        resume = await resumes_dao.get_resume(resume_id)
+
+        if not resume:
+            raise HTTPException(404, "Resume not found")
+
+        # Verify ownership
+        if resume.get("uuid") != uuid:
+            raise HTTPException(403, "Not authorized to access this resume")
+
+        # Validate resume
+        validation_result = ResumeValidator.validate_resume(resume)
+
+        return validation_result
+
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[Resume Validation] Error: {error_msg}")
+        raise HTTPException(500, f"Validation error: {error_msg}")
+
+# ============================================
+# AI-POWERED RESUME FEATURES
+# ============================================
+
+# UC-047: GENERATE RESUME CONTENT
+@resumes_router.post("/{resume_id}/generate-content", tags = ["resumes"])
+async def generate_resume_content(resume_id: str, request: Request, uuid: str = Depends(authorize)):
+    """
+    UC-047: Generate AI resume content based on job posting
+
+    Request body:
+    {
+        'job_posting': {
+            'title': str,
+            'description': str,
+            'requirements': str
+        }
+    }
+
+    Returns:
+    {
+        'generated_summary': str,
+        'generated_bullets': [str],
+        'suggested_skills': [str],
+        'relevance_score': int,
+        'keywords_found': [str]
+    }
+    """
+    try:
+        # Fetch resume to verify ownership
+        resume = await resumes_dao.get_resume(resume_id)
+
+        if not resume:
+            raise HTTPException(404, "Resume not found")
+
+        # Verify ownership
+        if resume.get("uuid") != uuid:
+            raise HTTPException(403, "Not authorized to access this resume")
+
+        # Get job posting from request body
+        try:
+            body = await request.json()
+            job_posting = body.get("job_posting", {})
+
+            if not job_posting or not job_posting.get("title"):
+                raise HTTPException(400, "Job posting with title is required")
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(400, f"Invalid request body: {str(e)}")
+
+        # Generate content using AI
+        result = AIGenerator.generate_ai_content(resume, job_posting)
+
+        return result
+
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[AI Generate Content] Error: {error_msg}")
+        raise HTTPException(500, f"Content generation error: {error_msg}")
+
+
+# UC-049: OPTIMIZE SKILLS
+@resumes_router.post("/{resume_id}/optimize-skills", tags = ["resumes"])
+async def optimize_resume_skills(resume_id: str, request: Request, uuid: str = Depends(authorize)):
+    """
+    UC-049: Optimize resume skills based on job posting
+
+    Request body:
+    {
+        'job_posting': {
+            'title': str,
+            'description': str,
+            'requirements': str
+        }
+    }
+
+    Returns:
+    {
+        'skills_to_emphasize': [str],
+        'recommended_skills': [str],
+        'missing_skills': [str],
+        'optimization_score': int,
+        'total_match': str
+    }
+    """
+    try:
+        # Fetch resume to verify ownership
+        resume = await resumes_dao.get_resume(resume_id)
+
+        if not resume:
+            raise HTTPException(404, "Resume not found")
+
+        # Verify ownership
+        if resume.get("uuid") != uuid:
+            raise HTTPException(403, "Not authorized to access this resume")
+
+        # Get job posting from request body
+        try:
+            body = await request.json()
+            job_posting = body.get("job_posting", {})
+
+            if not job_posting or not job_posting.get("title"):
+                raise HTTPException(400, "Job posting with title is required")
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(400, f"Invalid request body: {str(e)}")
+
+        # Optimize skills using AI
+        result = AIGenerator.optimize_skills(resume, job_posting)
+
+        return result
+
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[AI Optimize Skills] Error: {error_msg}")
+        raise HTTPException(500, f"Skills optimization error: {error_msg}")
+
+
+# UC-050: TAILOR EXPERIENCE
+@resumes_router.post("/{resume_id}/tailor-experience", tags = ["resumes"])
+async def tailor_resume_experience(resume_id: str, request: Request, uuid: str = Depends(authorize)):
+    """
+    UC-050: Generate tailored experience descriptions based on job posting
+
+    Request body:
+    {
+        'job_posting': {
+            'title': str,
+            'description': str,
+            'requirements': str
+        }
+    }
+
+    Returns:
+    {
+        'tailored_experiences': [
+            {
+                'index': int,
+                'original': str,
+                'title': str,
+                'variations': [str],
+                'relevance_score': int,
+                'matched_keywords': [str]
+            }
+        ],
+        'total_experiences': int,
+        'average_relevance': int
+    }
+    """
+    try:
+        # Fetch resume to verify ownership
+        resume = await resumes_dao.get_resume(resume_id)
+
+        if not resume:
+            raise HTTPException(404, "Resume not found")
+
+        # Verify ownership
+        if resume.get("uuid") != uuid:
+            raise HTTPException(403, "Not authorized to access this resume")
+
+        # Get job posting from request body
+        try:
+            body = await request.json()
+            job_posting = body.get("job_posting", {})
+
+            if not job_posting or not job_posting.get("title"):
+                raise HTTPException(400, "Job posting with title is required")
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(400, f"Invalid request body: {str(e)}")
+
+        # Tailor experience using AI
+        result = AIGenerator.tailor_experience(resume, job_posting)
+
+        return result
+
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[AI Tailor Experience] Error: {error_msg}")
+        raise HTTPException(500, f"Experience tailoring error: {error_msg}")
+
 # RESUME VERSIONS
 @resumes_router.post("/{resume_id}/versions", tags = ["resumes"])
 async def create_resume_version(resume_id: str, version: ResumeVersion, uuid: str = Depends(authorize)):
@@ -177,6 +412,23 @@ async def delete_resume_version(resume_id: str, version_id: str, uuid: str = Dep
         raise HTTPException(400, "Version not found")
     else:
         return {"detail": "Successfully deleted version"}
+
+@resumes_router.put("/{resume_id}/versions/{version_id}/rename", tags = ["resumes"])
+async def rename_resume_version(resume_id: str, version_id: str, name: str, description: str = None, uuid: str = Depends(authorize)):
+    """Rename a resume version"""
+    try:
+        if not name or not name.strip():
+            raise HTTPException(400, "Version name is required")
+        updated = await resumes_dao.rename_resume_version(version_id, name.strip(), description)
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        raise HTTPException(500, "Encountered internal service error")
+
+    if updated == 0:
+        raise HTTPException(400, "Version not found")
+    else:
+        return {"detail": "Successfully renamed version"}
 
 # RESUME FEEDBACK
 @resumes_router.post("/{resume_id}/feedback", tags = ["resumes"])
