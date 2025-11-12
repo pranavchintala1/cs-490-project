@@ -21,7 +21,6 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
   const [id, setId] = useState(null);
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
   const [scrapeError, setScrapeError] = useState("");
-  const [companyImageFile, setCompanyImageFile] = useState(null);
 
   useEffect(() => {
     if (editJob) {
@@ -63,7 +62,6 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
     setInterviewNotes("");
     setId(null);
     setScrapeError("");
-    setCompanyImageFile(null);
   };
 
   const validateUrl = (urlString) => {
@@ -95,6 +93,13 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       const data = response.data;
       
       console.log("Scraped data:", data);
+      console.log("Has company_data:", !!data.company_data);
+      if (data.company_data) {
+        console.log("Has image:", !!data.company_data.image);
+        if (data.company_data.image) {
+          console.log("Image length:", data.company_data.image.length);
+        }
+      }
 
       // Set basic job fields - company is a STRING, company_data is an OBJECT
       if (data.title) setTitle(data.title);
@@ -113,23 +118,17 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
         else setJobType("Full-Time");
       }
       
-      // Set industry - prioritize from main data, fallback to company_data
-      if (data.industry) {
-        setIndustry(data.industry);
-      } else if (data.company_data?.industry) {
-        setIndustry(data.company_data.industry);
-      }
-      
       if (data.description) setDescription(data.description.substring(0, 2000));
       
-      // Store the company_data object (with size, location, website, etc.)
+      // Store the company_data object (with size, location, website, IMAGE, etc.)
       if (data.company_data) {
+        console.log("Setting company data with image:", !!data.company_data.image);
         setCompanyData(data.company_data);
       }
    
       setUrl(importUrl.trim());
       setScrapeError("");
-      alert("Job imported successfully! Company information has been loaded.");
+      alert("Job imported successfully! Please enter missing details manually.");
     } catch (error) {
       const errorMessage =
         error.response?.data?.detail ||
@@ -173,8 +172,16 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       contacts: contacts.trim() || undefined,
       salary_notes: salaryNotes.trim() || undefined,
       interview_notes: interviewNotes.trim() || undefined,
-      company_data: companyData || undefined,
+      company_data: companyData || undefined, // This includes the image!
     };
+
+    console.log("Submitting job data:", {
+      ...jobData,
+      company_data: jobData.company_data ? {
+        ...jobData.company_data,
+        image: jobData.company_data.image ? `[${jobData.company_data.image.length} chars]` : null
+      } : null
+    });
 
     try {
       if (editJob) {
@@ -188,40 +195,9 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
         }
         
         await editJob.submit(jobData);
-        
-        // Upload company image if there's a new file and we have company data with image
-        if (companyImageFile && id) {
-          try {
-            await JobsAPI.uploadCompanyImage(id, companyImageFile);
-          } catch (err) {
-            console.error("Failed to upload company image:", err);
-          }
-        }
       } else {
         jobData.status_history = [[status, now]];
-        
-        // Add job first to get the job ID
-        const result = await addJob(jobData);
-        
-        // If we have a company image from scraping, upload it
-        if (companyData?.image && result?.id) {
-          try {
-            // Convert base64 to blob
-            const base64Data = companyData.image;
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-              byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'image/png' });
-            const file = new File([blob], `${company}_logo.png`, { type: 'image/png' });
-            
-            await JobsAPI.uploadCompanyImage(result.id, file);
-          } catch (err) {
-            console.error("Failed to upload scraped company image:", err);
-          }
-        }
+        await addJob(jobData);
       }
 
       resetForm();
@@ -284,7 +260,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           🔗 Quick Import from URL
         </h3>
         <p style={{ fontSize: "13px", color: "#666", marginBottom: "12px" }}>
-          Paste a job posting URL from Indeed to auto-fill the form (includes company info!)
+          Paste a job posting URL from Indeed to auto-fill the form (includes company logo!)
         </p>
 
         <label style={labelStyle}>Import URL</label>
@@ -367,7 +343,10 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
                 src={`data:image/png;base64,${companyData.image}`}
                 alt="Company logo"
                 style={{ maxWidth: "150px", maxHeight: "80px", objectFit: "contain", borderRadius: "4px" }}
-                onError={(e) => { e.target.style.display = 'none'; }}
+                onError={(e) => { 
+                  console.error("Failed to load company image");
+                  e.target.style.display = 'none'; 
+                }}
               />
             </div>
           )}
@@ -389,7 +368,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           </div>
           
           <p style={{ fontSize: "12px", color: "#666", marginTop: "12px", marginBottom: 0 }}>
-            💡 This company information will be saved with your job application
+            💡 This company information (including logo) will be saved with your job application
           </p>
         </div>
       )}

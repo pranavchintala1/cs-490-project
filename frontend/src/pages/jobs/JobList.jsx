@@ -95,47 +95,68 @@ export default function JobList() {
   }, [jobs, autoArchiveEnabled, autoArchiveDays]);
 
 
-  const loadJobs = async () => {
+// Replace your loadJobs function with this fixed version:
+
+const loadJobs = async () => {
   try {
     setLoading(true);
     const res = await JobsAPI.getAll();
     
-    const transformedJobs = (res.data || []).map(job => ({
-      id: job._id,
-      title: job.title,
-      company: typeof job.company === 'string' ? job.company : job.company?.name || 'Unknown Company',
-      companyData: job.company_data || null,
-      location: job.location,
-      salary: job.salary,
-      url: job.url,
-      deadline: job.deadline,
-      industry: job.industry,
-      job_type: job.job_type,
-      jobType: job.job_type,
-      description: job.description,
-      status: job.status,
-      createdAt: job.date_created || job.createdAt,
-      updatedAt: job.date_updated || job.updatedAt,
-      status_history: job.status_history || [],
-      statusHistory: (job.status_history || []).map(([status, timestamp]) => ({
-        status,
-        timestamp
-      })),
-      notes: job.notes,
-      contacts: job.contacts,
-      salary_notes: job.salary_notes,
-      salaryNotes: job.salary_notes,
-      interview_notes: job.interview_notes,
-      interviewNotes: job.interview_notes,
-      archived: job.archived || false,
-      archiveReason: job.archive_reason,
-      archiveDate: job.archive_date,
-      reminderDays: job.reminderDays || 3,
-      emailReminder: job.emailReminder !== false,
-      reminderEmail: job.reminderEmail
-    }));
+    console.log("Raw API response:", res.data); // DEBUG
     
-    console.log("Loaded jobs with company data:", transformedJobs.filter(j => j.companyData));
+    const transformedJobs = (res.data || []).map(job => {
+      console.log("Processing job:", job.title, "has company_data:", !!job.company_data); // DEBUG
+      
+      return {
+        id: job._id,
+        title: job.title,
+        company: typeof job.company === 'string' ? job.company : job.company?.name || 'Unknown Company',
+        companyData: job.company_data || null, // This should map company_data from backend
+        location: job.location,
+        salary: job.salary,
+        url: job.url,
+        deadline: job.deadline,
+        industry: job.industry,
+        job_type: job.job_type,
+        jobType: job.job_type,
+        description: job.description,
+        status: job.status,
+        createdAt: job.date_created || job.createdAt,
+        updatedAt: job.date_updated || job.updatedAt,
+        status_history: job.status_history || [],
+        statusHistory: (job.status_history || []).map(([status, timestamp]) => ({
+          status,
+          timestamp
+        })),
+        notes: job.notes,
+        contacts: job.contacts,
+        salary_notes: job.salary_notes,
+        salaryNotes: job.salary_notes,
+        interview_notes: job.interview_notes,
+        interviewNotes: job.interview_notes,
+        archived: job.archived || false,
+        archiveReason: job.archive_reason,
+        archiveDate: job.archive_date,
+        reminderDays: job.reminderDays || 3,
+        emailReminder: job.emailReminder !== false,
+        reminderEmail: job.reminderEmail
+      };
+    });
+    
+    console.log("Transformed jobs:", transformedJobs.length);
+    console.log("Jobs with companyData:", transformedJobs.filter(j => j.companyData).length);
+    console.log("Jobs with images:", transformedJobs.filter(j => j.companyData?.image).length);
+    
+    // Log first job with company data for debugging
+    const firstWithCompanyData = transformedJobs.find(j => j.companyData);
+    if (firstWithCompanyData) {
+      console.log("Sample job with company data:", {
+        title: firstWithCompanyData.title,
+        companyData: firstWithCompanyData.companyData,
+        hasImage: !!firstWithCompanyData.companyData?.image,
+        imageLength: firstWithCompanyData.companyData?.image?.length
+      });
+    }
     
     setJobs(transformedJobs);
   } catch (error) {
@@ -145,7 +166,6 @@ export default function JobList() {
     setLoading(false);
   }
 };
-
 
   // Auto-archive function
   const checkAutoArchive = async () => {
