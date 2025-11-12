@@ -1,5 +1,12 @@
 from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from mongo/.env file
+env_path = Path(__file__).parent / 'mongo' / '.env'
+load_dotenv(dotenv_path=env_path)
 
 from routes.auth import auth_router
 from routes.profiles import profiles_router
