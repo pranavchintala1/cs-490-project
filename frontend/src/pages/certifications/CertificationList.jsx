@@ -3,6 +3,7 @@ import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
 import CertificationsAPI from "../../api/certifications";
 import { useLocation } from "react-router-dom";
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
@@ -191,22 +192,74 @@ export default function CertificationList() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-        <h1 style={{ margin: 0, color: "#333" }}>📜 Certifications</h1>
-        <p>Loading certifications...</p>
+      <div className="dashboard-gradient min-vh-100 py-4">
+        <Container>
+          <h1 className="text-center text-white fw-bold mb-5 display-4">
+            Certifications
+          </h1>
+          <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+            <Spinner animation="border" variant="light" className="mb-3" />
+            <p className="text-white fs-5">Loading Certifications data...</p>
+          </div>
+        </Container>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{
+    <div
+      style={{
+        background: "linear-gradient(135deg, #005e9e, #00c28a)",
+        minHeight: "100vh",
+        width: "100%",
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        padding: "40px 20px",
+        boxSizing: "border-box",
+        }}
+    >
+
+    <div style={{ width: "100%", maxWidth: "1200px", }}>
+
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column", // stacks title & button vertically on small screens
         alignItems: "center",
-        marginBottom: "20px"
-      }}>
-        <h1 style={{ margin: 0, color: "#333" }}>📜 Certifications</h1>
+        flexWrap: "wrap",
+        textAlign: "center",
+        gap: "15px", // adds clean spacing
+        marginBottom: "30px",
+      }}
+    >
+      
+    {/*Wrap text */}
+    <div style={{ display: "inline-block" }}>
+      <h1
+        style={{
+          margin: 0,
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+          fontFamily: '"Playfair Display", serif',
+          WebkitTextFillColor: "#ffffff", // ensures true white text
+        }}
+      >
+        📜 Certifications
+      </h1>
+
+      {/* underline centered under text */}
+      <div
+        style={{
+          width: "120px", // you can tweak this 
+          height: "4px",
+          margin: "6px auto 0",
+          borderRadius: "2px",
+          background: "linear-gradient(90deg, #00c28a, #005e9e)", // green → blue
+        }}
+      />
+    </div>
         <button
           onClick={() => {
             setShowForm(!showForm);
@@ -291,6 +344,7 @@ export default function CertificationList() {
           )}
         </>
       )}
+    </div>
     </div>
   );
 }

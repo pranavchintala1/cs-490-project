@@ -92,7 +92,13 @@ export default function SkillForm({ addSkill, existingSkills }) {
       <h2 style={{ marginTop: 0, marginBottom: "16px", color: "#333" }}>➕ Add New Skill</h2>
       
       <form onSubmit={handleSubmit}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: "12px", alignItems: "start" }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", // responsive grid
+          gap: "12px",
+          alignItems: "start",
+          justifyContent: "center",
+          }}>
           <div style={{ position: "relative" }}>
             <input
               placeholder="Skill name (e.g., JavaScript, Leadership)"

@@ -1,175 +1,310 @@
-/* Dashboard.css */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@400;500;600&display=swap');
 
-/* Custom gradients and backgrounds */
-.dashboard-gradient {
-  background: linear-gradient(90deg, #003366, #00A67A);
-}
-
+.dashboard-gradient,
 .dashboard-bg {
-  background-color: #001E3C;
-}
-
-/* Dashboard cards - FIXED HEIGHT with scrolling */
-.dashboard-card {
-  height: 400px;
-  background-color: #F9FAFC;
-  border: 1px solid #D1D5DB;
-  border-radius: 12px;
-}
-
-.card-content {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
-  overflow-y: auto;
-  min-height: 0; /* Important for flex children to allow scrolling */
-}
-
-.card-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.card-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.card-content::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
-  border-radius: 4px;
-}
-
-/* Card title links with hover effect */
-.card-title-link {
-  color: #003366 !important;
-  transition: color 0.2s ease;
-}
-
-.card-title-link:hover {
-  color: #00A67A !important;
-}
-
-/* Dashboard buttons */
-.dashboard-btn {
-  background-color: #003366;
-  border-color: #003366;
-  transition: background-color 0.2s ease;
-}
-
-.dashboard-btn:hover {
-  background-color: #00A67A;
-  border-color: #00A67A;
-}
-
-/* Status indicator */
-.status-indicator {
-  width: 20px;
-  height: 20px;
+  background: linear-gradient(135deg, #005e9e, #00c28a);
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  color: #222;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: help;
-  flex-shrink: 0;
+  flex-direction: column;
 }
 
-.fill-success {
-  fill: #10B981;
-  stroke: #10B981;
-  stroke-width: 1;
-}
-
-.fill-warning {
-  fill: #F59E0B;
-  stroke: #F59E0B;
-  stroke-width: 1;
-}
-
-.fill-danger {
-  fill: #EF4444;
-  stroke: #EF4444;
-  stroke-width: 1;
-}
-
-/* Header section with centered title and positioned export button */
+/* header */
 .dashboard-header-container {
   position: relative;
+  display: flex;
+  justify-content: center; /* Center the title */
+  align-items: center;
   text-align: center;
-  margin-bottom: 2rem;
-  padding: 0 1rem;
+  margin-bottom: 2.5rem;
+  margin-top: 1rem;
 }
 
+.dashboard-header-container h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 3rem;
+  color: #ffffff;
+  text-align: center;
+  width: 100%;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+/* underline under the title */
+.dashboard-header-container h1::after {
+  content: "";
+  display: block;
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, #00c28a, #005e9e);
+  border-radius: 3px;
+  margin: 0.4rem auto 0;
+}
+
+/* Export Summary button (top-right corner) */
 .dashboard-export-btn {
-  position: absolute;
+  position: absolute !important;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+  background: #ffffff;
+  color: #005e9e;
+  font-weight: 600;
+  border-radius: 25px;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 0.45rem 1rem;
+  transition: all 0.3s ease;
 }
 
-/* Responsive adjustments for header */
-@media (max-width: 768px) {
-  .dashboard-header-container {
-    text-align: left;
-  }
-  
-  .dashboard-export-btn {
-    position: static;
-    transform: none;
-    margin-top: 1rem;
-    width: 100%;
-  }
+.dashboard-export-btn:hover {
+  background: linear-gradient(90deg, #00c28a, #005e9e);
+  color: #fff;
+  transform: translateY(-50%) scale(1.05);
 }
 
-/* Sticky sidebar - FULL HEIGHT below navbar with proper top spacing */
+/* progress tracker */
+.progress-tracker {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* dashboard cards */
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease-in-out;
+  height: 100%;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+/* Card title links */
+.card-title-link {
+  color: #005e9e;
+  font-weight: 600;
+  transition: color 0.25s ease;
+}
+
+.card-title-link:hover {
+  color: #00c28a;
+  text-decoration: none;
+}
+
+/* Card content scrollable area */
+.card-content {
+  max-height: 250px;
+  overflow-y: auto;
+  font-size: 0.95rem;
+}
+
+.card-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.card-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+
+/* Add button */
+.dashboard-btn {
+  background-color: #005e9e;
+  border: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.dashboard-btn:hover {
+  background-color: #00c28a;
+}
+
+/* Status indicator (left dot) */
+.status-indicator {
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fill-success {
+  fill: #00c28a;
+}
+
+.fill-warning {
+  fill: #ffc107;
+}
+
+.fill-danger {
+  fill: #dc3545;
+}
+
+/* sidebars */
 .sidebar-sticky {
   position: sticky;
-  top: 96px; /* Navbar height (56px) + more spacing (40px) */
-  height: calc(100vh - 116px); /* Full viewport minus navbar and spacing */
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  top: 90px; /* adjust to leave room for header or progress bar */
+  align-self: flex-start;
+  z-index: 5;
 }
 
-/* Sidebar cards - each takes half the height */
+
 .sidebar-card-top,
 .sidebar-card-bottom {
-  flex: 1;
-  background-color: #F9FAFC;
-  border: 1px solid #D1D5DB;
-  border-radius: 12px;
-  min-height: 0; /* Allow flex children to shrink */
-  overflow: hidden; /* Prevent content overflow */
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 1.25rem;
 }
 
-/* Responsive spacing for narrower screens */
-@media (max-width: 991px) {
+.sidebar-card-top:hover,
+.sidebar-card-bottom:hover {
+  transform: translateY(-1px);
+}
+
+/* icons*/
+.category-icon {
+  color: #005e9e;
+  font-size: 1.25rem;
+  vertical-align: middle;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.dashboard-card:hover .category-icon {
+  color: #00c28a;
+  transform: scale(1.1);
+}
+
+/* responsive portion */
+@media (max-width: 992px) {
+  .dashboard-header-container h1 {
+    font-size: 2.3rem;
+  }
+
+  .dashboard-export-btn {
+    position: static !important;
+    transform: none;
+    margin-top: 1rem;
+    align-self: center;
+  }
+
+  .dashboard-header-container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-card {
+    font-size: 0.9rem;
+  }
+
+  .dashboard-export-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+.form-section-divider {
+  width: 85%;
+  height: 3px;
+  margin: 2.5rem auto;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #00c28a, #005e9e, #00c28a);
+  background-size: 200% 100%;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+
+@media (max-width: 992px) {
   .sidebar-sticky {
-    position: static;
-    height: auto;
     margin-top: 2rem;
   }
-  
-  .sidebar-card-top,
+
+  .sidebar-card-top {
+    margin-top: 1.5rem;
+  }
+
   .sidebar-card-bottom {
-    min-height: 400px;
+    margin-top: 1.2rem;
   }
 }
 
-/* Add spacing between cards on smaller screens */
-@media (max-width: 767px) {
-  .dashboard-card {
-    margin-bottom: 1.5rem;
-  }
+/* ===== Career Journey Section (High-Contrast Redesign) ===== */
+.career-section {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 2.5rem 3rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  margin-top: 3rem;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
 }
 
-/* Bootstrap customization for primary color */
-:root {
-  --bs-primary: #003366;
-  --bs-primary-rgb: 0, 51, 102;
+.career-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary {
-  --bs-btn-bg: #003366;
-  --bs-btn-border-color: #003366;
-  --bs-btn-hover-bg: #00A67A;
-  --bs-btn-hover-border-color: #00A67A;
-  --bs-btn-active-bg: #00A67A;
-  --bs-btn-active-border-color: #00A67A;
+/* Section Title */
+.career-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.6rem;
+  color: #2f55d4;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.3px;
+  position: relative;
 }
+
+.career-title::after {
+  content: "";
+  display: block;
+  width: 90px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #00c28a, #005e9e);
+  margin: 0.5rem auto 0;
+}
+
+
+/* Empty timeline message */
+.timeline-card {
+  background: #f3f7fa;
+  border-radius: 10px;
+  padding: 1.2rem;
+  border: 1px solid rgba(0, 94, 158, 0.15);
+  color: #003366;
+  font-weight: 500;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.timeline-placeholder {
+  color: #004c7a;
+  font-size: 0.95rem;
+  opacity: 0.95;
+}
+
+
+
+
+
+
+

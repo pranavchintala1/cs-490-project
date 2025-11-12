@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ResumesAPI from '../../api/resumes';
 import '../../styles/resumes.css';
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 /**
  * ResumeList Component
@@ -102,15 +103,54 @@ export default function ResumeList() {
   };
 
   if (loading) {
-    return <div className="container mt-5"><h2>Loading resumes...</h2></div>;
+    return (
+          <div className="dashboard-gradient min-vh-100 py-4">
+            <Container>
+              <h1 className="text-center text-white fw-bold mb-5 display-4">
+                Resumes
+              </h1>
+              <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+                <Spinner animation="border" variant="light" className="mb-3" />
+                <p className="text-white fs-5">Loading Resume data...</p>
+              </div>
+            </Container>
+          </div>
+        );
   }
 
   return (
+    <div className="dashboard-gradient">
     <div className="container mt-5">
       {error && <div className="alert alert-danger mb-4">{error}</div>}
 
       <div className="resume-list-header">
-        <h1>My Resumes</h1>
+      {/* Group title + underline together */}
+        <div style={{ display: "inline-block" }}>
+          <h1
+            style={{
+            margin: 0,
+            color: "#ffffff",
+            fontWeight: 700,
+            fontSize: "2.5rem",
+            fontFamily: '"Playfair Display", serif',
+            WebkitTextFillColor: "#ffffff", // ensures true white text
+          }}
+        >
+          My Resumes
+        </h1>
+
+        {/* Gradient underline directly under title */}
+        <div
+          style={{
+            width: "90px",
+            height: "4px",
+            margin: "6px auto 0",
+            borderRadius: "2px",
+            background: "linear-gradient(90deg, #00c28a, #005e9e)",
+          }}
+        />
+      </div>
+
         <Link to="/resumes/create" className="btn btn-primary">
           + Create New Resume
         </Link>
@@ -212,6 +252,7 @@ export default function ResumeList() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }
