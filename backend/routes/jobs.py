@@ -33,27 +33,27 @@ def send_deadline_reminder_email(recipient_email: str, job_title: str, company: 
     # Determine urgency level
     if days_until < 0:
         urgency = "OVERDUE"
-        urgency_color = "#f44336"
+        urgency_color = "#dc3545"
         deadline_text = f"This deadline was {abs(days_until)} day(s) ago!"
     elif days_until == 0:
         urgency = "TODAY"
-        urgency_color = "#ff5722"
+        urgency_color = "#fd7e14"
         deadline_text = "This deadline is TODAY!"
     elif days_until == 1:
         urgency = "TOMORROW"
-        urgency_color = "#ff9800"
+        urgency_color = "#ffc107"
         deadline_text = "This deadline is TOMORROW!"
     elif days_until <= 3:
         urgency = "URGENT"
-        urgency_color = "#ff9800"
+        urgency_color = "#ffc107"
         deadline_text = f"Only {days_until} days left!"
     elif days_until <= 7:
         urgency = "THIS WEEK"
-        urgency_color = "#ffc107"
+        urgency_color = "#00bf72"
         deadline_text = f"{days_until} days remaining"
     else:
         urgency = "UPCOMING"
-        urgency_color = "#4caf50"
+        urgency_color = "#008793"
         deadline_text = f"{days_until} days remaining"
     
     # Format deadline date
@@ -86,22 +86,22 @@ This is an automated reminder from your Job Opportunities Tracker.
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #f5f5f5;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px;">
         <tr>
             <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 16px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);">
                     <!-- Header -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 20px; text-align: center;">
-                            <h1 style="margin: 0; color: white; font-size: 28px;">⏰ Deadline Reminder</h1>
+                        <td style="background: linear-gradient(135deg, #004d7a, #008793, #00bf72); padding: 40px 20px; text-align: center;">
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: 700;">⏰ Deadline Reminder</h1>
                         </td>
                     </tr>
                     
                     <!-- Urgency Badge -->
                     <tr>
-                        <td style="padding: 20px; text-align: center;">
-                            <div style="display: inline-block; background-color: {urgency_color}; color: white; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 18px;">
+                        <td style="padding: 30px 20px 20px 20px; text-align: center;">
+                            <div style="display: inline-block; background-color: {urgency_color}; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 18px;">
                                 {urgency}
                             </div>
                             <p style="margin: 15px 0 0 0; font-size: 16px; color: #333; font-weight: 600;">
@@ -112,23 +112,23 @@ This is an automated reminder from your Job Opportunities Tracker.
                     
                     <!-- Job Details -->
                     <tr>
-                        <td style="padding: 0 30px 20px 30px;">
-                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; border-radius: 6px; padding: 20px;">
+                        <td style="padding: 0 30px 30px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; border-radius: 8px; padding: 25px;">
                                 <tr>
                                     <td style="padding: 10px 0;">
-                                        <strong style="color: #666; font-size: 14px;">Position:</strong><br>
-                                        <span style="color: #333; font-size: 18px; font-weight: 600;">{job_title}</span>
+                                        <strong style="color: #6c757d; font-size: 14px;">Position:</strong><br>
+                                        <span style="color: #004d7a; font-size: 18px; font-weight: 600;">{job_title}</span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 10px 0;">
-                                        <strong style="color: #666; font-size: 14px;">Company:</strong><br>
+                                        <strong style="color: #6c757d; font-size: 14px;">Company:</strong><br>
                                         <span style="color: #333; font-size: 16px;">{company}</span>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 10px 0;">
-                                        <strong style="color: #666; font-size: 14px;">Deadline:</strong><br>
+                                        <strong style="color: #6c757d; font-size: 14px;">Deadline:</strong><br>
                                         <span style="color: #333; font-size: 16px;">📅 {formatted_deadline}</span>
                                     </td>
                                 </tr>
@@ -138,9 +138,9 @@ This is an automated reminder from your Job Opportunities Tracker.
                     
                     <!-- CTA Button -->
                     <tr>
-                        <td style="padding: 0 30px 30px 30px; text-align: center;">
-                            <a href="{os.getenv('FRONTEND_URL' + '/', 'http://localhost:3000/')}jobs" 
-                               style="display: inline-block; background-color: #4f8ef7; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
+                        <td style="padding: 0 30px 40px 30px; text-align: center;">
+                            <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/jobs" 
+                               style="display: inline-block; background-color: #00bf72; color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 10px rgba(0, 191, 114, 0.3);">
                                 View in Job Tracker
                             </a>
                         </td>
@@ -148,9 +148,11 @@ This is an automated reminder from your Job Opportunities Tracker.
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="background-color: #f9f9f9; padding: 20px; text-align: center; border-top: 1px solid #e0e0e0;">
-                            <p style="margin: 0; color: #999; font-size: 12px;">
-                                This is an automated reminder from your Job Opportunities Tracker.<br>
+                        <td style="background-color: #f9f9f9; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                            <p style="margin: 0 0 5px 0; color: #6c757d; font-size: 14px;">
+                                This is an automated reminder from your Job Opportunities Tracker
+                            </p>
+                            <p style="margin: 0; color: #ccc; font-size: 12px;">
                                 Don't forget to complete your application!
                             </p>
                         </td>
