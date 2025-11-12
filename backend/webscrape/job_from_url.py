@@ -34,10 +34,6 @@ async def job_from_url(url: str):
     try:
         if ext.domain.lower() == "indeed":
             return await indeed_scrape(html)
-        # elif ext.domain.lower() == "linkedin":
-        #     return await linkedin_scrape(html)
-        # elif ext.domain.lower() == "glassdoor":
-        #     return await glassdoor_scrape(html)
         else:
             raise URLScrapeError("Unsupported domain, please import from a supported website")
     except URLScrapeError:
@@ -48,7 +44,8 @@ async def job_from_url(url: str):
 async def indeed_scrape(html: str) -> dict:
     soup = BeautifulSoup(html, "html.parser")
 
-    title = soup.select_one(".jobsearch-JobInfoHeader-title span").find(text = True, recursive = False)
+    title_span = soup.select_one(".jobsearch-JobInfoHeader-title span")
+    title = title_span.find(text = True, recursive = False) if title_span else None
     company = soup.select_one('[data-testid="jobsearch-CompanyInfoContainer"] a')
     location = soup.select_one('[data-testid="inlineHeader-companyLocation"] div')
 
@@ -102,7 +99,7 @@ async def indeed_company_info(url: str):
 
     inner_text = inner_span.get_text(strip = True) if inner_span else ""
     company_size = outer_span.get_text(strip = True).replace(inner_text, "") if outer_span  else ""
-    comparator = inner_span.find(text = True, recursive = False)
+    comparator = inner_span.find(text = True, recursive = False) if inner_span else ""
 
     # company industry
     industry_div = soup.select_one('li[data-testid="companyInfo-industry"] > div:nth-of-type(2)')
