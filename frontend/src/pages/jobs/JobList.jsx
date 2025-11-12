@@ -13,6 +13,7 @@ import JobPipeline from "./JobPipeline";
 import JobCard from "./JobCard";
 import { DeadlineWidget, DeadlineCalendar, DeadlineReminderModal } from "./DeadlineComponents";
 import JobsAPI from "../../api/jobs";
+import ProfilesAPI from "../../api/profiles";
 
 export default function JobList() {
   const [jobs, setJobs] = useState([]);
@@ -25,11 +26,14 @@ export default function JobList() {
   const [reminderJob, setReminderJob] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   
-  // NEW: Bulk selection states
+  // NEW: User email for reminders
+  const [userEmail, setUserEmail] = useState("");
+  
+  // Bulk selection states
   const [selectedJobIds, setSelectedJobIds] = useState([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
   
-  // NEW: Auto-archive settings
+  // Auto-archive settings
   const [autoArchiveDays, setAutoArchiveDays] = useState(
     parseInt(localStorage.getItem('autoArchiveDays')) || 90
   );
@@ -38,7 +42,7 @@ export default function JobList() {
   );
   const [showSettings, setShowSettings] = useState(false);
   
-  // NEW: Undo state
+  // Undo state
   const [undoStack, setUndoStack] = useState([]);
 
   // Filter states
@@ -57,7 +61,27 @@ export default function JobList() {
     loadJobs();
   }, []);
 
-  // NEW: Auto-archive check on load and periodically
+  // NEW: Fetch user email on component mount
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        const response = await ProfilesAPI.get();
+        
+        if (response && response.data && response.data.email) {
+          setUserEmail(response.data.email);
+          console.log("User email loaded:", response.data.email);
+        } else {
+          console.warn("No email found in user profile");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user email:", error);
+      }
+    };
+    
+    fetchUserEmail();
+  }, []);
+
+  // Auto-archive check on load and periodically
   useEffect(() => {
     if (autoArchiveEnabled) {
       checkAutoArchive();
@@ -97,7 +121,11 @@ export default function JobList() {
         interviewNotes: job.interview_notes,
         archived: job.archived || false,
         archiveReason: job.archive_reason,
-        archiveDate: job.archive_date
+        archiveDate: job.archive_date,
+        // NEW: Email reminder fields
+        reminderDays: job.reminderDays || 3,
+        emailReminder: job.emailReminder !== false,
+        reminderEmail: job.reminderEmail
       }));
       
       setJobs(transformedJobs);
@@ -109,7 +137,7 @@ export default function JobList() {
     }
   };
 
-  // NEW: Auto-archive function
+  // Auto-archive function
   const checkAutoArchive = async () => {
     const today = new Date();
     const jobsToArchive = jobs.filter(job => {
@@ -260,7 +288,7 @@ export default function JobList() {
     }
   };
 
-  // ENHANCED: Archive with undo capability
+  // Archive with undo capability
   const archiveJob = async (id, reason = "", silent = false) => {
     try {
       const jobToArchive = jobs.find(j => j.id === id);
@@ -284,20 +312,20 @@ export default function JobList() {
       
       // Add to undo stack
       if (!silent) {
-  setUndoStack(prev => [...prev, {
-    type: 'archive',
-    job: jobToArchive,
-    timestamp: Date.now()
-  }]);
-  
-  // Show notification with option to undo
-  setTimeout(() => {
-    if (!window.confirm(`✅ Job "${jobToArchive.title}" archived.\n\nClick OK to continue\nClick Cancel to UNDO`)) {
-      restoreJob(id);
-    }
-  }, 100);
-}
-      } catch (error) {
+        setUndoStack(prev => [...prev, {
+          type: 'archive',
+          job: jobToArchive,
+          timestamp: Date.now()
+        }]);
+        
+        // Show notification with option to undo
+        setTimeout(() => {
+          if (!window.confirm(`✅ Job "${jobToArchive.title}" archived.\n\nClick OK to continue\nClick Cancel to UNDO`)) {
+            restoreJob(id);
+          }
+        }, 100);
+      }
+    } catch (error) {
       console.error("Failed to archive job:", error);
       alert(error.response?.data?.detail || "Failed to archive job. Please try again.");
     }
@@ -326,7 +354,7 @@ export default function JobList() {
     }
   };
 
-  // NEW: Bulk archive operations
+  // Bulk archive operations
   const bulkArchive = async () => {
     if (selectedJobIds.length === 0) {
       alert("Please select jobs to archive");
@@ -342,15 +370,15 @@ export default function JobList() {
       }
       
       alert(`✅ Successfully archived ${selectedJobIds.length} job(s)`);
-      window.location.reload();
       setSelectedJobIds([]);
       setShowBulkActions(false);
+      loadJobs();
     } catch (error) {
       alert("Some jobs failed to archive. Please try again.");
     }
   };
 
-  // NEW: Bulk delete operations
+  // Bulk delete operations
   const bulkDelete = async () => {
     if (selectedJobIds.length === 0) {
       alert("Please select jobs to delete");
@@ -375,7 +403,45 @@ export default function JobList() {
     }
   };
 
-  // NEW: Toggle job selection
+  // NEW: Bulk deadline management
+  const bulkSetDeadline = async () => {
+    if (selectedJobIds.length === 0) {
+      alert("Please select jobs to set deadline");
+      return;
+    }
+    
+    const newDeadline = prompt(`Set deadline for ${selectedJobIds.length} selected job(s) (YYYY-MM-DD):`);
+    if (!newDeadline) return;
+    
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(newDeadline)) {
+      alert("Invalid date format. Please use YYYY-MM-DD");
+      return;
+    }
+    
+    try {
+      for (const id of selectedJobIds) {
+        const job = jobs.find(j => j.id === id);
+        if (job) {
+          await JobsAPI.update(id, { deadline: newDeadline });
+        }
+      }
+      
+      // Update local state
+      setJobs(jobs.map(j => 
+        selectedJobIds.includes(j.id) ? { ...j, deadline: newDeadline } : j
+      ));
+      
+      alert(`✅ Deadline updated for ${selectedJobIds.length} job(s)`);
+      setSelectedJobIds([]);
+    } catch (error) {
+      console.error("Failed to set bulk deadline:", error);
+      alert("Some jobs failed to update. Please try again.");
+    }
+  };
+
+  // Toggle job selection
   const toggleJobSelection = (id) => {
     setSelectedJobIds(prev => 
       prev.includes(id) 
@@ -384,18 +450,18 @@ export default function JobList() {
     );
   };
 
-  // NEW: Select all visible jobs
+  // Select all visible jobs
   const selectAllVisible = () => {
     const visibleIds = sortedJobs.map(j => j.id);
     setSelectedJobIds(visibleIds);
   };
 
-  // NEW: Clear selection
+  // Clear selection
   const clearSelection = () => {
     setSelectedJobIds([]);
   };
 
-  // NEW: Save auto-archive settings
+  // Save auto-archive settings
   const saveAutoArchiveSettings = () => {
     localStorage.setItem('autoArchiveDays', autoArchiveDays.toString());
     localStorage.setItem('autoArchiveEnabled', autoArchiveEnabled.toString());
@@ -518,7 +584,9 @@ export default function JobList() {
     borderRadius: "4px",
     border: "1px solid #ccc",
     fontSize: "14px",
-  };if (loading) {
+  };
+
+  if (loading) {
     return (
       <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto", textAlign: "center" }}>
         <h1 style={{ margin: 0, color: "#333" }}>Job Opportunities Tracker</h1>
@@ -714,7 +782,6 @@ export default function JobList() {
           {showCalendar && <DeadlineCalendar jobs={jobs.filter(j => !j.archived)} />}
         </>
       )}
-
       {/* Bulk Actions Bar */}
       {view === "pipeline" && selectedJobIds.length > 0 && (
         <div style={{
@@ -733,6 +800,21 @@ export default function JobList() {
             {selectedJobIds.length} job(s) selected
           </div>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <button
+              onClick={bulkSetDeadline}
+              style={{
+                padding: "8px 16px",
+                background: "#ff9800",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontWeight: "600",
+                fontSize: "14px"
+              }}
+            >
+              📅 Set Deadline
+            </button>
             <button
               onClick={bulkArchive}
               style={{
@@ -1064,6 +1146,33 @@ export default function JobList() {
                 >
                   ⏰ Set Reminder
                 </button>
+                <button
+                  onClick={() => {
+                    const newDeadline = prompt("Enter new deadline (YYYY-MM-DD):", selectedJob.deadline);
+                    if (newDeadline) {
+                      // Validate date format
+                      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                      if (dateRegex.test(newDeadline)) {
+                        updateJob({ ...selectedJob, deadline: newDeadline });
+                      } else {
+                        alert("Invalid date format. Please use YYYY-MM-DD");
+                      }
+                    }
+                  }}
+                  style={{
+                    marginLeft: "8px",
+                    padding: "6px 12px",
+                    background: "#2196f3",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "600"
+                  }}
+                >
+                  📅 Extend Deadline
+                </button>
               </div>
             )}
             
@@ -1242,6 +1351,7 @@ export default function JobList() {
       {reminderJob && (
         <DeadlineReminderModal
           job={reminderJob}
+          userEmail={userEmail}
           onClose={() => setReminderJob(null)}
           onSave={(updatedJob) => {
             updateJob(updatedJob);
