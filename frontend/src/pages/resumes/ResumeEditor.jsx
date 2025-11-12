@@ -9,6 +9,7 @@ import TemplateCustomizer from '../../components/resumes/TemplateCustomizer';
 import ExperienceEditor from '../../components/resumes/ExperienceEditor';
 import SkillsManager from '../../components/resumes/SkillsManager';
 import SaveAsTemplateModal from '../../components/resumes/SaveAsTemplateModal';
+import ResumePreview from '../../components/resumes/ResumePreview';
 import '../../styles/resumes.css';
 
 /**
@@ -29,6 +30,7 @@ export default function ResumeEditor() {
   const [pdfUrl, setPdfUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  const [previewTab, setPreviewTab] = useState('live'); // 'live' for HTML or 'pdf' for PDF
   const layoutRef = useRef(null);
   const isResizing = useRef(false);
   const pdfTimeoutRef = useRef(null);
@@ -351,12 +353,27 @@ export default function ResumeEditor() {
           style={{ flex: `${100 - contentWidth}%` }}
         >
           <div className="preview-header-bar">
-            <h3>Live PDF Preview</h3>
-            {pdfLoading && <span className="badge bg-info">Generating...</span>}
-            {pdfError && <span className="badge bg-danger">Error</span>}
+            <h3>Preview</h3>
+            {/* Preview Tab Toggle */}
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                className={`btn btn-sm ${previewTab === 'live' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setPreviewTab('live')}
+              >
+                Live Preview
+              </button>
+              <button
+                className={`btn btn-sm ${previewTab === 'pdf' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setPreviewTab('pdf')}
+              >
+                PDF Preview
+              </button>
+            </div>
+            {previewTab === 'pdf' && pdfLoading && <span className="badge bg-info">Generating...</span>}
+            {previewTab === 'pdf' && pdfError && <span className="badge bg-danger">Error</span>}
           </div>
 
-          {pdfError && (
+          {previewTab === 'pdf' && pdfError && (
             <div className="alert alert-warning m-3 mb-0" role="alert">
               <small>
                 <strong>Preview Error:</strong> {pdfError}
@@ -365,28 +382,43 @@ export default function ResumeEditor() {
           )}
 
           <div className="editor-preview-container">
-            {pdfUrl ? (
-              <iframe
-                src={pdfUrl}
-                title="Resume PDF Preview"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  borderRadius: '6px',
-                }}
-              />
-            ) : pdfLoading ? (
-              <div className="pdf-loading-spinner">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading PDF...</span>
+            {previewTab === 'live' ? (
+              // LIVE HTML PREVIEW with template styling
+              resume ? (
+                <ResumePreview
+                  resume={resume}
+                  onSectionReorder={(sections) => setResume({ ...resume, sections })}
+                />
+              ) : (
+                <div className="pdf-loading-spinner">
+                  <p className="text-muted">Loading resume...</p>
                 </div>
-                <p className="text-muted mt-3">Generating your resume...</p>
-              </div>
+              )
             ) : (
-              <div className="pdf-loading-spinner">
-                <p className="text-muted">PDF preview will appear here</p>
-              </div>
+              // PDF PREVIEW
+              pdfUrl ? (
+                <iframe
+                  src={pdfUrl}
+                  title="Resume PDF Preview"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    borderRadius: '6px',
+                  }}
+                />
+              ) : pdfLoading ? (
+                <div className="pdf-loading-spinner">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading PDF...</span>
+                  </div>
+                  <p className="text-muted mt-3">Generating your resume...</p>
+                </div>
+              ) : (
+                <div className="pdf-loading-spinner">
+                  <p className="text-muted">PDF preview will appear here</p>
+                </div>
+              )
             )}
           </div>
         </div>

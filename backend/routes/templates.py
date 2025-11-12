@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 from typing import Optional
+import os
+import json
 
 from mongo.templates_dao import templates_dao
 from mongo.resumes_dao import resumes_dao
@@ -43,6 +45,28 @@ async def create_template(template: Template, uuid: str = Depends(authorize)):
         raise HTTPException(500, "Encountered internal server error")
 
     return {"detail": "Successfully created template", "template_id": result}
+
+
+@templates_router.get("/library", tags=["templates"])
+async def get_template_library():
+    """
+    Get built-in template library (no authentication required)
+    Related to UC-046
+    """
+    try:
+        # Get the path to templates_library.json
+        template_path = os.path.join(os.path.dirname(__file__), "..", "templates_library.json")
+
+        if not os.path.exists(template_path):
+            return []
+
+        with open(template_path, 'r') as f:
+            templates = json.load(f)
+
+        return templates
+    except Exception as e:
+        print(f"Error loading template library: {e}")
+        raise HTTPException(500, "Failed to load template library")
 
 
 @templates_router.get("/me", tags=["templates"])
