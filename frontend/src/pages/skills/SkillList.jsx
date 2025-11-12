@@ -254,10 +254,8 @@ export default function SkillList() {
       >
         <SortableContext items={skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div style={{ 
-            display: "flex",
-            flexWrap: "wrap", 
-            justifyContent: "center",
-            alignItems: "center",
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
             gap: "12px",
           }}>
             {categories.map((cat) => (
@@ -288,4 +286,4 @@ export default function SkillList() {
       </DndContext>
     </div>
   );
-}
+} 
