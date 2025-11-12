@@ -1,25 +1,30 @@
-from fastapi import APIRouter, HTTPException, Header, Path, Body
+from fastapi import APIRouter, HTTPException, Header, Path, File, UploadFile, Form, Body
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from uuid import uuid4
+from docx import Document
+from docx.shared import Pt, RGBColor, Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+import io
+import tempfile
+import requests
 
 from schema.CoverLetter import CoverLetterIn, CoverLetterOut
 from mongo.cover_letters_dao import cover_letters_dao
 
 coverletter_router = APIRouter()
 
-# ------------------------------------------------------------
+# ============================================================
 # GET a single cover letter by ID
-# ------------------------------------------------------------
+# ============================================================
 @coverletter_router.get("/cover-letters/{letter_id}", response_model=CoverLetterOut)
 async def get_coverletter(
     letter_id: str = Path(...),
     uuid: str = Header(...)
 ):
-    """
-    Fetch a single cover letter by ID if it belongs to the current user.
-    """
+    """Fetch a single cover letter by ID if it belongs to the current user."""
     letter = await cover_letters_dao.get_cover_letter(letter_id, uuid)
 
     if not letter:
@@ -35,19 +40,16 @@ async def get_coverletter(
         "created_at": letter.get("created_at"),
     }
 
-# ------------------------------------------------------------
+# ============================================================
 # GET all cover letters for the current user
-# ------------------------------------------------------------
+# ============================================================
 @coverletter_router.get("/cover-letters/me/{uuid}", response_model=List[CoverLetterOut])
 async def get_my_coverletters(uuid: str = Path(...)):
-    """
-    Fetch all cover letters belonging to the current user.
-    The user's UUID is passed via the 'uuid' header (set by frontend axios interceptor).
-    """
+    """Fetch all cover letters belonging to the current user."""
     letters = await cover_letters_dao.get_all_cover_letters(uuid)
 
     if not letters:
-        return [] #No cover letters... yet!
+        return []
 
     mapped_letters = [
         {
@@ -64,18 +66,15 @@ async def get_my_coverletters(uuid: str = Path(...)):
 
     return mapped_letters
 
-
-# ------------------------------------------------------------
+# ============================================================
 # POST create a new cover letter
-# ------------------------------------------------------------
+# ============================================================
 @coverletter_router.post("/cover-letters")
 async def add_coverletter(
     coverletter: CoverLetterIn,
     uuid: str = Header(...)
 ):
-    """
-    Add a new cover letter for the current user.
-    """
+    """Add a new cover letter for the current user."""
     new_letter = {
         "_id": str(uuid4()),
         "uuid": uuid,
@@ -89,19 +88,16 @@ async def add_coverletter(
     inserted_id = await cover_letters_dao.add_cover_letter(new_letter)
     return {"coverletter_id": inserted_id}
 
-
-# ------------------------------------------------------------
+# ============================================================
 # PUT update a cover letter
-# ------------------------------------------------------------
+# ============================================================
 @coverletter_router.put("/cover-letters/{letter_id}")
 async def update_coverletter(
     letter_id: str = Path(...),
     coverletter: CoverLetterIn = Body(...),
     uuid: str = Header(...)
 ):
-    """
-    Update an existing cover letter if it belongs to the current user.
-    """
+    """Update an existing cover letter if it belongs to the current user."""
     updates = {
         "title": coverletter.title,
         "company": coverletter.company,
@@ -112,27 +108,351 @@ async def update_coverletter(
     modified_count = await cover_letters_dao.update_cover_letter(letter_id, uuid, updates)
 
     if modified_count == 0:
-        # Check if the document exists
         letter_exists = await cover_letters_dao.get_cover_letter(letter_id, uuid)
         if not letter_exists:
             raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")
-        # If it exists, nothing changed → return success
         return {"message": "No changes to update"}
 
     return {"message": "Updated successfully"}
 
-# ------------------------------------------------------------
+# ============================================================
 # DELETE a cover letter
-# ------------------------------------------------------------
+# ============================================================
 @coverletter_router.delete("/cover-letters/{letter_id}")
 async def delete_coverletter(letter_id: str = Path(...)):
-    """
-    Delete a cover letter belonging to the current user.
-    """
-    # pass both letter_id and uuid to ensure only the owner can delete
+    """Delete a cover letter belonging to the current user."""
     deleted_count = await cover_letters_dao.delete_cover_letter(letter_id)
 
     if deleted_count == 0:
         raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")
 
     return {"message": "Deleted successfully"}
+
+# ============================================================
+# POST upload an HTML cover letter file
+# ============================================================
+@coverletter_router.post("/cover-letters/upload")
+async def upload_coverletter(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    company: str = Form(""),
+    position: str = Form(""),
+    uuid: str = Header(...)
+):
+    """Upload an HTML file and save as a cover letter."""
+    
+    # Validate file type
+    if file.content_type != "text/html" and not file.filename.lower().endswith('.html'):
+        raise HTTPException(status_code=400, detail="Only HTML files are supported")
+    
+    try:
+        content = await file.read()
+        html_content = content.decode('utf-8')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read HTML file: {str(e)}")
+    
+    # Generate unique ID
+    letter_id = str(uuid4())
+    created_at = datetime.utcnow().isoformat()
+    
+    # Create new cover letter document
+    new_letter = {
+        "_id": letter_id,
+        "uuid": uuid,
+        "title": title,
+        "company": company,
+        "position": position,
+        "content": html_content,
+        "created_at": created_at
+    }
+    
+    await cover_letters_dao.add_cover_letter(new_letter)
+    
+    # Return the complete cover letter object
+    return {
+        "coverletter_id": letter_id,
+        "letter": {
+            "id": letter_id,
+            "user_id": uuid,
+            "title": title,
+            "company": company,
+            "position": position,
+            "content": html_content,
+            "created_at": created_at,
+            "uploadedFile": True
+        }
+    }
+
+# ============================================================
+# GET download as PDF
+# ============================================================
+@coverletter_router.get("/cover-letters/{letter_id}/download/pdf")
+async def download_pdf(
+    letter_id: str = Path(...),
+    uuid: str = Header(...)
+):
+    """Download cover letter as PDF with styling preserved."""
+    letter = await cover_letters_dao.get_cover_letter(letter_id, uuid)
+    
+    if not letter:
+        raise HTTPException(status_code=404, detail="Cover letter not found")
+    
+    try:
+        html_content = letter.get("content", "")
+        filename = f"{letter.get('title', 'cover_letter')}.pdf"
+        
+        # Use HTML2PDF.com API (free, no signup needed)
+        response = requests.post(
+            'https://api.html2pdf.app/v1/generate',
+            json={
+                'html': html_content
+            },
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail="PDF generation failed")
+        
+        # Write to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
+            tmp.write(response.content)
+            tmp_path = tmp.name
+        
+        return FileResponse(
+            tmp_path,
+            media_type='application/pdf',
+            filename=filename,
+            headers={"Content-Disposition": f"attachment; filename=\"{filename}\""}
+        )
+    except Exception as e:
+        print(f"PDF Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
+
+
+def add_element_to_story(element, story, h1_style, h2_style, h3_style, normal_style, summary_style):
+    """Recursively add HTML elements to PDF story."""
+    if isinstance(element, str):
+        text = element.strip()
+        if text:
+            story.append(Paragraph(text, normal_style))
+        return
+    
+    tag = element.name
+    
+    if tag is None:
+        return
+    
+    elif tag == 'h1':
+        story.append(Paragraph(element.get_text(), h1_style))
+        story.append(Spacer(1, 0.1*inch))
+    
+    elif tag == 'h2':
+        story.append(Paragraph(element.get_text(), h2_style))
+        story.append(Spacer(1, 0.1*inch))
+    
+    elif tag == 'h3':
+        story.append(Paragraph(element.get_text(), h3_style))
+    
+    elif tag == 'p':
+        text = element.get_text(strip=True)
+        if text:
+            story.append(Paragraph(text, normal_style))
+    
+    elif tag == 'div':
+        class_attr = element.get('class', [])
+        
+        if 'summary' in class_attr:
+            text = element.get_text(strip=True)
+            story.append(Paragraph(f"<i>{text}</i>", summary_style))
+            story.append(Spacer(1, 0.1*inch))
+        else:
+            for child in element.children:
+                add_element_to_story(child, story, h1_style, h2_style, h3_style, normal_style, summary_style)
+    
+    elif tag == 'ul' or tag == 'ol':
+        for li in element.find_all('li', recursive=False):
+            story.append(Paragraph(f"• {li.get_text()}", normal_style))
+    
+    elif tag == 'li':
+        text = element.get_text(strip=True)
+        if text:
+            story.append(Paragraph(f"• {text}", normal_style))
+    
+    elif tag == 'header' or tag == 'footer':
+        for child in element.children:
+            add_element_to_story(child, story, h1_style, h2_style, h3_style, normal_style, summary_style)
+    
+    else:
+        if hasattr(element, 'children'):
+            for child in element.children:
+                add_element_to_story(child, story, h1_style, h2_style, h3_style, normal_style, summary_style)
+
+# ============================================================
+# GET download as DOCX
+# ============================================================
+@coverletter_router.get("/cover-letters/{letter_id}/download/docx")
+async def download_docx(
+    letter_id: str = Path(...),
+    uuid: str = Header(...)
+):
+    """Download cover letter as DOCX with styling preserved."""
+    letter = await cover_letters_dao.get_cover_letter(letter_id, uuid)
+    
+    if not letter:
+        raise HTTPException(status_code=404, detail="Cover letter not found")
+    
+    try:
+        html_content = letter.get("content", "")
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Create new DOCX document
+        doc = Document()
+        
+        # Set default font
+        style = doc.styles['Normal']
+        font = style.font
+        font.name = 'Segoe UI'
+        font.size = Pt(11)
+        
+        # Process HTML elements
+        for element in soup.body.children:
+            process_html_element(element, doc)
+        
+        # Save to bytes
+        doc_buffer = io.BytesIO()
+        doc.save(doc_buffer)
+        doc_buffer.seek(0)
+        
+        filename = f"{letter.get('title', 'cover_letter')}.docx"
+        
+        # Write to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp:
+            tmp.write(doc_buffer.getvalue())
+            tmp_path = tmp.name
+        
+        return FileResponse(
+            tmp_path,
+            media_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            filename=filename,
+            headers={"Content-Disposition": f"attachment; filename=\"{filename}\""}
+        )
+    except Exception as e:
+        print(f"DOCX Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate DOCX: {str(e)}")
+
+# ============================================================
+# HELPER: Process HTML elements into DOCX
+# ============================================================
+def process_html_element(element, doc):
+    """Recursively process HTML elements and add to DOCX document."""
+    if isinstance(element, str):
+        text = element.strip()
+        if text:
+            doc.add_paragraph(text)
+        return
+    
+    tag = element.name
+    
+    if tag == 'header':
+        for child in element.children:
+            process_html_element(child, doc)
+    
+    elif tag == 'h1':
+        p = doc.add_paragraph()
+        p.style = 'Heading 1'
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run(element.get_text())
+        run.font.size = Pt(24)
+        run.font.bold = True
+    
+    elif tag == 'h2':
+        p = doc.add_paragraph()
+        p.style = 'Heading 2'
+        run = p.add_run(element.get_text())
+        run.font.size = Pt(14)
+        run.font.bold = True
+        run.font.color.rgb = RGBColor(44, 62, 80)
+    
+    elif tag == 'h3':
+        p = doc.add_paragraph()
+        p.style = 'Heading 3'
+        run = p.add_run(element.get_text())
+        run.font.bold = True
+        run.font.color.rgb = RGBColor(52, 73, 94)
+    
+    elif tag == 'p':
+        text = element.get_text(strip=True)
+        if text:
+            p = doc.add_paragraph(text)
+            style_attr = element.get('style', '')
+            if 'font-weight: 500' in style_attr or 'bold' in style_attr:
+                for run in p.runs:
+                    run.font.bold = True
+            if 'font-style: italic' in style_attr or 'italic' in style_attr:
+                for run in p.runs:
+                    run.font.italic = True
+    
+    elif tag == 'div':
+        class_attr = element.get('class', [])
+        
+        if 'summary' in class_attr:
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Inches(0.25)
+            run = p.add_run(element.get_text())
+            run.font.italic = True
+            run.font.color.rgb = RGBColor(52, 152, 219)
+        
+        elif 'skills' in class_attr:
+            p = doc.add_paragraph()
+            run = p.add_run('Key Skills')
+            run.font.bold = True
+            run.font.size = Pt(14)
+            
+            ul = element.find('ul')
+            if ul:
+                for li in ul.find_all('li', recursive=False):
+                    doc.add_paragraph(li.get_text(), style='List Bullet')
+        
+        elif 'experience' in class_attr:
+            p = doc.add_paragraph()
+            run = p.add_run('Professional Experience')
+            run.font.bold = True
+            run.font.size = Pt(14)
+            
+            for child in element.children:
+                process_html_element(child, doc)
+        
+        elif 'education' in class_attr:
+            p = doc.add_paragraph()
+            run = p.add_run('Education')
+            run.font.bold = True
+            run.font.size = Pt(14)
+            
+            for child in element.children:
+                process_html_element(child, doc)
+        
+        else:
+            for child in element.children:
+                process_html_element(child, doc)
+    
+    elif tag == 'ul':
+        for li in element.find_all('li', recursive=False):
+            doc.add_paragraph(li.get_text(), style='List Bullet')
+    
+    elif tag == 'li':
+        text = element.get_text(strip=True)
+        if text:
+            doc.add_paragraph(text, style='List Bullet')
+    
+    elif tag == 'footer':
+        text = element.get_text(strip=True)
+        if text:
+            p = doc.add_paragraph(text)
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            for run in p.runs:
+                run.font.size = Pt(9)
+    
+    else:
+        if hasattr(element, 'children'):
+            for child in element.children:
+                process_html_element(child, doc)

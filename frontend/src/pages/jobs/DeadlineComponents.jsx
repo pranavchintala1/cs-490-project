@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-// import { sendData } from "../../tools/db_commands";
+import React, { useState, useEffect } from "react";
 import JobsAPI from "../../api/jobs";
+import ProfilesAPI from "../../api/profiles";
 
 export function DeadlineWidget({ jobs, onJobClick }) {
   const today = new Date();
@@ -288,35 +288,84 @@ export function DeadlineCalendar({ jobs }) {
 export function DeadlineReminderModal({ job, onClose, onSave }) {
   const [reminderDays, setReminderDays] = useState(job?.reminderDays || 3);
   const [emailReminder, setEmailReminder] = useState(job?.emailReminder !== false);
-  const [email, setEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [manualEmail, setManualEmail] = useState(job?.reminderEmail || "");
+  const [useManualEmail, setUseManualEmail] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [loadingEmail, setLoadingEmail] = useState(true);
+
+  // Fetch user email when modal opens
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        console.log("🔍 Fetching user profile for email...");
+        const response = await ProfilesAPI.get();
+        
+        console.log("📦 Profile response:", response?.data);
+        
+        if (response && response.data && response.data.email) {
+          setUserEmail(response.data.email);
+          if (!manualEmail) {
+            setManualEmail(response.data.email);
+          }
+          console.log("✅ User email loaded:", response.data.email);
+        } else {
+          console.warn("⚠️ No email found in user profile");
+          setUseManualEmail(true); // Force manual entry if no profile email
+        }
+      } catch (error) {
+        console.error("❌ Failed to fetch user email:", error);
+        setUseManualEmail(true); // Force manual entry on error
+      } finally {
+        setLoadingEmail(false);
+      }
+    };
+    
+    fetchUserEmail();
+  }, []);
 
   const handleSave = () => {
-    const updatedJob = { ...job, reminderDays, emailReminder, reminderEmail: email || job.reminderEmail };
+    const emailToUse = useManualEmail ? manualEmail : userEmail;
+    
+    if (emailReminder && !emailToUse) {
+      alert("Please enter an email address for reminders");
+      return;
+    }
+    
+    const updatedJob = { 
+      ...job, 
+      reminderDays, 
+      emailReminder, 
+      reminderEmail: emailToUse
+    };
     onSave(updatedJob);
     onClose();
   };
 
   const handleSendTestReminder = async () => {
-    if (!email) {
-      alert("Please enter an email address");
+    const emailToUse = useManualEmail ? manualEmail : userEmail;
+    
+    if (!emailToUse || !emailToUse.trim()) {
+      alert("Please enter an email address to send test reminder");
       return;
     }
 
     setIsSending(true);
     try {
-      // const response = await sendData(
-      //   {
-      //     email: email,
-      //     jobTitle: job.title,
-      //     company: job.company,
-      //     deadline: job.deadline,
-      //     daysUntil: Math.floor((new Date(job.deadline) - new Date()) / (1000 * 60 * 60 * 24))
-      //   },
-      //   "/api/jobs/send-deadline-reminder"
-      // );
-      // USE AXIOS API, I imported it above...
-      const response = null;
+      // Calculate days until deadline
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const deadlineDate = new Date(job.deadline);
+      deadlineDate.setHours(0, 0, 0, 0);
+      const daysUntil = Math.floor((deadlineDate - today) / (1000 * 60 * 60 * 24));
+
+      const response = await JobsAPI.sendDeadlineReminder({
+        email: emailToUse,
+        jobTitle: job.title,
+        company: job.company,
+        deadline: job.deadline,
+        daysUntil: daysUntil
+      });
 
       if (response && response.status === 200) {
         alert("✅ Test reminder sent! Check your email.");
@@ -325,7 +374,7 @@ export function DeadlineReminderModal({ job, onClose, onSave }) {
       }
     } catch (error) {
       console.error("Error sending reminder:", error);
-      alert("❌ Error sending reminder. Please try again.");
+      alert(`❌ Error sending reminder: ${error.response?.data?.detail || error.message}`);
     } finally {
       setIsSending(false);
     }
@@ -404,18 +453,83 @@ export function DeadlineReminderModal({ job, onClose, onSave }) {
             <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", fontSize: "14px" }}>
               Email Address
             </label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your.email@example.com" style={inputStyle} />
+            
+            {userEmail && !useManualEmail ? (
+              <>
+                <div style={{
+                  ...inputStyle,
+                  background: "#f5f5f5",
+                  color: "#666",
+                  cursor: "not-allowed"
+                }}>
+                  {userEmail}
+                </div>
+                <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                  Using email from your profile.{" "}
+                  <button
+                    onClick={() => setUseManualEmail(true)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#4f8ef7",
+                      textDecoration: "underline",
+                      cursor: "pointer",
+                      padding: 0,
+                      fontSize: "12px"
+                    }}
+                  >
+                    Use different email
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <input
+                  type="email"
+                  value={manualEmail}
+                  onChange={(e) => setManualEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                  style={inputStyle}
+                />
+                <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                  {userEmail ? (
+                    <>
+                      <button
+                        onClick={() => {
+                          setUseManualEmail(false);
+                          setManualEmail(userEmail);
+                        }}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#4f8ef7",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                          padding: 0,
+                          fontSize: "12px"
+                        }}
+                      >
+                        Use profile email ({userEmail})
+                      </button>
+                    </>
+                  ) : (
+                    "Enter the email where you want to receive reminders"
+                  )}
+                </div>
+              </>
+            )}
+            
             <button
               onClick={handleSendTestReminder}
-              disabled={isSending || !email}
+              disabled={isSending || (!userEmail && !manualEmail.trim())}
               style={{
                 marginTop: "8px",
                 padding: "8px 16px",
-                background: isSending ? "#ccc" : "#2196f3",
+                background: isSending || (!userEmail && !manualEmail.trim()) ? "#ccc" : "#2196f3",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
-                cursor: isSending || !email ? "not-allowed" : "pointer",
+                cursor: isSending || (!userEmail && !manualEmail.trim()) ? "not-allowed" : "pointer",
                 fontSize: "13px",
                 fontWeight: "600"
               }}
