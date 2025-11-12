@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import EmploymentForm from "./EmploymentForm";
 import EmploymentAPI from "../../api/employment";
 import { useLocation } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 const parseLocalDate = (dateStr) => {
   if (!dateStr) return null;
@@ -123,20 +124,16 @@ export default function EmploymentList() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-              <h1
-                style={{
-                margin: 0,
-                color: '#ffffff',
-                fontWeight: 700,
-                fontSize: '2.5rem',
-                fontFamily: '"Playfair Display", serif',
-                WebkitTextFillColor: '#ffffff', // ensures true white text, overrides Bootstrap
-                }}
-                >
-                💼 Employment History
-              </h1>
-        <p>Loading employment history...</p>
+      <div className="dashboard-gradient min-vh-100 py-4">
+        <Container>
+          <h1 className="text-center text-white fw-bold mb-5 display-4">
+            Employment History
+          </h1>
+          <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+            <Spinner animation="border" variant="light" className="mb-3" />
+            <p className="text-white fs-5">Loading Employment History data...</p>
+          </div>
+        </Container>
       </div>
     );
   }

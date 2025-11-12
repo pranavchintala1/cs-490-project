@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ResumesAPI from '../../api/resumes';
 import '../../styles/resumes.css';
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 /**
  * ResumeList Component
@@ -102,7 +103,19 @@ export default function ResumeList() {
   };
 
   if (loading) {
-    return <div className="container mt-5"><h2>Loading resumes...</h2></div>;
+    return (
+          <div className="dashboard-gradient min-vh-100 py-4">
+            <Container>
+              <h1 className="text-center text-white fw-bold mb-5 display-4">
+                Resumes
+              </h1>
+              <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+                <Spinner animation="border" variant="light" className="mb-3" />
+                <p className="text-white fs-5">Loading Resume data...</p>
+              </div>
+            </Container>
+          </div>
+        );
   }
 
   return (

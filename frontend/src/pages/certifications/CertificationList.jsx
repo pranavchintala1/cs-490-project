@@ -3,6 +3,7 @@ import CertificationForm from "./CertificationForm";
 import CertificationCard from "./CertificationCard";
 import CertificationsAPI from "../../api/certifications";
 import { useLocation } from "react-router-dom";
+import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 export default function CertificationList() {
   const [certs, setCerts] = useState([]);
@@ -191,20 +192,16 @@ export default function CertificationList() {
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}>
-            <h1
-              style={{
-              margin: 0,
-              color: '#ffffff',
-              fontWeight: 700,
-              fontSize: '2.5rem',
-              fontFamily: '"Playfair Display", serif',
-              WebkitTextFillColor: '#ffffff', // ensures true white text, overrides Bootstrap
-              }}
-            >
-            📜 Certifications
-            </h1>
-        <p>Loading certifications...</p>
+      <div className="dashboard-gradient min-vh-100 py-4">
+        <Container>
+          <h1 className="text-center text-white fw-bold mb-5 display-4">
+            Certifications
+          </h1>
+          <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
+            <Spinner animation="border" variant="light" className="mb-3" />
+            <p className="text-white fs-5">Loading Certifications data...</p>
+          </div>
+        </Container>
       </div>
     );
   }
