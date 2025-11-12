@@ -141,6 +141,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, onRe
             {job.salary && <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Salary:</strong> {job.salary}</p>}
             {job.industry && <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Industry:</strong> {job.industry}</p>}
             {job.jobType && <p style={{ margin: "4px 0", fontSize: "13px" }}><strong>Type:</strong> {job.jobType}</p>}
+            
             {job.description && (
               <div style={{ margin: "8px 0", fontSize: "13px" }}>
                 <strong>Description:</strong>
@@ -158,6 +159,7 @@ export default function JobCard({ job, onView, onEdit, onDelete, onArchive, onRe
                   onClick={(e) => e.stopPropagation()}
                   onPointerDown={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
+                  style={{ color: "#4f8ef7", textDecoration: "underline" }}
                 >
                   View Posting →
                 </a>
