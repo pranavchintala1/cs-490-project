@@ -139,7 +139,7 @@ This is an automated reminder from your Job Opportunities Tracker.
                     <!-- CTA Button -->
                     <tr>
                         <td style="padding: 0 30px 30px 30px; text-align: center;">
-                            <a href="{os.getenv('FRONTEND_URL', 'http://localhost:3000/')}jobs" 
+                            <a href="{os.getenv('FRONTEND_URL' + '/', 'http://localhost:3000/')}jobs" 
                                style="display: inline-block; background-color: #4f8ef7; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px;">
                                 View in Job Tracker
                             </a>
