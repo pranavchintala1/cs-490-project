@@ -1,104 +1,49 @@
 /**
  * PDF Generation API Client
- * Handles resume PDF generation via LaTeX
+ * Handles resume PDF generation via HTML-to-PDF
  * Related to UC-053: Export Resume
  */
 
-const API_BASE = 'http://localhost:8000/api/resumes';
-
-/**
- * Helper function to get auth headers
- */
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('session');
-  const uuid = localStorage.getItem('uuid');
-  const headers = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  } else {
-    console.warn('[PDFAPI] No session token found in localStorage');
-  }
-  if (uuid) {
-    headers['uuid'] = uuid;
-  } else {
-    console.warn('[PDFAPI] No uuid found in localStorage');
-  }
-  console.log('[PDFAPI] Auth headers prepared:', { hasToken: !!token, hasUuid: !!uuid });
-  return headers;
-};
+import api from './base';
 
 const PDFAPI = {
   /**
-   * Generate PDF from resume data with options
+   * Generate PDF from HTML content
    */
-  generatePDF: async (resumeId, options = {}) => {
+  generatePDF: async (resumeId, htmlContent) => {
     try {
-      const body = options && Object.keys(options).length > 0 ? options : undefined;
-
-      const response = await fetch(`${API_BASE}/${resumeId}/generate-pdf`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-        ...(body && { body: JSON.stringify(body) }),
+      console.log('[PDFAPI] Generating PDF for resume:', resumeId);
+      const response = await api.post(`/resumes/${resumeId}/generate-pdf`, {
+        html: htmlContent,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to generate PDF');
-      }
-
-      return response.json();
+      console.log('[PDFAPI] PDF generated successfully');
+      return response.data;
     } catch (err) {
-      if (err instanceof Error) {
-        throw err;
-      }
-      throw new Error(err?.detail || 'Failed to generate PDF');
+      console.error('[PDFAPI] PDF generation error:', err);
+      throw new Error(err?.response?.data?.detail || 'Failed to generate PDF');
     }
   },
 
   /**
    * Generate preview PDF for current resume state
    * Used for real-time preview during editing
+   * Sends rendered HTML from React component
    */
-  generatePreviewPDF: async (resumeId, resumeData) => {
+  generatePreviewPDF: async (resumeId, resumeData, htmlContent) => {
     try {
       console.log('[PDFAPI] Generating preview PDF for resume:', resumeId);
-      const headers = getAuthHeaders();
-      const body = JSON.stringify(resumeData);
-      console.log('[PDFAPI] Request body size:', body.length, 'bytes');
+      console.log('[PDFAPI] Request body size:', htmlContent.length, 'bytes');
 
-      const response = await fetch(`${API_BASE}/${resumeId}/preview-pdf`, {
-        method: 'POST',
-        headers: headers,
-        credentials: 'include',
-        body: body,
+      const response = await api.post(`/resumes/${resumeId}/preview-pdf`, {
+        html: htmlContent,
       });
 
-      console.log('[PDFAPI] Response status:', response.status);
-
-      if (!response.ok) {
-        let errorDetail = 'Failed to generate PDF preview';
-        try {
-          const error = await response.json();
-          errorDetail = error.detail || error.message || errorDetail;
-          console.error('[PDFAPI] Error response:', error);
-        } catch (e) {
-          console.error('[PDFAPI] Could not parse error response');
-        }
-        throw new Error(errorDetail);
-      }
-
-      const result = await response.json();
       console.log('[PDFAPI] Preview PDF generated successfully');
-      return result;
+      return response.data;
     } catch (err) {
       console.error('[PDFAPI] Preview PDF generation error:', err);
-      if (err instanceof Error) {
-        throw err;
-      }
-      throw new Error(err?.detail || 'Failed to generate PDF preview');
+      throw new Error(err?.response?.data?.detail || 'Failed to generate PDF preview');
     }
   },
 
@@ -119,6 +64,59 @@ const PDFAPI = {
   getPDFBlobURL: (hexString) => {
     const blob = PDFAPI.hexToBlob(hexString);
     return URL.createObjectURL(blob);
+  },
+
+  /**
+   * Generate DOCX from resume data
+   */
+  generateDOCX: async (resumeId) => {
+    try {
+      console.log('[PDFAPI] Generating DOCX for resume:', resumeId);
+      const response = await api.post(`/resumes/${resumeId}/generate-docx`, {}, {
+        responseType: 'blob'
+      });
+
+      console.log('[PDFAPI] DOCX generated successfully');
+      return response.data;
+    } catch (err) {
+      console.error('[PDFAPI] DOCX generation error:', err);
+      throw new Error(err?.response?.data?.detail || 'Failed to generate DOCX');
+    }
+  },
+
+  /**
+   * Validate resume and get feedback
+   */
+  validateResume: async (resumeId) => {
+    try {
+      console.log('[PDFAPI] Validating resume:', resumeId);
+      const response = await api.post(`/resumes/${resumeId}/validate`);
+
+      console.log('[PDFAPI] Resume validation complete');
+      return response.data;
+    } catch (err) {
+      console.error('[PDFAPI] Resume validation error:', err);
+      throw new Error(err?.response?.data?.detail || 'Failed to validate resume');
+    }
+  },
+
+  /**
+   * Export resume as PDF from stored data
+   * Used by ExportResumePage - generates PDF from resume data without needing HTML
+   */
+  exportPDFFromData: async (resumeId) => {
+    try {
+      console.log('[PDFAPI] Exporting PDF from resume data:', resumeId);
+      const response = await api.post(`/resumes/${resumeId}/export-pdf`, {}, {
+        responseType: 'blob'
+      });
+
+      console.log('[PDFAPI] PDF exported successfully');
+      return response.data;
+    } catch (err) {
+      console.error('[PDFAPI] PDF export error:', err);
+      throw new Error(err?.response?.data?.detail || 'Failed to export PDF');
+    }
   },
 };
 

@@ -23,6 +23,7 @@ class Fonts(BaseModel):
 class Resume(BaseModel):
     name: Optional[str] = None
     template: Optional[str] = None
+    templateId: Optional[str] = None  # Template ID for rendering (e.g., "professional-clean", "modern-bold")
     contact: Optional[ContactInfo] = None # can use above custom schema if needed
     summary: Optional[str] = None
     experience: Optional[list[Employment]] = None

@@ -4,6 +4,7 @@ from pymongo.errors import DuplicateKeyError
 from mongo.resumes_dao import resumes_dao
 from sessions.session_authorizer import authorize
 from schema.Resume import Resume, ResumeVersion, ResumeFeedback, ResumeShare
+from services.resume_validator import ResumeValidator
 
 resumes_router = APIRouter(prefix = "/resumes")
 
@@ -133,6 +134,49 @@ async def set_default_resume(resume_id: str, uuid: str = Depends(authorize)):
         raise HTTPException(400, "Resume not found")
     else:
         return {"detail": "Successfully set default resume"}
+
+# RESUME VALIDATION
+@resumes_router.post("/{resume_id}/validate", tags = ["resumes"])
+async def validate_resume(resume_id: str, uuid: str = Depends(authorize)):
+    """
+    Comprehensive resume validation and ATS scoring
+    Related to UC-053: Resume Preview and Validation
+
+    Returns:
+    {
+        valid: bool,
+        score: 0-100 (overall validation score),
+        ats_score: 0-100 (ATS compatibility score),
+        errors: [critical issues],
+        warnings: [non-critical issues],
+        suggestions: [improvement recommendations],
+        missing_sections: [incomplete sections],
+        metrics: {word_count, character_count, page estimate, etc},
+        summary: readable summary
+    }
+    """
+    try:
+        # Fetch resume to verify ownership
+        resume = await resumes_dao.get_resume(resume_id)
+
+        if not resume:
+            raise HTTPException(404, "Resume not found")
+
+        # Verify ownership
+        if resume.get("uuid") != uuid:
+            raise HTTPException(403, "Not authorized to access this resume")
+
+        # Validate resume
+        validation_result = ResumeValidator.validate_resume(resume)
+
+        return validation_result
+
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[Resume Validation] Error: {error_msg}")
+        raise HTTPException(500, f"Validation error: {error_msg}")
 
 # RESUME VERSIONS
 @resumes_router.post("/{resume_id}/versions", tags = ["resumes"])

@@ -125,7 +125,15 @@ export default function ResumeEditor() {
         setPdfLoading(true);
         setPdfError(null);
 
-        const result = await PDFAPI.generatePreviewPDF(id, resume);
+        // Get the rendered HTML from the ResumePreview component
+        const previewElement = document.querySelector('.resume-preview');
+        if (!previewElement) {
+          throw new Error('Resume preview not found');
+        }
+
+        const htmlContent = previewElement.outerHTML;
+
+        const result = await PDFAPI.generatePreviewPDF(id, resume, htmlContent);
 
         if (result.success && result.pdf) {
           const blobUrl = PDFAPI.getPDFBlobURL(result.pdf);

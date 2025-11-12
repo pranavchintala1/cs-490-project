@@ -77,34 +77,32 @@ export default function ExportResumePage() {
    * Multi-format support (DOCX, HTML, TXT) to be implemented
    */
   const handleExport = async () => {
-    if (selectedFormat !== 'pdf') {
-      setError('Multi-format export (DOCX, HTML, TXT) is not yet available. Please use PDF format.');
-      return;
-    }
-
     setExporting(true);
     setError(null);
 
     try {
-      // Build export options
-      const exportOptions = {
-        watermark: addWatermark,
-        print_optimized: printOptimized,
-      };
+      let fileBlob;
 
-      // Generate PDF from current resume state with options
-      const response = await PDFAPI.generatePDF(id, exportOptions);
-
-      if (!response.success) {
-        throw new Error(response.message || 'Failed to generate PDF');
+      if (selectedFormat === 'pdf') {
+        // Export PDF from stored resume data
+        console.log('Exporting PDF from resume data...');
+        fileBlob = await PDFAPI.exportPDFFromData(id);
+      } else if (selectedFormat === 'docx') {
+        // Export DOCX from stored resume data
+        console.log('Exporting DOCX from resume data...');
+        fileBlob = await PDFAPI.generateDOCX(id);
+      } else {
+        // Other formats not yet available
+        throw new Error('Multi-format export (HTML, TXT) is not yet available. Please use PDF or DOCX format.');
       }
 
-      // Convert hex string to blob and trigger download
-      const pdfBlob = PDFAPI.hexToBlob(response.pdf);
-      downloadFile(pdfBlob, filename);
+      if (!fileBlob || fileBlob.size === 0) {
+        throw new Error(`Failed to generate ${selectedFormat.toUpperCase()} file`);
+      }
 
+      downloadFile(fileBlob, filename);
     } catch (err) {
-      setError(err.message || 'Error exporting resume');
+      setError(err.message || `Error exporting to ${selectedFormat.toUpperCase()}`);
       console.error('Export error:', err);
     } finally {
       setExporting(false);
