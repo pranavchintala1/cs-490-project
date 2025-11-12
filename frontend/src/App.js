@@ -10,6 +10,7 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import Profile from "./pages/profile";
 import EmploymentList from "./pages/employment/EmploymentList";
+import SetPassword from "./pages/setPassword";
 import ForgotPassword from "./pages/forgotPassword";
 import ResetPassword from "./pages/resetPassword";
 import SkillsList from "./pages/skills/SkillList";
@@ -58,6 +59,7 @@ export function App() {
                 <Route path = "/profile" element = {<Profile />} />
                 <Route path="/employment-history" element={<EmploymentList />} />
                 <Route path = "/forgotPassword" element = {<ForgotPassword />} />
+                <Route path = "/set-password" element = {<SetPassword />} />
                 <Route path = "/dashboard" element = {<Dashboard />} />
                 <Route path = "/resetPassword/:token" element = {<ResetPassword />}/>
                 <Route path = "/coverLetter" element = {<CoverLetter />} />
