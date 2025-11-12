@@ -4,7 +4,13 @@ Converts HTML resume to PDF using Playwright
 Renders the exact same styling as the React frontend
 """
 
+import asyncio
+import sys
 from playwright.async_api import async_playwright
+
+# Windows asyncio subprocess fix
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class HTMLPDFGenerator:
@@ -26,7 +32,12 @@ class HTMLPDFGenerator:
             raise TypeError(f"html_content must be a string, got {type(html_content).__name__}")
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch()
+            try:
+                browser = await p.chromium.launch(headless=True)
+            except Exception as e:
+                print(f"[HTMLPDFGenerator] Failed to launch browser: {e}")
+                print("[HTMLPDFGenerator] Make sure Playwright browsers are installed: playwright install")
+                raise
             page = await browser.new_page()
 
             try:

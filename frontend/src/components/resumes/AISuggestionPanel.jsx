@@ -14,6 +14,7 @@ export default function AISuggestionPanel({
   onReject,
   onClose,
   loading = false,
+  experienceCount = 0,
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -45,10 +46,15 @@ export default function AISuggestionPanel({
 
         <div className="suggestion-section mt-4">
           <h5>Suggested Bullet Points ({suggestions.generated_bullets?.length || 0})</h5>
+          {experienceCount === 0 && (
+            <div className="alert alert-warning mb-3">
+              ⚠️ You need to add at least one work experience entry before adding bullet points. Go to the Experience tab to add your work history first.
+            </div>
+          )}
           <div className="bullets-list">
             {suggestions.generated_bullets?.map((bullet, idx) => (
               <div key={idx} className="bullet-item">
-                <input type="checkbox" id={`bullet-${idx}`} defaultChecked />
+                <input type="checkbox" id={`bullet-${idx}`} defaultChecked disabled={experienceCount === 0} />
                 <label htmlFor={`bullet-${idx}`} className="bullet-text">
                   {bullet}
                 </label>
@@ -63,6 +69,8 @@ export default function AISuggestionPanel({
               );
               onAccept({ experience_bullets: selectedBullets });
             }}
+            disabled={experienceCount === 0}
+            title={experienceCount === 0 ? 'Add experience entries first' : ''}
           >
             ✓ Add Selected Bullets
           </button>
