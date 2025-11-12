@@ -115,7 +115,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
         else if (normalizedType.includes("intern")) setJobType("Internship");
         else if (normalizedType.includes("contract")) setJobType("Contract");
         else if (normalizedType.includes("freelance")) setJobType("Freelance");
-        else setJobType("Full-Time");
+        //else setJobType("Full-Time");
       }
       
       if (data.description) setDescription(data.description.substring(0, 2000));
