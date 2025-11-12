@@ -419,35 +419,41 @@ export default function CoverLetterList() {
         />
       )}
 
-      <h2>Your Cover Letters</h2>
+      <h2 style={{ color: "#fff", fontSize: "24px" }}>Your Cover Letters </h2>
       
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".html,text/html"
-          onChange={handleFileUpload}
-          style={{ display: "none" }}
-          id="file-upload"
-        />
-        <label htmlFor="file-upload">
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "10px 20px",
-            background: uploading ? "#ccc" : "#2196f3",
-            color: "white",
-            borderRadius: "6px",
-            cursor: uploading ? "not-allowed" : "pointer",
-            fontSize: "14px",
-            fontWeight: "500"
-          }}>
-            <Upload size={18} />
-            {uploading ? "Uploading..." : "Upload HTML Template"}
-          </div>
-        </label>
-      </div>
+      <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept=".html,text/html"
+    onChange={handleFileUpload}
+    style={{ display: "none" }}
+    id="file-upload"
+  />
+  <label htmlFor="file-upload" style={{ display: "inline-block", flexShrink: 0 }}>
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+        padding: "10px 20px",
+        background: uploading ? "#ccc" : "#2196f3",
+        color: "white",
+        borderRadius: "6px",
+        cursor: uploading ? "not-allowed" : "pointer",
+        fontSize: "14px",
+        fontWeight: "500",
+        whiteSpace: "nowrap",
+        width: "fit-content",
+        flexShrink: 0,
+      }}
+    >
+      <Upload size={18} />
+      {uploading ? "Uploading..." : "Upload HTML Template"}
+    </div>
+  </label>
+</div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
         {userLetters.map((letter) => (
@@ -522,26 +528,93 @@ export default function CoverLetterList() {
       </div>
 
       <h2 style={{ marginTop: "40px" }}>Sample Cover Letters</h2>
-      <div style={{ marginBottom: "16px" }}>
-        <label>
-          Style:
-          <select value={filterStyle} onChange={(e) => setFilterStyle(e.target.value)}>
-            <option value="">All</option>
-            {styles.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </label>
-        <label style={{ marginLeft: "16px" }}>
-          Industry:
-          <select value={filterIndustry} onChange={(e) => setFilterIndustry(e.target.value)}>
-            <option value="">All</option>
-            {industries.map((i) => (
-              <option key={i} value={i}>{i}</option>
-            ))}
-          </select>
-        </label>
-      </div>
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "20px",
+    marginBottom: "20px",
+    flexWrap: "wrap",
+  }}
+>
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <label
+      style={{
+        fontWeight: "500",
+        marginBottom: "6px",
+        color: "#333",
+      }}
+    >
+      Style
+    </label>
+    <select
+      value={filterStyle}
+      onChange={(e) => setFilterStyle(e.target.value)}
+      style={{
+        display: "inline-block",
+        width: "fit-content",
+        minWidth: "180px",
+        padding: "10px 16px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        backgroundColor: "white",
+        color: "#333",
+        fontSize: "14px",
+        cursor: "pointer",
+        flexShrink: 0,
+        appearance: "none",
+        textAlign: "center",
+      }}
+    >
+      <option value="">All</option>
+      {styles.map((s) => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <label
+      style={{
+        fontWeight: "500",
+        marginBottom: "6px",
+        color: "#333",
+      }}
+    >
+      Industry
+    </label>
+    <select
+      value={filterIndustry}
+      onChange={(e) => setFilterIndustry(e.target.value)}
+      style={{
+        display: "inline-block",
+        width: "fit-content",
+        minWidth: "180px",
+        padding: "10px 16px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        backgroundColor: "white",
+        color: "#333",
+        fontSize: "14px",
+        cursor: "pointer",
+        flexShrink: 0,
+        appearance: "none",
+        textAlign: "center",
+      }}
+    >
+      <option value="">All</option>
+      {industries.map((i) => (
+        <option key={i} value={i}>
+          {i}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
 
       {sampleLetters.map((group) => (
         <div key={group.style} style={{ marginBottom: "30px" }}>
@@ -558,6 +631,8 @@ export default function CoverLetterList() {
                   width: "calc(33% - 10px)",
                   display: "flex",
                   flexDirection: "column",
+                  justifyContent: "space-between",
+                  height: "100%", 
                 }}
               >
                 <h4>{sample.title}</h4>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import CoverLetterAPI from "../../api/coverLetters";
+import UserAPI from "../../api/user";
 import AIAPI from "../../api/AI";
 import { useFlash } from "../../context/flashContext";
 import { Undo2, Redo2, Bold, Italic, Underline, List, Zap, Save, Clock, AlertCircle, CheckCircle } from "lucide-react";
@@ -34,6 +35,8 @@ export default function EditCoverLetterPage() {
   // AI Suggestions state
   const [aiSuggestions, setAiSuggestions] = useState("");
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+
+  
 
   // Load cover letter
   useEffect(() => {
@@ -211,6 +214,8 @@ export default function EditCoverLetterPage() {
   const handleGenerateCoverLetter = async () => {
     setAiLoading(true);
     try {
+
+      const userData = await UserAPI.getAllData(); // gets user data for dynamic injection
       const res = await AIAPI.generateText({
         prompt: `
 User instructions: "${aiPrompt}"
@@ -229,7 +234,7 @@ You are a professional cover letter writer.
 Preserve all HTML and inline styles.
 DO NOT ADD YOUR OWN STYLINGS OR HTML ELEMENTS OR CSS. ONLY WHAT WAS ORIGINALLY THERE. 
 Return ONLY HTML content.
-Don't invent any personal details/certifications/education/skills. Only use what you are given.
+Don't invent any personal details/certifications/education/skills. Only use what you are given in here: ${userData}.
 `
       });
 
