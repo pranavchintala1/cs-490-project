@@ -1,5 +1,12 @@
 from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from mongo/.env file
+env_path = Path(__file__).parent / 'mongo' / '.env'
+load_dotenv(dotenv_path=env_path)
 
 from routes.auth import auth_router
 from routes.profiles import profiles_router
@@ -12,6 +19,8 @@ from routes.jobs import jobs_router
 from routes.coverLetter import coverletter_router
 from routes.user_data import user_router
 from routes.resumes import resumes_router
+from routes.resumes_pdf import pdf_router
+from routes.templates import templates_router
 from routes.AI import ai_router
 
 app = FastAPI()
@@ -42,7 +51,7 @@ app.add_middleware(
 #     response.headers["Cross-Origin-Embedder-Policy"] = "unsafe-none"
 #     return response
 
-app.include_router(auth_router, prefix = api_prefix) 
+app.include_router(auth_router, prefix = api_prefix)
 app.include_router(profiles_router, prefix = api_prefix)
 app.include_router(skills_router, prefix = api_prefix)
 app.include_router(projects_router, prefix = api_prefix)
@@ -53,6 +62,13 @@ app.include_router(jobs_router, prefix = api_prefix)
 app.include_router(coverletter_router,prefix=api_prefix)
 app.include_router(user_router,prefix=api_prefix)
 app.include_router(resumes_router, prefix = api_prefix)
+app.include_router(pdf_router, prefix = api_prefix)
+app.include_router(templates_router, prefix = api_prefix)
+
+@app.on_event("startup")
+async def startup_event():
+    """Backend startup initialization"""
+    print("[Startup] Backend ready!")
 app.include_router(ai_router,prefix=api_prefix)
 
 # TODO: add user deletion services (deletes all data, requires password authentication)

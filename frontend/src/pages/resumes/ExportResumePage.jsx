@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ExportOptions from '../../components/resumes/ExportOptions';
+import PDFAPI from '../../api/pdf';
+import resumesAPI from '../../api/resumes';
 import '../../styles/resumes.css';
 
 /**
@@ -16,15 +18,29 @@ export default function ExportResumePage() {
   const [theme, setTheme] = useState('professional');
   const [exporting, setExporting] = useState(false);
   const [filename, setFilename] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [addWatermark, setAddWatermark] = useState(false);
+  const [printOptimized, setPrintOptimized] = useState(true);
 
-  // TODO: Replace with API call when backend is ready
+  // Fetch resume data from API
   useEffect(() => {
-    const mockResume = {
-      id: id,
-      name: 'Software Engineer Resume',
+    const fetchResume = async () => {
+      try {
+        setLoading(true);
+        const resumeData = await resumesAPI.get(id);
+        setResume(resumeData);
+        setFilename(resumeData.name?.replace(/\s+/g, '_') || 'resume');
+        setError(null);
+      } catch (err) {
+        setError(err.message || 'Failed to load resume');
+        console.error('Error fetching resume:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-    setResume(mockResume);
-    setFilename(mockResume.name.replace(/\s+/g, '_'));
+
+    fetchResume();
   }, [id]);
 
   const exportFormats = [
@@ -41,25 +57,74 @@ export default function ExportResumePage() {
     { id: 'creative', label: 'Creative', description: 'Bold and colorful' },
   ];
 
-  const handleExport = async () => {
-    setExporting(true);
-    // TODO: Replace with actual API call when backend is ready
-    console.log('Exporting resume:', {
-      resumeId: id,
-      format: selectedFormat,
-      theme: theme,
-      filename: filename,
-    });
-
-    setTimeout(() => {
-      setExporting(false);
-      alert(`Resume exported as ${selectedFormat.toUpperCase()}!\nFile: ${filename}.${selectedFormat}`);
-      // In real implementation, this would trigger a download
-    }, 1000);
+  /**
+   * Helper function to trigger file download
+   */
+  const downloadFile = (blob, fileName) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${fileName}.${selectedFormat}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
-  if (!resume) {
+  /**
+   * Handle resume export
+   * Currently supports PDF format via LaTeX
+   * Multi-format support (DOCX, HTML, TXT) to be implemented
+   */
+  const handleExport = async () => {
+    setExporting(true);
+    setError(null);
+
+    try {
+      let fileBlob;
+
+      if (selectedFormat === 'pdf') {
+        // Export PDF from stored resume data
+        console.log('Exporting PDF from resume data...');
+        fileBlob = await PDFAPI.exportPDFFromData(id);
+      } else if (selectedFormat === 'docx') {
+        // Export DOCX from stored resume data
+        console.log('Exporting DOCX from resume data...');
+        fileBlob = await PDFAPI.generateDOCX(id);
+      } else {
+        // Other formats not yet available
+        throw new Error('Multi-format export (HTML, TXT) is not yet available. Please use PDF or DOCX format.');
+      }
+
+      if (!fileBlob || fileBlob.size === 0) {
+        throw new Error(`Failed to generate ${selectedFormat.toUpperCase()} file`);
+      }
+
+      downloadFile(fileBlob, filename);
+    } catch (err) {
+      setError(err.message || `Error exporting to ${selectedFormat.toUpperCase()}`);
+      console.error('Export error:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  if (loading) {
     return <div className="container mt-5"><h2>Loading resume...</h2></div>;
+  }
+
+  if (!resume) {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger">
+          <h2>Error</h2>
+          <p>{error || 'Resume not found'}</p>
+          <button onClick={() => navigate('/resumes')} className="btn btn-secondary">
+            Back to Resumes
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -71,6 +136,13 @@ export default function ExportResumePage() {
         </button>
       </div>
 
+      {error && (
+        <div className="alert alert-warning alert-dismissible fade show" role="alert">
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError(null)}></button>
+        </div>
+      )}
+
       <div className="export-layout">
         <div className="export-options">
           <h3>Choose Format</h3>
@@ -79,6 +151,11 @@ export default function ExportResumePage() {
             selectedFormat={selectedFormat}
             onSelect={setSelectedFormat}
           />
+          {selectedFormat !== 'pdf' && (
+            <div className="alert alert-info mt-3">
+              <small>Multi-format export coming soon. Currently only PDF is available.</small>
+            </div>
+          )}
         </div>
 
         <div className="theme-options">
@@ -118,11 +195,15 @@ export default function ExportResumePage() {
               type="checkbox"
               id="addWatermark"
               className="form-check-input"
-              defaultChecked={false}
+              checked={addWatermark}
+              onChange={(e) => setAddWatermark(e.target.checked)}
             />
             <label className="form-check-label" htmlFor="addWatermark">
               Add watermark / Branding
             </label>
+            <small className="form-text text-muted d-block">
+              Adds a subtle "Resume" watermark to the document
+            </small>
           </div>
 
           <div className="form-check">
@@ -130,19 +211,24 @@ export default function ExportResumePage() {
               type="checkbox"
               id="printOptimized"
               className="form-check-input"
-              defaultChecked={true}
+              checked={printOptimized}
+              onChange={(e) => setPrintOptimized(e.target.checked)}
             />
             <label className="form-check-label" htmlFor="printOptimized">
               Print-optimized version
             </label>
+            <small className="form-text text-muted d-block">
+              Optimizes colors and spacing for printing
+            </small>
           </div>
         </div>
 
         <div className="export-actions mt-4">
           <button
             onClick={handleExport}
-            disabled={exporting || !filename.trim()}
+            disabled={exporting || !filename.trim() || selectedFormat !== 'pdf'}
             className="btn btn-primary btn-lg"
+            title={selectedFormat !== 'pdf' ? 'Multi-format export not yet available' : ''}
           >
             {exporting ? 'Exporting...' : `Download as ${selectedFormat.toUpperCase()}`}
           </button>

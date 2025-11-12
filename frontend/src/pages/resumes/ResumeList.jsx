@@ -168,7 +168,7 @@ export default function ResumeList() {
 
       {filteredResumes.length === 0 ? (
         <div className="alert alert-info">
-          <p>No resumes found. <Link to="/resumes/create">Create your first resume</Link></p>
+          <p>No resumes found. <Link to="/resumes/templates">Create your first resume</Link></p>
         </div>
       ) : (
         <div className="resume-cards-grid">
@@ -220,6 +220,9 @@ export default function ResumeList() {
                 </Link>
                 <Link to={`/resumes/preview/${resume._id}`} className="btn btn-sm btn-info">
                   Preview
+                </Link>
+                <Link to={`/resumes/export/${resume._id}`} className="btn btn-sm btn-success">
+                  Export
                 </Link>
                 <Link to={`/resumes/versions/${resume._id}`} className="btn btn-sm btn-warning">
                   Versions

@@ -70,6 +70,25 @@ export default function VersionManagementPage() {
     }
   };
 
+  const handleRename = async (versionId) => {
+    const version = versions.find((v) => v._id === versionId);
+    const newName = prompt('Enter new version name:', version.name);
+    if (newName && newName.trim() && newName !== version.name) {
+      try {
+        await ResumesAPI.renameVersion(id, versionId, newName.trim());
+        // Update local state
+        setVersions(
+          versions.map((v) =>
+            v._id === versionId ? { ...v, name: newName.trim() } : v
+          )
+        );
+        alert('Version renamed successfully!');
+      } catch (err) {
+        alert('Failed to rename version: ' + err.message);
+      }
+    }
+  };
+
   const handleCreateFromVersion = async (versionId) => {
     const version = versions.find((v) => v._id === versionId);
     const newName = prompt('Enter name for new version:', `${version.name} (Copy)`);
@@ -141,6 +160,13 @@ export default function VersionManagementPage() {
                     title="Restore this version"
                   >
                     Restore
+                  </button>
+                  <button
+                    onClick={() => handleRename(version._id)}
+                    className="btn btn-sm btn-secondary"
+                    title="Rename this version"
+                  >
+                    Rename
                   </button>
                   <button
                     onClick={() => handleCreateFromVersion(version._id)}
