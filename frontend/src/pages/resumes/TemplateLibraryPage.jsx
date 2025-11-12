@@ -67,46 +67,44 @@ export default function TemplateLibraryPage() {
 
   useEffect(() => {
     const fetchTemplates = async () => {
-      // Predefined templates for demo
-      const builtInTemplates = [
-        {
-          _id: 'chrono-demo',
-          name: 'Chronological',
-          template_type: 'chronological',
-          description: 'Traditional format: Summary first, then work experience in reverse chronological order. Best for candidates with consistent career progression.',
-          is_default: false,
-          isBuiltIn: true
-        },
-        {
-          _id: 'func-demo',
-          name: 'Functional',
-          template_type: 'functional',
-          description: 'Skills-focused format: Emphasizes skills and achievements. Best for career changers or those with employment gaps.',
-          is_default: false,
-          isBuiltIn: true
-        },
-        {
-          _id: 'hybrid-demo',
-          name: 'Hybrid',
-          template_type: 'hybrid',
-          description: 'Balanced format: Combines skills section with chronological work history. Best for showcasing both abilities and experience.',
-          is_default: false,
-          isBuiltIn: true
-        }
-      ];
-
       try {
         setLoading(true);
         setError(null);
-        const response = await TemplatesAPI.getUserTemplates();
-        const userTemplates = response.data || response;
+
+        // Fetch built-in template library
+        const libraryResponse = await TemplatesAPI.getLibrary();
+        const libraryData = libraryResponse.data || libraryResponse;
+        const builtInTemplates = Array.isArray(libraryData)
+          ? libraryData.map(t => ({
+              ...t,
+              _id: t.id,
+              template_type: t.id,
+              is_default: false,
+              isBuiltIn: true
+            }))
+          : [];
+
+        // Fetch user templates
+        let userTemplates = [];
+        try {
+          const userResponse = await TemplatesAPI.getUserTemplates();
+          userTemplates = Array.isArray(userResponse) ? userResponse : (userResponse.data || []);
+        } catch (err) {
+          // User might not be authenticated, ignore and just show built-in templates
+          console.log('Could not load user templates:', err.message);
+        }
+
         // Combine built-in templates with user templates
-        setTemplates([...builtInTemplates, ...userTemplates]);
+        const allTemplates = [...builtInTemplates, ...userTemplates];
+        setTemplates(allTemplates);
+
         // Select first template by default
-        setSelectedTemplate(builtInTemplates[0]);
+        if (allTemplates.length > 0) {
+          setSelectedTemplate(allTemplates[0]);
+        }
       } catch (err) {
         // Properly extract error message
-        let errorMessage = 'Failed to load user templates';
+        let errorMessage = 'Failed to load templates';
         if (err instanceof Error) {
           errorMessage = err.message;
         } else if (typeof err === 'string') {
@@ -115,10 +113,7 @@ export default function TemplateLibraryPage() {
           errorMessage = err.detail;
         }
         setError(errorMessage);
-        // Still show built-in templates even if user templates fail to load
-        setTemplates(builtInTemplates);
-        setSelectedTemplate(builtInTemplates[0]);
-        console.error('Error loading user templates:', err);
+        setTemplates([]);
       } finally {
         setLoading(false);
       }
@@ -135,9 +130,12 @@ export default function TemplateLibraryPage() {
     try {
       setDeletingId(templateId);
       await TemplatesAPI.deleteTemplate(templateId);
-      setTemplates(templates.filter(t => t._id !== templateId));
+      const updatedTemplates = templates.filter(t => t._id !== templateId);
+      setTemplates(updatedTemplates);
       if (selectedTemplate?._id === templateId) {
-        setSelectedTemplate(builtInTemplates[0]);
+        // Select first built-in template or first remaining template
+        const builtInTemplate = updatedTemplates.find(t => t.isBuiltIn);
+        setSelectedTemplate(builtInTemplate || updatedTemplates[0]);
       }
     } catch (err) {
       alert('Failed to delete template: ' + err.message);
