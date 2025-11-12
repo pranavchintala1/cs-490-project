@@ -28,6 +28,34 @@ const TemplatesAPI = {
   },
 
   /**
+   * Get the built-in template library
+   */
+  getLibrary: async () => {
+    try {
+      const response = await fetch(`${API_BASE}/library`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || `Failed to fetch template library (${response.status})`);
+      }
+
+      return response.json();
+    } catch (err) {
+      // If it's already an Error, re-throw it
+      if (err instanceof Error) {
+        throw err;
+      }
+      // Otherwise wrap it
+      throw new Error(err?.detail || 'Failed to fetch template library');
+    }
+  },
+
+  /**
    * Get all templates for the current user
    */
   getUserTemplates: async () => {
