@@ -287,42 +287,7 @@ export default function ResumePreview({ resume, onSectionReorder }) {
     return renderSectionsByOrder(sectionOrder);
   };
 
-  // SIDEBAR-MODERN TEMPLATE: Sidebar layout with main content
-  const renderSidebarModern = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
-    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
-    return (
-      <div style={{ display: 'grid', gridTemplateColumns: '30% 70%', gap: '20px' }}>
-        <div className="sidebar-column">
-          {renderContactInfo()}
-          {renderSectionsByOrder(['skills'])}
-        </div>
-        <div className="main-column">
-          {renderSectionsByOrder(sectionOrder.filter(s => s !== 'contact' && s !== 'skills'))}
-        </div>
-      </div>
-    );
-  };
-
-  // TWO-COLUMN TEMPLATE: Equal two-column layout
-  const renderTwoColumn = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
-    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
-    const leftSections = ['contact', 'summary', 'skills'];
-    const rightSections = ['experience', 'education'];
-    return (
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <div className="left-column">
-          {renderSectionsByOrder(sectionOrder.filter(s => leftSections.includes(s)))}
-        </div>
-        <div className="right-column">
-          {renderSectionsByOrder(sectionOrder.filter(s => rightSections.includes(s)))}
-        </div>
-      </div>
-    );
-  };
-
-  // MODERN-GRADIENT TEMPLATE: Modern with accent highlights
+  // MODERN-GRADIENT TEMPLATE: Modern with gradient accent divider
   const renderModernGradient = () => {
     const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
@@ -339,40 +304,16 @@ export default function ResumePreview({ resume, onSectionReorder }) {
     );
   };
 
-  // BOLD-CREATIVE TEMPLATE: Creative with bold accents
-  const renderBoldCreative = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
-    const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
-    return (
-      <div className="bold-creative-layout">
-        <div className="creative-header" style={{
-          backgroundColor: colors?.accent || '#ff6b6b',
-          padding: '20px',
-          color: 'white',
-          borderRadius: '8px',
-          marginBottom: '20px'
-        }}>
-          {renderContactInfoContent()}
-        </div>
-        {renderSectionsByOrder(sectionOrder.filter(s => s !== 'contact'))}
-      </div>
-    );
-  };
-
   // Select which template to render
   const getTemplateContent = () => {
-    // Map new template IDs to dedicated render functions with distinct visual styles
+    // Map template IDs to dedicated render functions with distinct visual styles
     const templateRenderMap = {
       'professional-clean': renderProfessional,    // Traditional corporate style
-      'modern-bold': renderModern,                 // Contemporary design with gradient header
+      'modern-bold': renderModern,                 // Contemporary design with purple gradient header
+      'modern-gradient': renderModernGradient,     // Modern with gradient accent divider
       'minimal-zen': renderMinimal,                // Ultra-minimalist design
       'creative-vibrant': renderCreative,          // Colorful and visually engaging
       'academic-formal': renderTechnical,          // Formal academic style
-      // Legacy templates for backward compatibility
-      'sidebar-modern': renderSidebarModern,
-      'two-column': renderTwoColumn,
-      'modern-gradient': renderModernGradient,
-      'bold-creative': renderBoldCreative,
     };
 
     // Use template-specific render function if available
