@@ -1,8 +1,9 @@
 import React from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Navbar, Nav as BootstrapNav, Container, Button, NavDropdown } from "react-bootstrap";
+import { Navbar, Nav as BootstrapNav, Container, NavDropdown } from "react-bootstrap";
 import { useFlash } from "../context/flashContext";
 import AuthAPI from "../api/authentication";
+import ProfilesAPI from "../api/profiles";
 
 
 const Nav = () => {
@@ -16,6 +17,9 @@ const Nav = () => {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [showDropdown, setShowDropdown] = React.useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
+  const [avatarUrl, setAvatarUrl] = React.useState(null);
+  const [username, setUsername] = React.useState("");
 
   console.log(token)
   React.useEffect(() => {
@@ -49,6 +53,24 @@ const Nav = () => {
         
         if (response.status === 200) {
           setIsAuthenticated(true);
+          
+          // Load user profile data
+          try {
+            const profileRes = await ProfilesAPI.get();
+            setUsername(profileRes.data.username || "User");
+            
+            // Load avatar
+            const avatarRes = await ProfilesAPI.getAvatar();
+            const blob = avatarRes.data;
+            const url = URL.createObjectURL(blob);
+            if (url) {
+              setAvatarUrl(url);
+            }
+          } catch (error) {
+            console.error("Failed to load profile data:", error);
+            // Set defaults if profile loading fails
+            setUsername("User");
+          }
         } else {
           // Non-200 response
           localStorage.removeItem("uuid");
@@ -75,6 +97,12 @@ const Nav = () => {
     };
 
     validateSession();
+    
+    return () => {
+      if (avatarUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
   }, [token, navigate]);
 
   const logout = async () => {
@@ -88,13 +116,19 @@ const Nav = () => {
       console.error("Logout failed:", error);
     }
 
+    if (avatarUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarUrl);
+    }
+
     localStorage.removeItem("uuid");
     localStorage.removeItem("session");
     setIsAuthenticated(false);
+    setAvatarUrl(null);
+    setUsername("");
     navigate("/");
   };
 
-  // Optional: Show loading state while validating
+/*
   if (isLoading) {
     return (
       <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
@@ -111,7 +145,7 @@ const Nav = () => {
       </Navbar>
     );
   }
-
+*/
   return (
     <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
       <Container fluid>
@@ -126,13 +160,14 @@ const Nav = () => {
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <BootstrapNav className="ms-auto gap-3">
+          <BootstrapNav className="ms-auto gap-3 align-items-center">
             {isAuthenticated ? (
               <>
+                {/* Moved to logout and profile
                 <BootstrapNav.Link as={NavLink} to="/profile" className="mx-3">
                   Profile
                 </BootstrapNav.Link>
-
+                */}
                 <NavDropdown
                   title={
                     <span
@@ -181,13 +216,47 @@ const Nav = () => {
                   Cover Letters
                 </BootstrapNav.Link>
 
-                <Button
-                  variant="outline-light"
-                  onClick={logout}
-                  className="ms-2"
+                <NavDropdown
+                  title={
+                    <span
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate("/profile");
+                      }}
+                      style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                    >
+                      <img
+                        src={avatarUrl || "/default.png"}
+                        alt="Profile"
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          marginRight: "8px",
+                          border: "2px solid #fff"
+                        }}
+                      />
+                      {username}
+                    </span>
+                  }
+                  id="profile-dropdown"
+                  className="mx-3"
+                  align="end"
+                  show={showProfileDropdown}
+                  onMouseEnter={() => setShowProfileDropdown(true)}
+                  onMouseLeave={() => setShowProfileDropdown(false)}
                 >
-                  Logout
-                </Button>
+                  <NavDropdown.Item as={NavLink} to="/profile">
+                    <i className="fas fa-user" style={{ marginRight: "8px" }}></i>
+                    Profile
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={logout}>
+                    <i className="fas fa-sign-out-alt" style={{ marginRight: "8px" }}></i>
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
               </>
             ) : (
               <>
