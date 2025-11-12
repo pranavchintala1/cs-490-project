@@ -21,6 +21,7 @@ from routes.user_data import user_router
 from routes.resumes import resumes_router
 from routes.resumes_pdf import pdf_router
 from routes.templates import templates_router
+from routes.AI import ai_router
 
 app = FastAPI()
 
@@ -68,6 +69,7 @@ app.include_router(templates_router, prefix = api_prefix)
 async def startup_event():
     """Backend startup initialization"""
     print("[Startup] Backend ready!")
+app.include_router(ai_router,prefix=api_prefix)
 
 # TODO: add user deletion services (deletes all data, requires password authentication)
 # Where to put it though?
