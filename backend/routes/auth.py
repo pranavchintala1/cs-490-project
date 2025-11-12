@@ -110,23 +110,32 @@ async def forgot_password(email: str = Body(..., embed=True)):
 @auth_router.get("/password/reset", tags = ["profiles"])
 async def reset_password(token: str):
     fp = ForgotPassword()
+    print("IN HERE")
+    print(token)
     uuid,expires = await fp.verify_link(token)
+    print("OVER HERE")
     try:
         if (uuid):
-            if(datetime.now() < expires ): # The link is still valid.
-                return JSONResponse(status_code = 200, content = {"uuid": uuid})
+            # if(datetime.now() < expires ): # The link is still valid.
+            #     return JSONResponse(status_code = 200, content = {"uuid": uuid})
+            print("VALID")
+            return JSONResponse(status_code = 200, content = {"uuid": uuid})
     except Exception as e:
         print(e)
         return None
     
 
 @auth_router.put("/password/update", tags = ["profiles"])
-async def update_password(token: str = Body(...),password: str = Body(...)):
+async def update_password(token: str = Body(...),password: str = Body(...), old_token: str=Body(...)):
 
     try:
         old_data = await profiles_dao.get_profile(token)
         old_data["password"] = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         await auth_dao.update_password(token,old_data)
+        fp = ForgotPassword()
+        await fp.delete_link(old_token)
+        print("OLDTOKEN")
+        print(old_token)
         session_token = session_manager.begin_session(token)
     except Exception as e:
 

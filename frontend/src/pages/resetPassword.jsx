@@ -5,7 +5,7 @@ import { useFlash } from "../context/flashContext";
 import AuthAPI from "../api/authentication";
 
 const ResetPassword = () => {
-  const { token } = useParams(); // assuming your URL param is called "token"
+  const { token } = useParams();
   const [res, setRes] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,25 +14,25 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const res = await AuthAPI.resetPassword(token)
-      if (!res) {
+    const fetchData = async () => {
+      try {
+        const res = await AuthAPI.resetPassword(token)
+        if (!res) {
+          setRes(null);
+          console.log("NO OR NULL RESPONSE")
+          return;
+        }
+        const json = await res.data;
+        setRes(json);
+      } catch (err) {
+        console.error(err);
         setRes(null);
-        return;
+      } finally {
+        setLoading(false);
       }
-      const json = await res.json();
-      setRes(json);
-    } catch (err) {
-      console.error(err);
-      setRes(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchData();
-}, [token]);
-
+    };
+    fetchData();
+  }, [token]);
 
   if (loading) return <p>Loading...</p>;
 
@@ -42,7 +42,7 @@ const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     try {
-        
+      data.old_token = token;
       const res = await AuthAPI.updatePassword(data);
       if (!res) {
         showFlash("Something went wrong", "error");
@@ -67,6 +67,7 @@ const ResetPassword = () => {
   return (
     <form className="Reset" onSubmit={handleSubmit(onSubmit)}>
       <input type="hidden" value={res.uuid} {...register("token")} />
+      
       <input
         type="password"
         minLength="8"
@@ -75,6 +76,10 @@ const ResetPassword = () => {
         placeholder="Enter new password"
         title="Password must be minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number"
       />
+      {errors.password && (
+        <p style={{ color: "red" }}>Password is required</p>
+      )}
+      
       <input
         type="password"
         {...register("confirm", {
@@ -84,6 +89,10 @@ const ResetPassword = () => {
         })}
         placeholder="Confirm new password"
       />
+      {errors.confirm && (
+        <p style={{ color: "red" }}>{errors.confirm.message || "Confirmation is required"}</p>
+      )}
+      
       <input type="submit" />
     </form>
   );

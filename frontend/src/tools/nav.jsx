@@ -19,9 +19,14 @@ const Nav = () => {
 
   console.log(token)
   React.useEffect(() => {
-    if (location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/resetPassword" || location.pathname === "/forgotPassword") {
-    return;
-    }
+    const excludedPaths = ["/login", "/register", "/forgotPassword", "/resetPassword"];
+
+    const shouldSkip = excludedPaths.some(prefix =>
+      location.pathname.startsWith(prefix)
+    );
+
+    
+
     console.log("ENTERING EFFECT")
     const validateSession = async () => {
       if (!token) {
@@ -30,6 +35,10 @@ const Nav = () => {
         localStorage.removeItem("uuid");
         localStorage.removeItem("session");
         setIsAuthenticated(false);
+        
+        if (shouldSkip) {
+          return;
+        }
         navigate("/");
         return;
       }
@@ -45,6 +54,9 @@ const Nav = () => {
           localStorage.removeItem("uuid");
           localStorage.removeItem("session");
           setIsAuthenticated(false);
+          if (shouldSkip) {
+            return;
+          }
           navigate("/");
         }
       } catch (error) {
@@ -53,6 +65,9 @@ const Nav = () => {
         localStorage.removeItem("uuid");
         localStorage.removeItem("session");
         setIsAuthenticated(false);
+        if (shouldSkip) {
+          return;
+        }
         navigate("/");
       } finally {
         setIsLoading(false);
