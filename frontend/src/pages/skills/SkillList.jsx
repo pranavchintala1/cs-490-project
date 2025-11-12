@@ -186,7 +186,17 @@ export default function SkillList() {
   if (loading) {
     return (
       <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto", textAlign: "center" }}>
-        <h1 style={{ margin: "0 0 20px 0", color: "#333" }}>Skills Tracker</h1>
+        <h1
+          style={{
+            margin: 20,
+            color: '#ffffff',
+            fontWeight: 700,
+            fontSize: '2.5rem',
+            fontFamily: '"Playfair Display", serif',
+            WebkitTextFillColor: '#ffffff', // ensures true white text, overrides Bootstrap
+          }}
+        > 💡 Skills Tracker
+        </h1>
         <p>Loading skills...</p>
       </div>
     );
@@ -194,7 +204,31 @@ export default function SkillList() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
-      <h1 style={{ margin: "0 0 20px 0", color: "#333" }}>Skills Tracker</h1>
+    {/* makes sure the underline wrapper is with the text */}
+      <div style={{ display: "inline-block", textAlign: "center", marginBottom: "20px" }}>
+        <h1
+          style={{
+          margin: 0,
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: "2.5rem",
+          fontFamily: '"Playfair Display", serif',
+          WebkitTextFillColor: "#ffffff", // ensures true white text
+          }}
+        >
+        💡Skills Tracker
+        </h1>
+
+    <div
+      style={{
+        width: "110px", // adjust for desired length
+        height: "4px",
+        margin: "6px auto 0",
+        borderRadius: "2px",
+        background: "linear-gradient(90deg, #00c28a, #005e9e)", // green to blue
+      }}
+    />
+  </div>
 
       <SkillForm addSkill={addSkill} existingSkills={skills} />
 
@@ -222,10 +256,11 @@ export default function SkillList() {
       >
         <SortableContext items={skills.map((s) => s.id)} strategy={verticalListSortingStrategy}>
           <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "16px",
-            marginBottom: "20px"
+            display: "flex",
+            flexWrap: "wrap", 
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "12px",
           }}>
             {categories.map((cat) => (
               <SkillCategory

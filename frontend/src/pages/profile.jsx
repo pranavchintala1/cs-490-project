@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ProfilesAPI from "../api/profiles";
 import DeleteAccount from "../components/DeleteAccount";
+import "../styles/profile.css"; 
 
 export default function Profile() {
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -139,116 +140,206 @@ export default function Profile() {
     }
   };
 
-  if (loading) return <div style={{ padding: 24 }}>Loading…</div>;
-
+  if (loading)
   return (
-    <div style={{ maxWidth: 900, margin: "24px auto", padding: "0 16px" }}>
-      <h1>My Profile</h1>
+    <div className="profile-loading">
+      <div className="spinner"></div>
+      <p>Loading your profile...</p>
+    </div>
+  );
 
-      {msg && <div style={{ color: "green", marginTop: 8 }}>{msg}</div>}
-      {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
 
-      {/* Picture */}
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "160px 1fr",
-          gap: 16,
-          alignItems: "center",
-          margin: "16px 0 24px",
-        }}
-      >
-        <div>
-          {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt="preview"
-              style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
-            />
-          ) : avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="pfp"
-              style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
-            />
-          ) : (
-            <img
-              src="/default.png"
-              alt="default profile"
-              style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 12 }}
-            />
-          )}
+return (
+  <div className="simple-profile">
+    <div className="profile-card">
+      <h1 className="profile-title">My Profile</h1>
+
+
+      {msg && (
+  <div className="profile-message">
+    <i className="fas fa-check-circle" style={{ marginRight: 6 }}></i>
+    {msg}
+  </div>
+)}
+      {err && (
+        <div className="profile-message error">
+          <i className="fas fa-exclamation-circle" style={{ marginRight: 6 }}></i>
+          {err}
         </div>
-        <div>
-          <input ref={fileRef} type="file" accept="image/*" onChange={onPick} />
-          {selectedFile && (
-            <div style={{ fontSize: 13, marginTop: 6 }}>
-              Selected: <strong>{selectedFile.name}</strong>
-            </div>
-          )}
-        </div>
-      </section>
+      )}
 
-      {/* Form */}
-      <form onSubmit={onSave} style={{ display: "grid", gap: 16 }}>
-        <Row>
-          <Field label="Username">
-            <input name="username" value={form.username} onChange={onChange} />
-          </Field>
-          <Field label="Email">
-            <input name="email" value={form.email} onChange={onChange} />
-          </Field>
-        </Row>
 
-        <Row>
-          <Field label="Full Name">
-            <input name="full_name" value={form.full_name} onChange={onChange} />
-          </Field>
-          <Field label="Phone">
-            <input name="phone_number" value={form.phone_number} onChange={onChange} />
-          </Field>
-        </Row>
+      {/* Profile Picture */}
+      <div className="profile-photo">
+        <img
+          src={previewUrl || avatarUrl || "/default.png"}
+          alt="Profile"
+          className="avatar"
+        />
+        <button
+          type="button"
+          className="upload-btn"
+          onClick={() => fileRef.current?.click()}
+        >
+          <i className="fas fa-upload"></i> Upload Photo
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          onChange={onPick}
+          hidden
+        />
+        {selectedFile && (
+          <div style={{ fontSize: 13, marginTop: 6, color: "#555" }}>
+            Selected: <strong>{selectedFile.name}</strong>
+          </div>
+        )}
+      </div>
 
-        <Row>
-          <Field label="Address">
-            <input name="address" value={form.address} onChange={onChange} />
-          </Field>
-          <Field label="Headline / Title">
-            <input name="title" value={form.title} onChange={onChange} />
-          </Field>
-        </Row>
 
-        <Row>
-          <Field label="Industry">
-            <input name="industry" value={form.industry} onChange={onChange} />
-          </Field>
-          <Field label="Experience Level">
-            <select
-              name="experience_level"
-              value={form.experience_level}
-              onChange={onChange}
-            >
-              <option value="">(select)</option>
-              <option>Intern</option>
-              <option>Junior</option>
-              <option>Mid</option>
-              <option>Senior</option>
-            </select>
-          </Field>
-        </Row>
+      {/* Profile Form */}
+      <form className="profile-form" onSubmit={onSave}>
+        <label>
+          <div className="label-title">
+            <span>👤 Username</span>
+          </div>
+          <input
+            name="username"
+            value={form.username}
+            onChange={onChange}
+            placeholder="e.g. JohnSmith1"
+          />
+        </label>
 
-        <Field label="Bio">
-          <textarea name="biography" rows={4} value={form.biography} onChange={onChange} />
-        </Field>
 
-        <button disabled={saving} style={{ width: 140, height: 36 }}>
+        <label>
+          <div className="label-title">
+            <span>📧 Email</span>
+          </div>
+          <input
+            name="email"
+            value={form.email}
+            onChange={onChange}
+            placeholder="e.g. JohnSmith@gmail.com"
+          />
+        </label>
+
+
+        <label>
+          <div className="label-title">
+            <span>🪪 Full Name</span>
+          </div>
+          <input
+            name="full_name"
+            value={form.full_name}
+            onChange={onChange}
+            placeholder="e.g. John Smith"
+          />
+        </label>
+
+
+        <label>
+          <div className="label-title">
+            <span>📞 Phone</span>
+          </div>
+          <input
+            name="phone_number"
+            value={form.phone_number}
+            onChange={onChange}
+            placeholder="e.g. (555) 123-4567"
+          />
+        </label>
+
+
+        <label>
+          <div className="label-title">
+            <span>📍 Address</span>
+          </div>
+          <input
+            name="address"
+            value={form.address}
+            onChange={onChange}
+            placeholder="City, State"
+          />
+        </label>
+
+
+        <label>
+          <div className="label-title">
+            <span>💼 Headline / Title</span>
+          </div>
+          <input
+            name="title"
+            value={form.title}
+            onChange={onChange}
+            placeholder="e.g. Project Manager"
+          />
+        </label>
+
+
+        <label>
+          <div className="label-title">
+            <span>🏢 Industry</span>
+          </div>
+          <input
+            name="industry"
+            value={form.industry}
+            onChange={onChange}
+            placeholder="e.g. Technology"
+          />
+        </label>
+
+
+        <label>
+          <div className="label-title">
+            <span>📈 Experience Level</span>
+          </div>
+          <select
+            name="experience_level"
+            value={form.experience_level}
+            onChange={onChange}
+          >
+            <option value="">(select)</option>
+            <option>Intern</option>
+            <option>Junior</option>
+            <option>Mid</option>
+            <option>Senior</option>
+          </select>
+        </label>
+
+
+        <label className="full-width">
+          <div className="label-title">
+            <span>✍️ Bio</span>
+          </div>
+          <textarea
+            name="biography"
+            rows={4}
+            value={form.biography}
+            onChange={onChange}
+            placeholder="Write a short bio about yourself..."
+          />
+        </label>
+
+
+        <button type="submit" className="save-btn" disabled={saving}>
+          <i className="fas fa-save"></i>
           {saving ? "Saving…" : "Save Profile"}
         </button>
       </form>
 
-      <DeleteAccount />
+
+      <div className="delete-account">
+        <p>
+          Want To Delete Your Account?{" "}
+          <DeleteAccount />
+        </p>
+      </div>
     </div>
-  );
+  </div>
+);
+
 }
 
 function Row({ children }) {

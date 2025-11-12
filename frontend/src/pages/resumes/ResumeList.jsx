@@ -106,11 +106,38 @@ export default function ResumeList() {
   }
 
   return (
+    <div className="dashboard-gradient">
     <div className="container mt-5">
       {error && <div className="alert alert-danger mb-4">{error}</div>}
 
       <div className="resume-list-header">
-        <h1>My Resumes</h1>
+      {/* Group title + underline together */}
+        <div style={{ display: "inline-block" }}>
+          <h1
+            style={{
+            margin: 0,
+            color: "#ffffff",
+            fontWeight: 700,
+            fontSize: "2.5rem",
+            fontFamily: '"Playfair Display", serif',
+            WebkitTextFillColor: "#ffffff", // ensures true white text
+          }}
+        >
+          My Resumes
+        </h1>
+
+        {/* Gradient underline directly under title */}
+        <div
+          style={{
+            width: "90px",
+            height: "4px",
+            margin: "6px auto 0",
+            borderRadius: "2px",
+            background: "linear-gradient(90deg, #00c28a, #005e9e)",
+          }}
+        />
+      </div>
+
         <Link to="/resumes/create" className="btn btn-primary">
           + Create New Resume
         </Link>
@@ -212,6 +239,7 @@ export default function ResumeList() {
           ))}
         </div>
       )}
+    </div>
     </div>
   );
 }

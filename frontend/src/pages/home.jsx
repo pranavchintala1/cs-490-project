@@ -20,7 +20,16 @@ const Home = ({ user, session }) => {
                 alt="Metamorphosis logo"
                 className="hero-logo mb-3"
               />
-              <h1 className="fw-bold display-5">Metamorphosis</h1>
+              <h1
+                style={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 800,
+                  fontSize: '4rem',
+                  color: '#000',
+                  }}
+              >
+              Metamorphosis
+              </h1>
             </div>
 
             <h2 className="lead mb-4">

@@ -521,7 +521,18 @@ export default function JobList() {
   };if (loading) {
     return (
       <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto", textAlign: "center" }}>
-        <h1 style={{ margin: 0, color: "#333" }}>Job Opportunities Tracker</h1>
+          <h1
+            style={{
+            margin: 0,
+            color: '#ffffff',
+            fontWeight: 700,
+            fontSize: '2.5rem',
+            fontFamily: '"Playfair Display", serif',
+            WebkitTextFillColor: '#ffffff', // ensures true white text, overrides Bootstrap
+            }}
+          >
+          Job Opportunities Tracker
+          </h1>
         <p>Loading jobs...</p>
       </div>
     );
@@ -529,8 +540,43 @@ export default function JobList() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "100%", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "10px" }}>
-        <h1 style={{ margin: 0, color: "#333" }}>Job Opportunities Tracker</h1>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+          flexWrap: "wrap",
+          gap: "10px",
+          }}
+      >
+    {/* Group title + underline together */}
+      <div style={{ display: "inline-block", textAlign: "center" }}>
+        <h1
+          style={{
+          margin: 0,
+          color: "#ffffff",
+          fontWeight: 700,
+          fontSize: "2.5rem",
+          fontFamily: '"Playfair Display", serif',
+          WebkitTextFillColor: "#ffffff",
+          }}
+        >
+        Job Opportunities Tracker
+        </h1>
+
+      {/* underline centered under text */}
+        <div
+          style={{
+          width: "90px",
+          height: "4px",
+          margin: "6px auto 0",
+          borderRadius: "2px",
+          background: "linear-gradient(90deg, #00c28a, #005e9e)",
+          }}
+        />
+        </div>
+        
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {view === "pipeline" && !showArchived && (
             <button

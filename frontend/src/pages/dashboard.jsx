@@ -689,12 +689,12 @@ const Dashboard = () => {
 
 
   const categories = [
-    { title: 'Profile', data: data.profile },
-    { title: 'Employment History', data: data.employmentHistory },
-    { title: 'Skills', data: data.skills },
-    { title: 'Education', data: data.education },
-    { title: 'Projects', data: data.projects },
-    { title: 'Certifications', data: data.certifications }
+    { title: 'Profile', icon: '👤', data: data.profile },
+    { title: 'Employment History', icon: '💼', data: data.employmentHistory },
+    { title: 'Skills', icon: '🧠', data: data.skills },
+    { title: 'Education', icon: '🎓', data: data.education },
+    { title: 'Projects', icon: '🚀', data: data.projects },
+    { title: 'Certifications', icon: '📜', data: data.certifications }
   ];
 
   const statusColors = {
@@ -741,6 +741,7 @@ const Dashboard = () => {
 </div>
         
         <ProgressTracker data={data} />
+        <div className="form-section-divider"></div>
         <Row>
           {/* Left side: 3x2 grid */}
           <Col lg={9}>
@@ -787,7 +788,7 @@ const Dashboard = () => {
                             href={link} 
                             className="text-decoration-none fw-semibold fs-5 text-primary flex-grow-1 text-center mx-2 card-title-link"
                           >
-                            {category.title}
+                            {category.icon} {category.title}
                           </Card.Link>
 
                           {/* Button */}
@@ -827,7 +828,7 @@ const Dashboard = () => {
                     href="/skills" 
                     className="text-decoration-none fw-semibold fs-5 text-primary text-center mb-3 d-block flex-shrink-0 card-title-link"
                   >
-                    Skills Overview
+                    🧩 Skills Overview
                   </Card.Link>
                   <div className="flex-grow-1 overflow-hidden">
                     <BarChart 
@@ -844,7 +845,7 @@ const Dashboard = () => {
                   <Card.Link 
                     className="text-decoration-none fw-semibold fs-5 text-primary text-center mb-3 d-block flex-shrink-0 card-title-link"
                   >
-                    Recent Changes
+                    🕓 Recent Changes
                   </Card.Link>
                   <div className="flex-grow-1 overflow-hidden">
                     <RecentChanges changes={formattedRecentUpdates} />
@@ -854,14 +855,21 @@ const Dashboard = () => {
             </div>
           </Col>
         </Row>
+        
+        <div className="form-section-divider"></div>
 
         {/* Career Timeline */}
         <Row className="mt-4">
           <Col>
-            <CareerTimeline 
-              title="My Career Journey" 
-              employmentData={rawEmploymentData}
-            />
+            <section className="career-section">
+              <h4 className="timeline-title">🧭 My Career Journey</h4>
+              <div className="career-content">
+                <CareerTimeline 
+                  title="My Career Journey" 
+                  employmentData={rawEmploymentData}
+                />
+              </div>
+            </section>
           </Col>
         </Row>
       </Container>
