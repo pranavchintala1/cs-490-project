@@ -36,6 +36,7 @@ function Register() {
       localStorage.setItem("uuid", res.data.uuid);
 
       navigate(`/profile`);
+      return;
     } catch (error) {
       showFlash(error, "error");
     }
@@ -48,7 +49,13 @@ function Register() {
       localStorage.setItem("session", res.data.session_token);
       localStorage.setItem("uuid", res.data.uuid);
 
+      if (!res.data.has_password){
+        navigate(`/set-password`);
+        return;
+      }
+
       navigate(`/profile`);
+      return;
     } catch (error) {
       showFlash(error, "error");
     }
@@ -86,7 +93,14 @@ function Register() {
       localStorage.setItem("session", res.data.session_token);
       localStorage.setItem("uuid", res.data.uuid);
 
+
+      if (!res.data.has_password){
+        navigate(`/set-password`);
+        return;
+      }
+
       navigate("/profile");
+      return;
     } catch (err) {
       console.error("Microsoft login failed:", err);
       showFlash(err.message, "error");
@@ -123,7 +137,7 @@ function Register() {
           <input
             type="password"
             minLength="8"
-            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$"
+            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$"
             {...register("password", { required: true })}
             placeholder="Password"
             title="Password must be minimum 8 characters with at least 1 uppercase, 1 lowercase, 1 number"
@@ -170,7 +184,7 @@ function Register() {
           <div className="google-login mb-2">
             <GoogleLogin
               onSuccess={(credentialResponse) =>
-                OAuthSubmit(credentialResponse)
+                OAuthSubmit({ credential: credentialResponse.credential })
               }
               onError={() => console.log("Login Failed")}
             />
