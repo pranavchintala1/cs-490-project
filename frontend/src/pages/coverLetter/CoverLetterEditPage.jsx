@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import CoverLetterAPI from "../../api/coverLetters";
 import AIAPI from "../../api/AI";
 import { useFlash } from "../../context/flashContext";
-import { Undo2, Redo2, Bold, Italic, Underline, List, Zap, Save, Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { Undo2, Redo2, Bold, Italic, Underline, List, Zap, Save, Clock, AlertCircle, CheckCircle, Lightbulb } from "lucide-react";
 
 export default function EditCoverLetterPage() {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function EditCoverLetterPage() {
   const [showAIHelper, setShowAIHelper] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState([]);
 
   // Stats and History
   const [wordCount, setWordCount] = useState(0);
@@ -28,7 +29,6 @@ export default function EditCoverLetterPage() {
   const [readabilityScore, setReadabilityScore] = useState(0);
   const [versionHistory, setVersionHistory] = useState([]);
   const [autoSaveStatus, setAutoSaveStatus] = useState("saved");
-  const [grammarIssues, setGrammarIssues] = useState([]);
   const [selectedWord, setSelectedWord] = useState(null);
   const [synonyms, setSynonyms] = useState([]);
   const [showSynonyms, setShowSynonyms] = useState(false);
@@ -66,35 +66,14 @@ export default function EditCoverLetterPage() {
     const plainText = text.replace(/<[^>]*>/g, "");
     const words = plainText.trim().split(/\s+/).filter(w => w.length > 0);
     const chars = plainText.length;
-    
+
     setWordCount(words.length);
     setCharCount(chars);
-    
+
     const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const avgWordsPerSentence = words.length / (sentences.length || 1);
     const score = Math.max(0, Math.min(100, 100 - (avgWordsPerSentence * 5)));
     setReadabilityScore(Math.round(score));
-
-    checkGrammar(plainText);
-  };
-
-  const checkGrammar = (text) => {
-    const issues = [];
-    const patterns = [
-      { regex: /\b(their|there|they're)\b/gi, msg: "Check usage of their/there/they're" },
-      { regex: /\b(your|you're)\b/gi, msg: "Check usage of your/you're" },
-      { regex: /\b(its|it's)\b/gi, msg: "Check usage of its/it's" },
-      { regex: /\s{2,}/g, msg: "Multiple spaces detected" },
-      { regex: /([.!?])\s+([a-z])/g, msg: "Sentence should start with capital" },
-    ];
-
-    patterns.forEach(pattern => {
-      if (pattern.regex.test(text)) {
-        issues.push(pattern.msg);
-      }
-    });
-
-    setGrammarIssues([...new Set(issues)].slice(0, 5));
   };
 
   // Populate iframe
@@ -155,12 +134,12 @@ export default function EditCoverLetterPage() {
         content: contentRef.current,
       });
       setAutoSaveStatus("saved");
-      
-      setVersionHistory(prev => [...prev, { 
-        timestamp: new Date(), 
-        content: contentRef.current 
+
+      setVersionHistory(prev => [...prev, {
+        timestamp: new Date(),
+        content: contentRef.current
       }].slice(-10));
-      
+
     } catch (err) {
       console.error("Auto-save failed:", err);
       setAutoSaveStatus("unsaved");
@@ -174,30 +153,27 @@ export default function EditCoverLetterPage() {
         system_message: "You are a helpful assistant that generates synonyms."
       });
 
-      const syns = res.data.result
-        .split(",")
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-      
+      const responseText = res.data.result || res.data.response || res.data.text || "";
+      const syns = responseText.split(",").map(s => s.trim()).filter(s => s.length > 0 && s.length < 50);
       setSynonyms(syns);
     } catch (err) {
       console.error("Failed to fetch synonyms:", err);
+      setSynonyms([]);
     }
   };
 
   const replaceSynonym = (synonym) => {
     if (!iframeRef.current || !selectedWord) return;
-    
     const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
     const selection = doc.getSelection();
-    
+
     if (selection.rangeCount > 0) {
       selection.deleteFromDocument();
       const span = doc.createElement("span");
       span.textContent = synonym;
       selection.getRangeAt(0).insertNode(span);
     }
-    
+
     setShowSynonyms(false);
     contentRef.current = doc.documentElement.innerHTML;
     calculateStats(doc.documentElement.innerHTML);
@@ -206,23 +182,31 @@ export default function EditCoverLetterPage() {
   const restoreVersion = (version) => {
     contentRef.current = version.content;
     setHtmlContent(version.content);
-    
-    if (iframeRef.current && editorMode === "visual") {
-      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
-      doc.open();
-      doc.write(version.content);
-      doc.close();
-      doc.body.contentEditable = "true";
+
+    if (editorMode === "visual") {
+      setEditorMode("html");
+      setTimeout(() => {
+        setEditorMode("visual");
+        setTimeout(() => {
+          if (iframeRef.current) {
+            const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
+            doc.open();
+            doc.write(version.content);
+            doc.close();
+            doc.body.contentEditable = "true";
+          }
+        }, 50);
+      }, 50);
     }
-    
+
     calculateStats(version.content);
+    setAutoSaveStatus("unsaved");
     showFlash("Version restored", "success");
   };
 
   const applyFormatting = (command, value = null) => {
     const doc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow.document;
     if (!doc) return;
-
     doc.execCommand(command, false, value);
     doc.body.focus();
   };
@@ -230,7 +214,6 @@ export default function EditCoverLetterPage() {
   const insertList = (type) => {
     const doc = iframeRef.current?.contentDocument || iframeRef.current?.contentWindow.document;
     if (!doc) return;
-
     doc.execCommand(type === "ul" ? "insertUnorderedList" : "insertOrderedList");
     doc.body.focus();
   };
@@ -238,7 +221,6 @@ export default function EditCoverLetterPage() {
   const handleSave = async () => {
     try {
       let contentToSave = contentRef.current;
-      
       if (editorMode === "visual" && iframeRef.current) {
         const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
         contentToSave = doc.documentElement.innerHTML;
@@ -252,13 +234,13 @@ export default function EditCoverLetterPage() {
         position,
         content: contentToSave,
       });
-      
+
       setAutoSaveStatus("saved");
-      setVersionHistory(prev => [...prev, { 
-        timestamp: new Date(), 
-        content: contentToSave 
+      setVersionHistory(prev => [...prev, {
+        timestamp: new Date(),
+        content: contentToSave
       }].slice(-10));
-      
+
       showFlash("Cover letter saved!", "success");
       navigate("/coverletter");
     } catch (err) {
@@ -267,12 +249,46 @@ export default function EditCoverLetterPage() {
     }
   };
 
+  // 🔹 Generate improvement ideas
+  const generateAISuggestionsList = async () => {
+    const plainText = contentRef.current.replace(/<[^>]*>/g, "");
+    try {
+      const res = await AIAPI.generateText({
+        prompt: `Suggest 3 unique, high-quality ways to improve this cover letter. Focus strictly on writing quality, tone, and clarity — not HTML, structure, or CSS. Return only a clean numbered list (e.g., "1. Make it sound more confident"), with no duplicates or explanations.`,
+        system_message: `You are an expert writing coach. The user is editing a cover letter that includes HTML markup. 
+DO NOT comment on HTML tags, CSS, or formatting.
+DO NOT mention removing code.
+DO NOT duplicate ideas.
+Output exactly 3 unique suggestions as plain text, in numbered list form only.
+Here is the user's cover letter text:\n\n${plainText.substring(0, 800)}...`
+      });
+
+      const text = res.data.response || res.data.result || res.data.text || "";
+      setAiSuggestions(text.split(/\n+/).filter(l => l.trim().length > 0));
+    } catch (err) {
+      console.error("AI suggestion generation failed:", err);
+      showFlash("Failed to get AI suggestions.", "error");
+    }
+  };
+
+  // 🔹 Apply improvement -> TODO change later with a seperate function that does this instead of just having the prompt in  the jsx...
   const sendAISuggestion = async (userPrompt) => {
     const plainText = contentRef.current.replace(/<[^>]*>/g, "");
-    
     return AIAPI.generateText({
-      prompt: userPrompt,
-      system_message: `You are a professional cover letter editor. Here is the current cover letter:\n\n${plainText.substring(0, 500)}...\n\nThe user is applying for a ${position} position at ${company}. Help them improve their cover letter based on their request.`
+      prompt: `Using this feedback: "${userPrompt}", rewrite the following cover letter to improve it. 
+Keep the same HTML structure and tags. 
+Do not wrap your response in markdown or code blocks. 
+Do not add explanations or commentary. 
+Return ONLY the improved HTML.`,
+      system_message: `You are a professional cover letter editor. 
+The user's cover letter includes HTML markup that defines its layout. 
+You must preserve ALL existing HTML structure and tags exactly as-is (do not remove or reformat them). 
+Do not alter, critique, or remove CSS or styling.
+Do not include markdown fences like '''html.
+Do not append any commentary or explanations — return ONLY the improved HTML content.
+Maintain the same formatting, section order, and tone.
+
+Here is the user's current letter:\n\n${plainText}`
     });
   };
 
@@ -285,23 +301,19 @@ export default function EditCoverLetterPage() {
     setAiLoading(true);
     try {
       const res = await sendAISuggestion(aiPrompt);
-      const suggestion = res.data.response;
+      const suggestion = res.data.response || res.data.result || res.data.text || "";
 
-      
       if (iframeRef.current && editorMode === "visual") {
         const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow.document;
-        doc.body.focus();
-        const para = doc.createElement("p");
-        para.innerHTML = `<em style="color: #9c27b0;">💡 Suggestion: ${suggestion}</em>`;
-        doc.body.appendChild(para);
-        
-        // Update the content reference to preserve state
+        doc.body.innerHTML = suggestion;
         contentRef.current = doc.documentElement.innerHTML;
         setHtmlContent(doc.documentElement.innerHTML);
+        calculateStats(doc.documentElement.innerHTML);
         setAutoSaveStatus("unsaved");
       }
-      
+
       setAiPrompt("");
+      showFlash("AI improvements applied.", "success");
     } catch (err) {
       console.error("AI suggestion error:", err);
       showFlash("Failed to get AI suggestion.", "error");
@@ -435,92 +447,49 @@ export default function EditCoverLetterPage() {
                   <List size={16} />
                 </button>
                 <button onClick={() => insertList("ol")} title="Numbered List" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
-                  1.
+                  <List size={16} style={{ transform: "rotate(90deg)" }} />
                 </button>
 
-                <select
-                  onChange={(e) => applyFormatting("formatBlock", e.target.value)}
-                  defaultValue="p"
-                  style={{ padding: "6px 10px", cursor: "pointer", borderRadius: "3px", border: "1px solid #ccc" }}
-                >
-                  <option value="p">Paragraph</option>
-                  <option value="h1">Heading 1</option>
-                  <option value="h2">Heading 2</option>
-                  <option value="h3">Heading 3</option>
-                </select>
+                <div style={{ width: "1px", height: "20px", background: "#ccc", margin: "0 5px" }} />
 
-                <button
-                  onClick={() => setShowAIHelper(!showAIHelper)}
-                  style={{
-                    marginLeft: "auto",
-                    padding: "8px 12px",
-                    background: "#9c27b0",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px"
-                  }}
-                >
+                <button onClick={() => setShowAIHelper(!showAIHelper)} title="AI Helper" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px", background: showAIHelper ? "#e0f7fa" : "white" }}>
                   <Zap size={16} />
-                  AI Helper
+                </button>
+                <button onClick={handleSave} title="Save Now" style={{ padding: "6px 10px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "3px" }}>
+                  <Save size={16} />
                 </button>
               </div>
 
-              {/* AI Helper Panel */}
-              {showAIHelper && (
-                <div style={{
-                  background: "#f9f3f0",
-                  border: "2px solid #9c27b0",
-                  borderRadius: "6px",
-                  padding: "15px",
-                  marginBottom: "15px"
-                }}>
-                  <h4 style={{ margin: "0 0 10px 0" }}>✨ AI Assistant</h4>
-                  <textarea
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="e.g., 'Make this section more impactful' or 'Add a line about leadership skills'"
-                    style={{
-                      width: "100%",
-                      minHeight: "60px",
-                      padding: "10px",
-                      marginBottom: "10px",
-                      borderRadius: "4px",
-                      border: "1px solid #ddd"
-                    }}
-                  />
-                  <button
-                    onClick={handleAISuggestion}
-                    disabled={aiLoading}
-                    style={{
-                      padding: "8px 16px",
-                      background: "#9c27b0",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: aiLoading ? "not-allowed" : "pointer",
-                      opacity: aiLoading ? 0.6 : 1
-                    }}
-                  >
-                    {aiLoading ? "Generating..." : "Get Suggestions"}
-                  </button>
-                </div>
-              )}
-
-              {/* WYSIWYG Editor */}
+              {/* Iframe Editor */}
               <iframe
                 ref={iframeRef}
-                style={{
-                  width: "100%",
-                  minHeight: "600px",
+                title="Cover Letter Editor"
+                style={{ width: "100%", height: "500px", border: "1px solid #ccc", borderRadius: "4px", background: "white" }}
+              ></iframe>
+
+              {/* Synonym Popup */}
+              {showSynonyms && synonyms.length > 0 && (
+                <div style={{
+                  position: "absolute",
+                  background: "white",
                   border: "1px solid #ccc",
-                  borderRadius: "6px",
-                  marginBottom: "15px"
-                }}
-              />
+                  borderRadius: "4px",
+                  padding: "8px",
+                  top: "100px",
+                  right: "20px",
+                  width: "200px",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+                }}>
+                  <strong>Synonyms:</strong>
+                  <ul style={{ listStyle: "none", padding: 0, marginTop: "5px" }}>
+                    {synonyms.map((syn, idx) => (
+                      <li key={idx} onClick={() => replaceSynonym(syn)} style={{ cursor: "pointer", marginBottom: "4px", color: "#2196f3" }}>
+                        {syn}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </>
           )}
 
@@ -536,137 +505,126 @@ export default function EditCoverLetterPage() {
               }}
               style={{
                 width: "100%",
-                minHeight: "600px",
-                padding: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
-                marginBottom: "15px",
+                height: "500px",
                 fontFamily: "monospace",
-                fontSize: "12px"
+                fontSize: "14px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                padding: "10px"
               }}
             />
           )}
-
-          {/* Action Buttons */}
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              onClick={handleSave}
-              style={{
-                padding: "10px 20px",
-                background: "#34c759",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px"
-              }}
-            >
-              <Save size={16} />
-              Save Changes
-            </button>
-            <button
-              onClick={() => navigate("/coverletter")}
-              style={{
-                padding: "10px 20px",
-                background: "#ff3b30",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontWeight: "bold"
-              }}
-            >
-              Cancel
-            </button>
-          </div>
         </div>
 
         {/* Sidebar */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-          {/* Statistics */}
-          <div style={{ background: "#f5f5f5", padding: "15px", borderRadius: "6px" }}>
-            <h4 style={{ margin: "0 0 10px 0" }}>📊 Statistics</h4>
-            <div style={{ fontSize: "12px", lineHeight: "1.8" }}>
-              <div>Words: <strong>{wordCount}</strong></div>
-              <div>Characters: <strong>{charCount}</strong></div>
-              <div>Readability: <strong>{readabilityScore}%</strong></div>
-            </div>
-          </div>
+        <div>
+          {/* AI Helper */}
+          {showAIHelper && (
+            <div style={{
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              padding: "15px",
+              background: "#fafafa",
+              marginBottom: "20px"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                <Zap size={18} />
+                <h4 style={{ margin: 0 }}>AI Helper</h4>
+              </div>
 
-          {/* Grammar Issues */}
-          {grammarIssues.length > 0 && (
-            <div style={{ background: "#fff3cd", padding: "15px", borderRadius: "6px", border: "1px solid #ffc107" }}>
-              <h4 style={{ margin: "0 0 10px 0", color: "#856404" }}>⚠️ Grammar Check</h4>
-              <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "12px" }}>
-                {grammarIssues.map((issue, i) => (
-                  <li key={i} style={{ color: "#856404", marginBottom: "5px" }}>{issue}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Ask AI to make improvements..."
+                style={{ width: "100%", height: "80px", padding: "8px", marginBottom: "10px", borderRadius: "4px" }}
+              />
 
-          {/* Synonyms */}
-          {showSynonyms && selectedWord && (
-            <div style={{ background: "#e3f2fd", padding: "15px", borderRadius: "6px", border: "1px solid #2196f3" }}>
-              <h4 style={{ margin: "0 0 10px 0" }}>🔤 Synonyms for "{selectedWord}"</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {synonyms.length > 0 ? (
-                  synonyms.map((syn, i) => (
-                    <button
-                      key={i}
-                      onClick={() => replaceSynonym(syn)}
-                      style={{
-                        padding: "8px 12px",
-                        background: "#2196f3",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "12px",
-                        textAlign: "left"
-                      }}
-                    >
-                      {syn}
-                    </button>
-                  ))
-                ) : (
-                  <p style={{ fontSize: "12px", margin: 0, color: "#666" }}>No synonyms found</p>
+              <button
+                onClick={handleAISuggestion}
+                disabled={aiLoading}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  background: "#2196f3",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: aiLoading ? "not-allowed" : "pointer"
+                }}
+              >
+                {aiLoading ? "Applying..." : "Apply Suggestion"}
+              </button>
+
+              <div style={{ marginTop: "15px" }}>
+                <button
+                  onClick={generateAISuggestionsList}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    padding: "6px 10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    background: "white",
+                    cursor: "pointer"
+                  }}
+                >
+                  <Lightbulb size={16} /> Generate Ideas
+                </button>
+
+                {aiSuggestions.length > 0 && (
+                  <ul style={{ marginTop: "10px", paddingLeft: "20px" }}>
+                    {aiSuggestions.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </div>
           )}
 
+          {/* Stats */}
+          <div style={{
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "15px",
+            background: "#fafafa"
+          }}>
+            <h4>Stats</h4>
+            <p><strong>Words:</strong> {wordCount}</p>
+            <p><strong>Characters:</strong> {charCount}</p>
+            <p><strong>Readability:</strong> {readabilityScore}/100</p>
+          </div>
+
           {/* Version History */}
-          {versionHistory.length > 1 && (
-            <div style={{ background: "#f5f5f5", padding: "15px", borderRadius: "6px" }}>
-              <h4 style={{ margin: "0 0 10px 0" }}>⏱️ Version History</h4>
-              <div style={{ fontSize: "11px", maxHeight: "200px", overflowY: "auto" }}>
-                {versionHistory.map((version, i) => (
-                  <button
-                    key={i}
-                    onClick={() => restoreVersion(version)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      padding: "8px",
-                      marginBottom: "5px",
-                      background: "#fff",
-                      border: "1px solid #ddd",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      fontSize: "11px"
-                    }}
-                  >
-                    {version.timestamp.toLocaleTimeString()}
-                  </button>
-                ))}
+          <div style={{
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "15px",
+            background: "#fafafa",
+            marginTop: "20px"
+          }}>
+            <h4>Version History</h4>
+            {versionHistory.length === 0 && <p>No versions yet</p>}
+            {versionHistory.map((v, idx) => (
+              <div key={idx} style={{ marginBottom: "5px" }}>
+                <button
+                  onClick={() => restoreVersion(v)}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    background: "white",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    padding: "5px",
+                    cursor: "pointer"
+                  }}
+                >
+                  {new Date(v.timestamp).toLocaleTimeString()} - Restore
+                </button>
               </div>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       </div>
     </div>
