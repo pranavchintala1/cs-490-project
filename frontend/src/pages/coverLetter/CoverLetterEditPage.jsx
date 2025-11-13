@@ -220,6 +220,7 @@ export default function EditCoverLetterPage() {
         prompt: `
 User instructions: "${aiPrompt}"
 Personalize for company "${company}" and role "${position}".
+if "${company}" is specified, then you MUST provide at one or two specific details about the company, as well as a comment about recent news of the company in the cover letter (the more specific, the better). This is non-negotiable.
 Preserve all HTML and inline styles.
 Return ONLY updated HTML content.
 DO NOT ADD YOUR OWN STYLINGS OR HTML ELEMENTS OR CSS. ONLY WHAT WAS ORIGINALLY THERE. 
