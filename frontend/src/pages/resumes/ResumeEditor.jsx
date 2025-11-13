@@ -8,6 +8,9 @@ import SummaryEditor from '../../components/resumes/SummaryEditor';
 import ReorderSectionsEditor from '../../components/resumes/ReorderSectionsEditor';
 import TemplateCustomizer from '../../components/resumes/TemplateCustomizer';
 import ExperienceEditor from '../../components/resumes/ExperienceEditor';
+import EducationEditor from '../../components/resumes/EducationEditor';
+import CertificationsEditor from '../../components/resumes/CertificationsEditor';
+import ProjectsEditor from '../../components/resumes/ProjectsEditor';
 import SkillsManager from '../../components/resumes/SkillsManager';
 import SaveAsTemplateModal from '../../components/resumes/SaveAsTemplateModal';
 import JobPostingSelector from '../../components/resumes/JobPostingSelector';
@@ -56,6 +59,37 @@ export default function ResumeEditor() {
         const response = await ResumesAPI.get(id);
         let resumeData = response.data || response;
 
+        // Ensure sections array includes all necessary sections (for backward compatibility)
+        const allSections = ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'];
+        if (!resumeData.sections || resumeData.sections.length === 0) {
+          resumeData.sections = allSections;
+        } else {
+          // Add missing sections that aren't in the current sections array
+          const missingSections = allSections.filter(s => !resumeData.sections.includes(s));
+          if (missingSections.length > 0) {
+            // Insert missing sections at appropriate positions
+            const newSections = [...resumeData.sections];
+            missingSections.forEach(section => {
+              if (section === 'certifications' && !newSections.includes('certifications')) {
+                const eduIndex = newSections.indexOf('education');
+                newSections.splice(eduIndex + 1, 0, 'certifications');
+              } else if (section === 'projects' && !newSections.includes('projects')) {
+                const certIndex = newSections.indexOf('certifications');
+                newSections.splice(certIndex + 1, 0, 'projects');
+              }
+            });
+            resumeData.sections = newSections;
+          }
+        }
+
+        // Ensure certifications and projects arrays exist
+        if (!resumeData.certifications) {
+          resumeData.certifications = [];
+        }
+        if (!resumeData.projects) {
+          resumeData.projects = [];
+        }
+
         // Transform backend field names to frontend field names
         if (resumeData.experience && Array.isArray(resumeData.experience)) {
           resumeData.experience = resumeData.experience.map((exp, index) => ({
@@ -75,6 +109,47 @@ export default function ResumeEditor() {
           resumeData.skills = resumeData.skills.map(skill =>
             typeof skill === 'string' ? skill : skill.name || ''
           );
+        }
+
+        // Transform education field names to match frontend expectations
+        if (resumeData.education && Array.isArray(resumeData.education)) {
+          resumeData.education = resumeData.education.map((edu, index) => ({
+            id: index + 1,
+            school: edu.institution_name,
+            degree: edu.degree,
+            field: edu.field_of_study,
+            year: edu.graduation_date,
+            gpa: edu.gpa,
+            achievements: edu.achievements,
+          }));
+        }
+
+        // Transform certifications field names to match frontend expectations
+        if (resumeData.certifications && Array.isArray(resumeData.certifications)) {
+          resumeData.certifications = resumeData.certifications.map((cert, index) => ({
+            id: index + 1,
+            name: cert.name,
+            issuer: cert.issuer,
+            dateEarned: cert.date_earned,
+            dateExpiry: cert.date_expiry,
+            certNumber: cert.cert_number,
+            category: cert.category,
+          }));
+        }
+
+        // Transform projects field names to match frontend expectations
+        if (resumeData.projects && Array.isArray(resumeData.projects)) {
+          resumeData.projects = resumeData.projects.map((proj, index) => ({
+            id: index + 1,
+            title: proj.project_name,
+            description: proj.description,
+            role: proj.role,
+            startDate: proj.start_date,
+            endDate: proj.end_date,
+            skills: proj.skills || [],
+            url: proj.project_url,
+            achievements: proj.achievements,
+          }));
         }
 
         setResume(resumeData);
@@ -198,6 +273,41 @@ export default function ResumeEditor() {
         typeof skill === 'string' ? { name: skill } : skill
       );
 
+      // Transform education: rename frontend fields to backend field names
+      const transformedEducation = (resume.education || []).map(edu => ({
+        institution_name: edu.school,
+        degree: edu.degree,
+        field_of_study: edu.field,
+        graduation_date: edu.year,
+        gpa: edu.gpa,
+        achievements: edu.achievements,
+        // Remove frontend-only fields: id
+      }));
+
+      // Transform certifications: rename frontend fields to backend field names
+      const transformedCertifications = (resume.certifications || []).map(cert => ({
+        name: cert.name,
+        issuer: cert.issuer,
+        date_earned: cert.dateEarned,
+        date_expiry: cert.dateExpiry,
+        cert_number: cert.certNumber,
+        category: cert.category,
+        // Remove frontend-only fields: id
+      }));
+
+      // Transform projects: rename frontend fields to backend field names
+      const transformedProjects = (resume.projects || []).map(proj => ({
+        project_name: proj.title,
+        description: proj.description,
+        role: proj.role,
+        start_date: proj.startDate,
+        end_date: proj.endDate,
+        skills: proj.skills || [],
+        project_url: proj.url,
+        achievements: proj.achievements,
+        // Remove frontend-only fields: id
+      }));
+
       // Only send fields that the backend expects, exclude _id, uuid, and timestamps
       const updateData = {
         name: resume.name,
@@ -205,7 +315,9 @@ export default function ResumeEditor() {
         contact: resume.contact,
         summary: resume.summary,
         experience: transformedExperience,
-        education: resume.education,
+        education: transformedEducation,
+        certifications: transformedCertifications,
+        projects: transformedProjects,
         skills: transformedSkills,
         colors: resume.colors,
         fonts: resume.fonts,
@@ -460,6 +572,30 @@ export default function ResumeEditor() {
             </li>
             <li className="nav-item">
               <button
+                className={`nav-link ${activeTab === 'education' ? 'active' : ''}`}
+                onClick={() => setActiveTab('education')}
+              >
+                Education
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'certifications' ? 'active' : ''}`}
+                onClick={() => setActiveTab('certifications')}
+              >
+                Certifications
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'projects' ? 'active' : ''}`}
+                onClick={() => setActiveTab('projects')}
+              >
+                Projects
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
                 className={`nav-link ${activeTab === 'skills' ? 'active' : ''}`}
                 onClick={() => setActiveTab('skills')}
               >
@@ -503,6 +639,24 @@ export default function ResumeEditor() {
             <ExperienceEditor
               experience={resume.experience}
               onUpdate={(experience) => setResume({...resume, experience})}
+            />
+          )}
+          {activeTab === 'education' && (
+            <EducationEditor
+              education={resume.education}
+              onUpdate={(education) => setResume({...resume, education})}
+            />
+          )}
+          {activeTab === 'certifications' && (
+            <CertificationsEditor
+              certifications={resume.certifications}
+              onUpdate={(certifications) => setResume({...resume, certifications})}
+            />
+          )}
+          {activeTab === 'projects' && (
+            <ProjectsEditor
+              projects={resume.projects}
+              onUpdate={(projects) => setResume({...resume, projects})}
             />
           )}
           {activeTab === 'skills' && (
