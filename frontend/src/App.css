@@ -49,3 +49,7 @@
 #dashboard-dropdown::after {
   display: none;
 }
+
+#profile-dropdown::after {
+  display: none;
+}
