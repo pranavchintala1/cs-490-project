@@ -28,7 +28,7 @@ function Login() {
       localStorage.setItem("session", res.data.session_token);
       localStorage.setItem("uuid", res.data.uuid);
 
-      navigate(`/profile`);
+      navigate(`/dashboard`);
       return;
     } catch (error) {
       console.log("ERROR", error);
@@ -64,7 +64,7 @@ function Login() {
     }
 
     // Otherwise, go to profile
-    navigate("/profile");
+    navigate("/dashboard");
   } catch (error) {
     console.error("Google login error:", error);
     showFlash(error?.response?.data?.detail || "Google login failed", "error");
@@ -110,7 +110,7 @@ function Login() {
       }
 
 
-      navigate("/profile");
+      navigate("/dashboard");
     } catch (err) {
       console.error("Microsoft login failed:", err);
       showFlash(err.message, "error");
