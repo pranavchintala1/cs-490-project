@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, File, UploadFile, Form
 from typing import Optional
 import os
 import json
+from datetime import datetime, timezone
+from uuid import uuid4
 
 from mongo.templates_dao import templates_dao
 from mongo.resumes_dao import resumes_dao
@@ -45,6 +47,74 @@ async def create_template(template: Template, uuid: str = Depends(authorize)):
         raise HTTPException(500, "Encountered internal server error")
 
     return {"detail": "Successfully created template", "template_id": result}
+
+
+@templates_router.post("/upload", tags=["templates"])
+async def upload_resume_template(
+    file: UploadFile = File(...),
+    name: str = Form(...),
+    description: str = Form(""),
+    uuid: str = Depends(authorize)
+):
+    """
+    Upload an HTML resume file as a template
+    Related to UC-046: Resume Template Management - Import existing resume as template
+    """
+    # Validate file type
+    if file.content_type != "text/html" and not file.filename.lower().endswith('.html'):
+        raise HTTPException(status_code=400, detail="Only HTML files are supported")
+
+    try:
+        # Read HTML content
+        content = await file.read()
+        html_content = content.decode('utf-8')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read HTML file: {str(e)}")
+
+    try:
+        # Generate unique ID for template
+        template_id = str(uuid4())
+        created_at = datetime.now(timezone.utc)
+
+        # Create new template document
+        new_template = {
+            "_id": template_id,
+            "uuid": uuid,
+            "name": name,
+            "description": description,
+            "template_type": "imported",
+            "html_content": html_content,  # Store raw HTML
+            "colors": None,
+            "fonts": None,
+            "sections": ["contact", "summary", "experience", "education", "skills"],
+            "is_default": False,
+            "created_at": created_at,
+            "updated_at": created_at,
+            "is_public": False,
+            "uploadedFile": True  # Mark as imported file
+        }
+
+        # Save to database
+        await templates_dao.add_template(new_template)
+
+        return {
+            "template_id": template_id,
+            "template": {
+                "_id": template_id,
+                "uuid": uuid,
+                "name": name,
+                "description": description,
+                "template_type": "imported",
+                "is_default": False,
+                "created_at": created_at.isoformat(),
+                "uploadedFile": True
+            }
+        }
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        print(f"Error uploading template: {e}")
+        raise HTTPException(500, "Encountered internal server error")
 
 
 @templates_router.get("/library", tags=["templates"])

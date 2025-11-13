@@ -118,6 +118,25 @@ const PDFAPI = {
       throw new Error(err?.response?.data?.detail || 'Failed to export PDF');
     }
   },
+
+  /**
+   * Export resume as HTML from stored data
+   * Used by ExportResumePage - generates HTML file from resume data
+   */
+  exportHTMLFromData: async (resumeId) => {
+    try {
+      console.log('[PDFAPI] Exporting HTML from resume data:', resumeId);
+      const response = await api.post(`/resumes/${resumeId}/export-html`, {}, {
+        responseType: 'blob'
+      });
+
+      console.log('[PDFAPI] HTML exported successfully');
+      return response.data;
+    } catch (err) {
+      console.error('[PDFAPI] HTML export error:', err);
+      throw new Error(err?.response?.data?.detail || 'Failed to export HTML');
+    }
+  },
 };
 
 export default PDFAPI;

@@ -246,6 +246,25 @@ const TemplatesAPI = {
   },
 
   /**
+   * Upload an HTML resume file as a template
+   */
+  upload: async (formData) => {
+    const response = await fetch(`${API_BASE}/upload`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+      // Don't set Content-Type header - browser will set it with boundary
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to upload template');
+    }
+
+    return response.json();
+  },
+
+  /**
    * Share a template with other users
    */
   shareTemplate: async (templateId, userIds) => {
