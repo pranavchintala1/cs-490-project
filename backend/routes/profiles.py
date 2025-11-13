@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from datetime import datetime, timezone
 from io import BytesIO
 import bcrypt
+from pathlib import Path
 
 from mongo.profiles_dao import profiles_dao
 from mongo.media_dao import media_dao
@@ -126,10 +127,28 @@ async def retrieve_pfp(uuid: str = Depends(authorize)):
         media_ids = await media_dao.get_all_associated_media_ids(uuid)
     except Exception as e:
         raise HTTPException(500, "Encountered internal service error")
-    
+
     if not media_ids:
-        raise HTTPException(400, "Could not find profile picture for user")
-    
+        # Return default profile picture if user hasn't set one
+        default_image_path = Path(__file__).parent.parent.parent / "frontend" / "public" / "default.png"
+
+        if not default_image_path.exists():
+            raise HTTPException(500, "Default profile picture not found")
+
+        try:
+            with open(default_image_path, "rb") as f:
+                default_image_content = f.read()
+
+            return StreamingResponse(
+                BytesIO(default_image_content),
+                media_type="image/png",
+                headers={
+                    "Content-Disposition": 'inline; filename="default.png"'
+                }
+            )
+        except Exception as e:
+            raise HTTPException(500, "Could not load default profile picture")
+
     try:
         media = await media_dao.get_media(media_ids[-1])
     except:
