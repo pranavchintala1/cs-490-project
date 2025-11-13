@@ -272,12 +272,12 @@ export default function ResumeEditor() {
             setResume({...resume, summary: suggestion.summary});
           }
           if (suggestion.experience_bullets) {
-            // Add bullets to first experience entry
+            // REPLACE bullets in first experience entry (not add)
             if (resume.experience && resume.experience.length > 0) {
               const updatedExp = [...resume.experience];
               updatedExp[0] = {
                 ...updatedExp[0],
-                description: (updatedExp[0].description || '') + '\n' + suggestion.experience_bullets.join('\n'),
+                description: suggestion.experience_bullets.join('\n'),
               };
               setResume({...resume, experience: updatedExp});
             }
@@ -303,11 +303,28 @@ export default function ResumeEditor() {
           break;
 
         case 'experience':
-          if (suggestion.experience_index !== undefined && suggestion.new_description) {
+          if (suggestion.experience_index !== undefined && suggestion.bullet_replacements) {
             const updatedExp = [...resume.experience];
+            const expToUpdate = updatedExp[suggestion.experience_index];
+
+            // Get current bullets
+            const currentBullets = expToUpdate.description
+              ? expToUpdate.description.split('\n').filter(line => line.trim() !== '')
+              : [];
+
+            // Replace selected bullets with AI alternatives
+            const updatedBullets = currentBullets.map((bullet, bulletIdx) => {
+              if (suggestion.bullet_replacements[bulletIdx]) {
+                // Replace with AI suggestion
+                return suggestion.bullet_replacements[bulletIdx];
+              }
+              // Keep original if not selected
+              return bullet;
+            });
+
             updatedExp[suggestion.experience_index] = {
-              ...updatedExp[suggestion.experience_index],
-              description: suggestion.new_description,
+              ...expToUpdate,
+              description: updatedBullets.join('\n'),
             };
             setResume({...resume, experience: updatedExp});
           }
@@ -616,6 +633,7 @@ export default function ResumeEditor() {
           onReject={handleRejectSuggestion}
           onClose={handleCloseAiPanel}
           loading={aiLoading}
+          experienceCount={resume?.experience?.length || 0}
         />
       )}
 

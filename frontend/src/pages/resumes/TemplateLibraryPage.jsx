@@ -200,7 +200,13 @@ export default function TemplateLibraryPage() {
   };
 
   if (loading) {
-    return <div className="text-center p-5">Loading templates...</div>;
+    return (
+      <div className="dashboard-gradient min-vh-100 py-4">
+        <div className="text-center p-5">
+          <h2 className="text-white mb-3">Loading templates...</h2>
+        </div>
+      </div>
+    );
   }
 
   // Create demo resume with selected template
@@ -210,7 +216,7 @@ export default function TemplateLibraryPage() {
   } : null;
 
   return (
-    <div className="template-library-container">
+    <div className="dashboard-gradient template-library-container">
       <div className="template-library-header">
         <div>
           <h1>Resume Templates</h1>

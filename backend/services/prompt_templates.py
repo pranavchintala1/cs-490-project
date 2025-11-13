@@ -73,19 +73,36 @@ JOB POSTING:
 - Description: {job_description}
 - Requirements: {job_requirements}
 
-For each work experience entry, provide:
-1. Assessment of relevance to the job (0-100 score)
-2. 3 alternative descriptions that emphasize different relevant skills/achievements
-3. Key keywords from the job posting that match this experience
+For each work experience, analyze EACH BULLET POINT and generate alternatives.
 
-Return as JSON with array of experiences, each containing:
-"title", "original_description", "relevance_score", "variants" (array of 3 alternatives), "matched_keywords"
+Return ONLY valid JSON (no markdown, no extra text):
+{{
+  "experiences": [
+    {{
+      "title": "Job Title",
+      "original_description": "Full original description",
+      "relevance_score": 75,
+      "matched_keywords": ["keyword1", "keyword2"],
+      "bullet_alternatives": [
+        {{
+          "original_bullet": "Original bullet text",
+          "alternatives": ["Better version 1", "Better version 2"]
+        }}
+      ]
+    }}
+  ]
+}}
 
-Focus on:
-- Using action verbs from the job requirements
-- Quantifying achievements (percentages, numbers, metrics)
-- Emphasizing technical skills matching the job
-- Highlighting leadership, collaboration, or problem-solving where relevant
+Instructions:
+1. For EACH bullet point in the experience, create one bullet_alternatives object
+2. Keep original_bullet exactly as it appears
+3. Provide 2 alternatives that emphasize job-relevant skills
+4. Use action verbs from job requirements
+5. Add metrics/quantification where possible
+6. relevance_score: how well this experience matches (0-100)
+7. matched_keywords: top job requirements found in this experience
+
+IMPORTANT: Return ONLY the JSON object, nothing else. No markdown, no explanation.
 """
 
     @staticmethod

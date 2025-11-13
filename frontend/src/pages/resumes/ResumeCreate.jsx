@@ -67,6 +67,7 @@ export default function ResumeCreate() {
     } catch (err) {
       alert('Failed to create resume: ' + err.message);
       console.error('Error creating resume:', err);
+    } finally {
       setLoading(false);
     }
   };

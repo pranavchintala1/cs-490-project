@@ -102,22 +102,43 @@ export default function ResumePreview({ resume, onSectionReorder }) {
       {experience && experience.length > 0 && (
         <div className="resume-section">
           <h2 className="section-heading">PROFESSIONAL EXPERIENCE</h2>
-          {experience.map((exp) => (
-            <div key={exp.id} className="experience-entry">
-              <div className="exp-header-row">
-                <h3 className="job-title">{exp.position || 'Job Title'}</h3>
-                <span className="date-range">
-                  {exp.startDate} – {exp.endDate}
-                </span>
+          {experience.map((exp) => {
+            // Handle both string and object descriptions
+            const getDescriptionText = (desc) => {
+              if (!desc) return null;
+              if (typeof desc === 'string') return desc;
+              if (typeof desc === 'object' && desc.description) return desc.description;
+              return null;
+            };
+
+            const descriptionText = getDescriptionText(exp.description);
+
+            // Split description by newlines to create separate bullet points
+            const bulletPoints = descriptionText
+              ? descriptionText.split('\n').filter(line => line.trim() !== '')
+              : [];
+
+            return (
+              <div key={exp.id} className="experience-entry">
+                <div className="exp-header-row">
+                  <h3 className="job-title">{exp.position || 'Job Title'}</h3>
+                  <span className="date-range">
+                    {exp.startDate} – {exp.endDate}
+                  </span>
+                </div>
+                <div className="company-name">{exp.company || 'Company Name'}</div>
+                <ul className="description-list">
+                  {bulletPoints.length > 0 ? (
+                    bulletPoints.map((bullet, idx) => (
+                      <li key={idx}>{bullet.trim()}</li>
+                    ))
+                  ) : descriptionText ? (
+                    <li>{descriptionText}</li>
+                  ) : null}
+                </ul>
               </div>
-              <div className="company-name">{exp.company || 'Company Name'}</div>
-              <ul className="description-list">
-                {exp.description && (
-                  <li>{exp.description}</li>
-                )}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </>

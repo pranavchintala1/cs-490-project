@@ -151,7 +151,7 @@ export default function ResumeList() {
         />
       </div>
 
-        <Link to="/resumes/create" className="btn btn-primary">
+        <Link to="/resumes/templates" className="btn btn-primary">
           + Create New Resume
         </Link>
       </div>
