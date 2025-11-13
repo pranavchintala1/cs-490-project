@@ -6,7 +6,7 @@ Related to UC-053: Export Resume
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 import io
 
 from mongo.resumes_dao import resumes_dao
@@ -178,6 +178,50 @@ async def export_resume_pdf(resume_id: str, uuid: str = Depends(authorize)):
         error_msg = str(e)
         print(f"[Export PDF Error] {error_msg}")
         raise HTTPException(500, f"PDF export error: {error_msg}")
+
+
+@pdf_router.post("/{resume_id}/export-html", tags=["resumes"])
+async def export_resume_html(resume_id: str, uuid: str = Depends(authorize)):
+    """
+    Export resume as HTML from stored resume data
+    Used by ExportResumePage for web-friendly HTML export
+    Related to UC-051: Resume Export and Formatting
+    """
+    try:
+        # Fetch resume to verify ownership
+        resume = await resumes_dao.get_resume(resume_id)
+
+        if not resume:
+            raise HTTPException(404, "Resume not found")
+
+        # Verify ownership
+        if resume.get("uuid") != uuid:
+            raise HTTPException(403, "Not authorized to access this resume")
+
+        # Build HTML from resume data
+        print(f"[Export HTML] Building HTML from resume data for resume_id={resume_id}")
+        resume_html = HTMLPDFGenerator.build_resume_html_from_data(resume)
+
+        # Wrap with full HTML document and styles
+        full_html = HTMLPDFGenerator.wrap_resume_html(resume_html)
+
+        # Encode HTML to bytes
+        html_bytes = full_html.encode('utf-8')
+
+        return StreamingResponse(
+            io.BytesIO(html_bytes),
+            media_type="text/html",
+            headers={
+                "Content-Disposition": f"attachment; filename={resume.get('name', 'resume')}.html"
+            }
+        )
+
+    except HTTPException as http:
+        raise http
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[Export HTML Error] {error_msg}")
+        raise HTTPException(500, f"HTML export error: {error_msg}")
 
 
 @pdf_router.post("/{resume_id}/generate-docx", tags=["resumes"])
