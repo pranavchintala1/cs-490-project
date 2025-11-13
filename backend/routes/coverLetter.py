@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Header, Path, File, UploadFile, Form, Body
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
@@ -10,11 +10,24 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 import io
 import tempfile
 import requests
+from bs4 import BeautifulSoup
 
 from schema.CoverLetter import CoverLetterIn, CoverLetterOut
 from mongo.cover_letters_dao import cover_letters_dao
 
 coverletter_router = APIRouter()
+
+# ============================================================
+# GET usage stats aggregated by template type (MUST BE FIRST)
+# ============================================================
+@coverletter_router.get("/cover-letters/usage/by-type")
+async def get_usage_by_template_type():
+    """Get aggregated usage counts grouped by template type (style_industry)."""
+    try:
+        usage_stats = await cover_letters_dao.get_usage_by_template_type()
+        return usage_stats
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get usage stats: {str(e)}")
 
 # ============================================================
 # GET a single cover letter by ID
@@ -38,6 +51,8 @@ async def get_coverletter(
         "position": letter.get("position"),
         "content": letter.get("content"),
         "created_at": letter.get("created_at"),
+        "style": letter.get("style"),        
+        "industry": letter.get("industry")
     }
 
 # ============================================================
@@ -82,7 +97,9 @@ async def add_coverletter(
         "company": coverletter.company,
         "position": coverletter.position,
         "content": coverletter.content,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
+        "usage_count": 1 if coverletter.template_type else 0,
+        "template_type": getattr(coverletter, 'template_type', None)
     }
 
     inserted_id = await cover_letters_dao.add_cover_letter(new_letter)
@@ -119,12 +136,19 @@ async def update_coverletter(
 # DELETE a cover letter
 # ============================================================
 @coverletter_router.delete("/cover-letters/{letter_id}")
-async def delete_coverletter(letter_id: str = Path(...)):
+async def delete_coverletter(
+    letter_id: str = Path(...),
+    uuid: str = Header(...)
+):
     """Delete a cover letter belonging to the current user."""
+    letter = await cover_letters_dao.get_cover_letter(letter_id, uuid)
+    if not letter:
+        raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")
+    
     deleted_count = await cover_letters_dao.delete_cover_letter(letter_id)
 
     if deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Cover letter not found or not owned by user")
+        raise HTTPException(status_code=404, detail="Cover letter not found")
 
     return {"message": "Deleted successfully"}
 
@@ -141,7 +165,6 @@ async def upload_coverletter(
 ):
     """Upload an HTML file and save as a cover letter."""
     
-    # Validate file type
     if file.content_type != "text/html" and not file.filename.lower().endswith('.html'):
         raise HTTPException(status_code=400, detail="Only HTML files are supported")
     
@@ -151,11 +174,9 @@ async def upload_coverletter(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to read HTML file: {str(e)}")
     
-    # Generate unique ID
     letter_id = str(uuid4())
     created_at = datetime.utcnow().isoformat()
     
-    # Create new cover letter document
     new_letter = {
         "_id": letter_id,
         "uuid": uuid,
@@ -163,12 +184,14 @@ async def upload_coverletter(
         "company": company,
         "position": position,
         "content": html_content,
-        "created_at": created_at
+        "created_at": created_at,
+        "usage_count": 0,
+        "uploadedFile": True,
+        "template_type": None
     }
     
     await cover_letters_dao.add_cover_letter(new_letter)
     
-    # Return the complete cover letter object
     return {
         "coverletter_id": letter_id,
         "letter": {
@@ -179,7 +202,8 @@ async def upload_coverletter(
             "position": position,
             "content": html_content,
             "created_at": created_at,
-            "uploadedFile": True
+            "uploadedFile": True,
+            "usage_count": 0
         }
     }
 
@@ -201,19 +225,15 @@ async def download_pdf(
         html_content = letter.get("content", "")
         filename = f"{letter.get('title', 'cover_letter')}.pdf"
         
-        # Use HTML2PDF.com API (free, no signup needed)
         response = requests.post(
             'https://api.html2pdf.app/v1/generate',
-            json={
-                'html': html_content
-            },
+            json={'html': html_content},
             timeout=30
         )
         
         if response.status_code != 200:
             raise HTTPException(status_code=500, detail="PDF generation failed")
         
-        # Write to temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
             tmp.write(response.content)
             tmp_path = tmp.name
@@ -227,65 +247,6 @@ async def download_pdf(
     except Exception as e:
         print(f"PDF Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
-
-
-def add_element_to_story(element, story, h1_style, h2_style, h3_style, normal_style, summary_style):
-    """Recursively add HTML elements to PDF story."""
-    if isinstance(element, str):
-        text = element.strip()
-        if text:
-            story.append(Paragraph(text, normal_style))
-        return
-    
-    tag = element.name
-    
-    if tag is None:
-        return
-    
-    elif tag == 'h1':
-        story.append(Paragraph(element.get_text(), h1_style))
-        story.append(Spacer(1, 0.1*inch))
-    
-    elif tag == 'h2':
-        story.append(Paragraph(element.get_text(), h2_style))
-        story.append(Spacer(1, 0.1*inch))
-    
-    elif tag == 'h3':
-        story.append(Paragraph(element.get_text(), h3_style))
-    
-    elif tag == 'p':
-        text = element.get_text(strip=True)
-        if text:
-            story.append(Paragraph(text, normal_style))
-    
-    elif tag == 'div':
-        class_attr = element.get('class', [])
-        
-        if 'summary' in class_attr:
-            text = element.get_text(strip=True)
-            story.append(Paragraph(f"<i>{text}</i>", summary_style))
-            story.append(Spacer(1, 0.1*inch))
-        else:
-            for child in element.children:
-                add_element_to_story(child, story, h1_style, h2_style, h3_style, normal_style, summary_style)
-    
-    elif tag == 'ul' or tag == 'ol':
-        for li in element.find_all('li', recursive=False):
-            story.append(Paragraph(f"• {li.get_text()}", normal_style))
-    
-    elif tag == 'li':
-        text = element.get_text(strip=True)
-        if text:
-            story.append(Paragraph(f"• {text}", normal_style))
-    
-    elif tag == 'header' or tag == 'footer':
-        for child in element.children:
-            add_element_to_story(child, story, h1_style, h2_style, h3_style, normal_style, summary_style)
-    
-    else:
-        if hasattr(element, 'children'):
-            for child in element.children:
-                add_element_to_story(child, story, h1_style, h2_style, h3_style, normal_style, summary_style)
 
 # ============================================================
 # GET download as DOCX
@@ -305,27 +266,22 @@ async def download_docx(
         html_content = letter.get("content", "")
         soup = BeautifulSoup(html_content, 'html.parser')
         
-        # Create new DOCX document
         doc = Document()
         
-        # Set default font
         style = doc.styles['Normal']
         font = style.font
         font.name = 'Segoe UI'
         font.size = Pt(11)
         
-        # Process HTML elements
         for element in soup.body.children:
             process_html_element(element, doc)
         
-        # Save to bytes
         doc_buffer = io.BytesIO()
         doc.save(doc_buffer)
         doc_buffer.seek(0)
         
         filename = f"{letter.get('title', 'cover_letter')}.docx"
         
-        # Write to temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as tmp:
             tmp.write(doc_buffer.getvalue())
             tmp_path = tmp.name
