@@ -3,114 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technical Cover Letter</title>
+    <title>Cover Letter</title>
     <style>
         body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #f0f0f0;
-            color: #333;
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-        }
-        header, main, footer {
+            color: #333;
+            background-color: #f9f9f9;
+            background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0), 
+                            linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
             padding: 20px;
-            margin: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        header {
-            text-align: center;
-            border-bottom: 3px solid #007bff;
-        }
-        main {
             max-width: 800px;
             margin: 0 auto;
         }
-        footer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #666;
-        }
-        h1, h2, h3 {
-            color: #007bff;
-        }
-        .contact-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9em;
+
+        .header {
+            text-align: right;
             margin-bottom: 20px;
+            color: #2c3e50;
         }
-        .summary, .skills, .experience {
-            margin-bottom: 30px;
+
+        .header p {
+            margin: 2px 0;
         }
-        .summary p, .skills ul, .experience p {
-            margin: 0;
-            padding: 0;
+
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            color: #2c3e50;
         }
-        .skills ul {
-            list-style-type: none;
-            padding-left: 20px;
+
+        .greeting {
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3e50;
         }
-        .skills ul li {
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="5" fill="%23007bff"/></svg>') no-repeat left center;
-            background-size: 10px;
-            padding-left: 20px;
-            margin-bottom: 5px;
+
+        .body {
+            margin-bottom: 20px;
+            color: #34495e;
         }
-        .experience h3 {
-            margin-bottom: 5px;
+
+        .closing {
+            text-align: left;
+            margin-top: 20px;
+            color: #2c3e50;
         }
-        .experience p {
-            font-size: 0.9em;
-            color: #666;
+
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <div class="contact-info">
-            <span>{{address}}</span>
-            <span>{{phone}}</span>
-            <span>{{email}}</span>
+    <div class="header">
+        <p>{{name}}</p>
+        <p>{{address}}</p>
+        <p>{{email}} | {{phone}}</p>
+    </div>
+
+    <div class="date">
+        <p>{{date}}</p>
+    </div>
+
+    <div class="greeting">
+        <p>Dear Hiring Manager,</p>
+    </div>
+
+    <div class="body">
+        <p>
+            I am excited to apply for the {{title}} role within the {{industry}} sector. With {{experience_level}} of experience in technical roles, I have developed a strong foundation in <span class="highlight">{{skills}}</span>, among other areas. My most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}} allowed me to refine my abilities in a fast-paced, innovative environment.
+        </p>
+        <p>
+            During my tenure at {{latest_company}}, I successfully led and contributed to various projects that required a deep understanding of technical concepts and problem-solving skills. My educational background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has provided me with a solid theoretical foundation that I have applied in practical, real-world scenarios. Additionally, I hold certifications in <span class="highlight">{{certifications}}</span>, which have further enhanced my expertise.
+        </p>
+        <p>
+            I am particularly drawn to this opportunity because it aligns with my passion for leveraging technology to drive efficiency and innovation. I am confident that my combination of technical skills, hands-on experience, and continuous learning mindset makes me a strong candidate for this role. I would welcome the opportunity to discuss how my background and skills align with the needs of your team.
+        </p>
+    </div>
+
+    <div class="closing">
+        <p>Sincerely,</p>
+        <div class="signature">
+            <p>{{name}}</p>
         </div>
-    </header>
-
-    <main>
-        <section class="summary">
-            <h2>Summary</h2>
-            <p>{{biography}}</p>
-        </section>
-
-        <section class="skills">
-            <h2>Skills</h2>
-            <ul>
-                {{skills}}
-            </ul>
-        </section>
-
-        <section class="experience">
-            <h2>Experience</h2>
-            <h3>{{latest_title}}</h3>
-            <p>{{latest_company}} | {{latest_location}}</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </section>
-
-        <section class="education">
-            <h2>Education</h2>
-            <h3>{{top_degree}} in {{top_field}}</h3>
-            <p>{{top_institution}}</p>
-        </section>
-
-        <section class="certifications">
-            <h2>Certifications</h2>
-            <p>{{certifications}}</p>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2023 {{name}}. All rights reserved.</p>
-    </footer>
+    </div>
 </body>
 </html>

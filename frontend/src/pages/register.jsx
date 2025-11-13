@@ -38,8 +38,13 @@ function Register() {
       navigate(`/profile`);
       return;
     } catch (error) {
-      showFlash(error, "error");
-    }
+  const msg =
+    error.response?.data?.detail ||
+    error.response?.data?.message ||
+    error.message ||
+    "Registration failed.";
+  showFlash(msg, "error");
+}
   };
 
   const OAuthSubmit = async (data) => {
@@ -57,8 +62,14 @@ function Register() {
       navigate(`/profile`);
       return;
     } catch (error) {
-      showFlash(error, "error");
-    }
+  const msg =
+    error.response?.data?.detail ||
+    error.response?.data?.message ||
+    error.message ||
+    "Google login failed.";
+  showFlash(msg, "error");
+}
+
   };
 
   async function handleMicrosoftLogin() {

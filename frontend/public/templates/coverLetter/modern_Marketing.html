@@ -8,102 +8,89 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
             color: #333;
-        }
-        header, main, footer {
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 800px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        header {
-            text-align: center;
-            border-bottom: 4px solid #6200ea;
-        }
-        header h1 {
+            background-color: #f9f9f9;
             margin: 0;
-            font-size: 2.5em;
-            color: #6200ea;
+            padding: 20px;
         }
-        header p {
-            margin: 5px 0;
-            font-size: 1.2em;
-            color: #555;
-        }
-        main {
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
             padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        main h2 {
-            color: #6200ea;
-            border-bottom: 2px solid #6200ea;
-            padding-bottom: 10px;
+        .header {
+            text-align: right;
             margin-bottom: 20px;
         }
-        main p {
-            margin: 10px 0;
-        }
-        .summary {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-left: 4px solid #6200ea;
-            margin: 20px 0;
-        }
-        .skills ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .skills ul li {
-            background: #6200ea;
-            color: white;
-            display: inline-block;
-            margin: 5px;
-            padding: 10px;
-            border-radius: 20px;
-        }
-        footer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #777;
-        }
-        footer p {
+        .header p {
             margin: 5px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .body {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .body p {
+            margin-bottom: 15px;
+        }
+        .closing {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .highlight {
+            color: #007BFF;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <p>{{title}}</p>
-        <p>{{address}}</p>
-        <p>{{email}} | {{phone}}</p>
-    </header>
-    <main>
-        <h2>Dear Hiring Manager,</h2>
-        <p>I am excited to apply for the <strong>{{title}}</strong> position at your esteemed company. With <strong>{{experience_level}}</strong> in the <strong>{{industry}}</strong> industry, I am confident in my ability to contribute to your team’s success.</p>
-        <div class="summary">
-            <p><em>{{biography}}</em></p>
+    <div class="container">
+        <div class="header">
+            <p>{{name}}</p>
+            <p>{{address}}</p>
+            <p>{{email}} | {{phone}}</p>
         </div>
-        <div class="skills">
-            <h2>Key Skills</h2>
-            <ul>
-                {{skills}}
-            </ul>
+        <div class="date">
+            <p>{{date}}</p>
         </div>
-        <h2>Professional Experience</h2>
-        <p><strong>{{latest_title}}</strong> at {{latest_company}} | {{latest_location}}</p>
-        <p><em>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</em></p>
-        <h2>Education</h2>
-        <p><strong>{{top_degree}}</strong> in {{top_field}} | {{top_institution}}</p>
-        <h2>Certifications</h2>
-        <p>{{certifications}}</p>
-    </main>
-    <footer>
-        <p>Sincerely,</p>
-        <p>{{name}}</p>
-    </footer>
+        <div class="greeting">
+            <p>Dear Hiring Manager,</p>
+        </div>
+        <div class="body">
+            <p>
+                I am excited to apply for the {{title}} role in the {{industry}} sector, bringing my {{experience_level}} of experience and a passion for driving impactful marketing strategies. With a strong foundation in <span class="highlight">{{skills}}</span>, I have successfully led campaigns that enhanced brand visibility and customer engagement.
+            </p>
+            <p>
+                In my most recent role as {{latest_title}} at {{latest_company}} in {{latest_location}}, I spearheaded initiatives that resulted in significant growth in both online and offline channels. My educational background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has equipped me with the analytical and creative skills necessary to excel in this field. Additionally, my certifications in <span class="highlight">{{certifications}}</span> have further honed my expertise in leveraging data-driven insights to optimize marketing efforts.
+            </p>
+            <p>
+                I am particularly drawn to this opportunity because of the innovative approach your company takes in the {{industry}} space. I am confident that my ability to combine strategic thinking with hands-on execution will contribute to your team’s success. I would welcome the chance to discuss how my skills and experiences align with the goals of your organization.
+            </p>
+        </div>
+        <div class="closing">
+            <p>Sincerely,</p>
+            <div class="signature">
+                <p>{{name}}</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -3,139 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technical Cover Letter - Healthcare</title>
+    <title>Cover Letter</title>
     <style>
         body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-        header, main, footer {
-            background: #fff;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        header {
-            text-align: center;
-            border-bottom: 3px solid #007bff;
-        }
-        main {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0), 
+                            linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
         }
-        footer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #666;
+
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
+            color: #0056b3;
         }
-        h1, h2, h3 {
-            color: #007bff;
+
+        .header p {
+            margin: 2px 0;
         }
-        .summary {
-            background: #e8f4ff;
-            padding: 15px;
-            border-left: 5px solid #007bff;
-            margin: 20px 0;
+
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            color: #555;
         }
-        .skills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
+
+        .greeting {
+            margin-bottom: 20px;
+            font-weight: bold;
         }
-        .skill {
-            background: #007bff;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9em;
+
+        .body {
+            margin-bottom: 20px;
         }
-        .contact-info {
-            font-size: 0.9em;
-            color: #666;
+
+        .body p {
+            margin: 10px 0;
+        }
+
+        .closing {
+            margin-top: 20px;
+        }
+
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #0056b3;
+        }
+
+        a {
+            color: #0056b3;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <div class="contact-info">
-            {{address}} | {{email}} | {{phone}}
-        </div>
-    </header>
+    <div class="header">
+        <p>{{name}}</p>
+        <p>{{address}}</p>
+        <p><a href="mailto:{{email}}">{{email}}</a> | <a href="tel:{{phone}}">{{phone}}</a></p>
+    </div>
 
-    <main>
-        <section>
-            <h2>Application for {{title}} in {{industry}}</h2>
-            <p>Dear Hiring Manager,</p>
-            <p>I am excited to apply for the {{title}} position at your esteemed organization. With {{experience_level}} in the healthcare industry, I am confident in my ability to contribute effectively to your team.</p>
-        </section>
+    <div class="date">
+        <p>{{date}}</p>
+    </div>
 
-        <section class="summary">
-            <h3>Summary</h3>
-            <p>{{biography}}</p>
-        </section>
+    <div class="greeting">
+        <p>Dear Hiring Manager,</p>
+    </div>
 
-        <section>
-            <h3>Professional Experience</h3>
-            <p><strong>{{latest_title}}</strong> at {{latest_company}} ({{latest_location}})</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </section>
+    <div class="body">
+        <p>
+            I am excited to apply for the {{title}} role within the {{industry}} sector, leveraging my {{experience_level}} experience in healthcare technology and systems. With a strong foundation in {{top_field}} from {{top_institution}}, where I earned my {{top_degree}}, I have developed a unique blend of technical and healthcare expertise.
+        </p>
+        <p>
+            In my most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}}, I successfully implemented innovative solutions that improved patient care workflows and data management systems. My skills in {{skills}} have been instrumental in driving efficiency and accuracy in healthcare operations. Additionally, my certifications in {{certifications}} have equipped me with the knowledge to navigate complex healthcare IT environments.
+        </p>
+        <p>
+            I am particularly drawn to this opportunity because of its focus on integrating cutting-edge technology with patient-centric care, which aligns with my career aspirations and values. I am confident that my technical expertise, combined with my passion for healthcare, makes me a strong candidate for this role.
+        </p>
+    </div>
 
-        <section>
-            <h3>Skills</h3>
-            <div class="skills">
-                <ul>
-                {{skills}}
-                </ul>
-            </div>
-        </section>
+    <div class="closing">
+        <p>I look forward to the opportunity to discuss how my background, skills, and certifications can contribute to your team. Thank you for considering my application.</p>
+    </div>
 
-        <section>
-            <h3>Education</h3>
-            <p><strong>{{top_degree}} in {{top_field}}</strong> - {{top_institution}}</p>
-        </section>
-
-        <section>
-            <h3>Certifications</h3>
-            <p>{{certifications}}</p>
-        </section>
-    </main>
-
-    <footer>
-        <p>Thank you for considering my application. I look forward to the opportunity to discuss how my skills and experiences align with the needs of your team.</p>
-        <p>Sincerely,<br>{{name}}</p>
-    </footer>
-
-    <script>
-        // Sample filler data for placeholders
-        document.addEventListener('DOMContentLoaded', function() {
-            const placeholders = {
-                "{{name}}": "John Doe",
-                "{{email}}": "john.doe@example.com",
-                "{{phone}}": "(123) 456-7890",
-                "{{address}}": "123 Healthcare St, Wellness City, HC 12345",
-                "{{title}}": "Healthcare Data Analyst",
-                "{{industry}}": "Healthcare",
-                "{{experience_level}}": "5+ years",
-                "{{skills}}": ["Data Analysis", "Healthcare Informatics", "Python", "SQL", "Machine Learning"],
-                "{{latest_title}}": "Senior Data Analyst",
-                "{{latest_company}}": "HealthTech Solutions",
-                "{{latest_location}}": "Wellness City",
-                "{{top_degree}}": "Master of Science",
-                "{{top_field}}": "Health Informatics",
-                "{{top_institution}}": "University of Wellness",
-                "{{certifications}}": "Certified Health Data Analyst (CHDA)"
-            };
-
-            Object.keys(placeholders).forEach(key => {
-                const elements = document.querySelectorAll(key);
-                elements.forEach(el => el.textContent = placeholders[key]);
-            });
-        });
-    </script>
+    <div class="signature">
+        <p>Sincerely,</p>
+        <p>{{name}}</p>
+    </div>
 </body>
 </html>

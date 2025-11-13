@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formal Marketing Cover Letter</title>
+    <title>Formal Cover Letter</title>
     <style>
         body {
             font-family: 'Georgia', serif;
-            line-height: 1.6;
             color: #333;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 20px;
-            background-color: #f9f9f9;
+            line-height: 1.6;
         }
         .container {
             max-width: 800px;
@@ -19,108 +19,77 @@
             background: #fff;
             padding: 30px;
             border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
         }
-        header h1 {
-            font-size: 28px;
-            margin: 0;
-            color: #6200ea;
-        }
-        header p {
-            font-size: 16px;
-            color: #666;
-            margin: 5px 0;
-        }
-        .contact-info {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .contact-info p {
+        .header p {
             margin: 5px 0;
             font-size: 14px;
-            color: #666;
-        }
-        main {
-            margin-bottom: 30px;
-        }
-        .section {
-            margin-bottom: 20px;
-            border-left: 4px solid #6200ea;
-            padding-left: 15px;
-        }
-        .section h2 {
-            font-size: 20px;
-            border-bottom: 2px solid #6200ea;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            font-variant: small-caps;
-            color: #333;
-        }
-        .section p {
-            font-size: 16px;
-            color: #444;
-        }
-        .summary {
-            font-style: italic;
             color: #555;
         }
-        footer {
-            text-align: center;
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
             font-size: 14px;
-            color: #666;
+            color: #555;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .body {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .body p {
+            margin: 15px 0;
+        }
+        .closing {
+            font-size: 18px;
             margin-top: 20px;
+        }
+        .signature {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .skills {
+            display: inline;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>{{name}}</h1>
-            <div class="contact-info">
-                <p>{{address}}</p>
-                <p>{{phone}} | {{email}}</p>
-            </div>
-        </header>
-        <main>
-            <div class="section">
-                <h2>Dear Hiring Manager,</h2>
-                <p>I am writing to express my interest in the {{title}} position at your esteemed company. With a strong background in {{industry}} and {{experience_level}} of experience, I am confident in my ability to contribute to your team's success.</p>
-            </div>
-            <div class="section">
-                <h2>Professional Summary</h2>
-                <p class="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            </div>
-            <div class="section">
-                <h2>Key Skills</h2>
-                <p>{{skills}}</p>
-            </div>
-            <div class="section">
-                <h2>Experience</h2>
-                <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-            </div>
-            <div class="section">
-                <h2>Education</h2>
-                <p><strong>{{top_degree}} in {{top_field}}</strong> - {{top_institution}}</p>
-            </div>
-            <div class="section">
-                <h2>Certifications</h2>
-                <p>{{certifications}}</p>
-            </div>
-            <div class="section">
-                <p>I would welcome the opportunity to discuss how my skills and experiences align with the needs of your team. Thank you for considering my application. I look forward to the possibility of contributing to your organization.</p>
-                <p>Sincerely,</p>
-                <p>{{name}}</p>
-            </div>
-        </main>
-        <footer>
-            <p>&copy; 2023 {{name}}. All rights reserved.</p>
-        </footer>
+        <div class="header">
+            <p>{{name}}</p>
+            <p>{{address}}</p>
+            <p>{{email}} | {{phone}}</p>
+        </div>
+        <div class="date">
+            {{date}}
+        </div>
+        <div class="greeting">
+            Dear Hiring Manager,
+        </div>
+        <div class="body">
+            <p>
+                I am excited to apply for the {{title}} role in the {{industry}} sector, leveraging my {{experience_level}} experience to contribute to your team’s success. With a strong foundation in <span class="skills">{{skills}}</span>, I have consistently delivered impactful results in fast-paced environments. During my tenure as {{latest_title}} at {{latest_company}} in {{latest_location}}, I spearheaded initiatives that drove brand awareness and customer engagement, showcasing my ability to align marketing strategies with business goals.
+            </p>
+            <p>
+                My academic background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has equipped me with a deep understanding of market dynamics and consumer behavior. Additionally, my certifications in {{certifications}} have enhanced my technical proficiency, enabling me to execute data-driven campaigns with precision. I am confident that my blend of strategic thinking, creative problem-solving, and analytical skills will make me a valuable asset to your organization.
+            </p>
+            <p>
+                I am particularly drawn to this opportunity because of your company’s reputation for innovation and excellence in the {{industry}} space. I would welcome the chance to discuss how my experience and skills align with your objectives. Thank you for considering my application.
+            </p>
+        </div>
+        <div class="closing">
+            Sincerely,
+        </div>
+        <div class="signature">
+            {{name}}
+        </div>
     </div>
 </body>
 </html>
