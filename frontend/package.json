@@ -38,7 +38,12 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "node scripts/test-summary.js && react-scripts test --watchAll=false --passWithNoTests",
+    "test:watch": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:all": "node scripts/test-compact.js",
+    "test:unified": "node scripts/unified-test-runner.js",
+    "test:detailed": "node scripts/unified-test-runner.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
