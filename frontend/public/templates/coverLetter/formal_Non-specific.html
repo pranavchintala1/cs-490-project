@@ -7,144 +7,83 @@
     <style>
         body {
             font-family: 'Georgia', serif;
-            line-height: 1.6;
             color: #333;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 20px;
-            background-color: #f8f8f8;
+            line-height: 1.6;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
             background: #fff;
-            padding: 35px;
-            border: 1px solid #ccc;
-            border-radius: 12px;
-            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.07);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-            position: relative;
-        }
-        header h1 {
-            font-size: 30px;
-            margin: 0;
-            letter-spacing: 1px;
-            color: #1a1a1a;
-        }
-        header p {
-            font-size: 16px;
-            color: #555;
-            margin: 5px 0;
-            font-style: italic;
-        }
-        header::after {
-            content: "";
-            display: block;
-            width: 80px;
-            height: 3px;
-            background: #2980b9;
-            margin: 10px auto 0;
-            border-radius: 2px;
-        }
-        .contact-info {
-            text-align: right;
+            padding: 30px;
             border: 1px solid #ddd;
-            padding: 10px 15px;
-            margin-bottom: 25px;
-            border-radius: 5px;
-            background-color: #f7f7f7;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .contact-info p {
-            margin: 3px 0;
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .header p {
+            margin: 5px 0;
             font-size: 14px;
+            color: #555;
         }
-        main {
-            margin-bottom: 30px;
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
         }
-        .section {
-            margin-bottom: 25px;
-            padding: 10px 15px;
-            border-radius: 5px;
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
         }
-        .section:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .section h2 {
-            font-size: 20px;
-            border-bottom: 2px solid #2980b9;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            font-variant: small-caps;
-            color: #1a1a1a;
-        }
-        .section p {
+        .body {
             font-size: 16px;
-            margin: 0;
-            color: #444;
+            margin-bottom: 20px;
         }
-        footer {
-            text-align: center;
-            font-size: 14px;
-            color: #777;
+        .closing {
+            font-size: 18px;
             margin-top: 20px;
         }
-        a {
-            color: #2980b9;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
+        .signature {
+            margin-top: 20px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>{{name}}</h1>
-            <p>{{title}}</p>
-        </header>
-        <div class="contact-info">
+        <div class="header">
+            <p>{{name}}</p>
             <p>{{address}}</p>
-            <p>{{phone}}</p>
-            <p><a href="mailto:{{email}}">{{email}}</a></p>
+            <p>{{email}} | {{phone}}</p>
         </div>
-        <main>
-            <div class="section">
-                <h2>Dear Hiring Manager,</h2>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            </div>
-            <div class="section">
-                <h2>Professional Summary</h2>
-                <p>{{biography}}</p>
-            </div>
-            <div class="section">
-                <h2>Skills</h2>
-                <p>{{skills}}</p>
-            </div>
-            <div class="section">
-                <h2>Experience</h2>
-                <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-            </div>
-            <div class="section">
-                <h2>Education</h2>
-                <p><strong>{{top_degree}}</strong> in {{top_field}}, {{top_institution}}</p>
-            </div>
-            <div class="section">
-                <h2>Certifications</h2>
-                <p>{{certifications}}</p>
-            </div>
-            <div class="section">
-                <p>I am excited about the opportunity to contribute to your team and would welcome the chance to discuss how my skills align with the role. Thank you for considering my application.</p>
-                <p>Sincerely,</p>
-                <p>{{name}}</p>
-            </div>
-        </main>
-        <footer>
-            <p>&copy; 2023 {{name}}. All rights reserved.</p>
-        </footer>
+        <div class="date">
+            {{date}}
+        </div>
+        <div class="greeting">
+            Dear Hiring Manager,
+        </div>
+        <div class="body">
+            <p>
+                I am writing to express my interest in the {{title}} role within the {{industry}} sector. With {{experience_level}} of experience, I have developed a strong foundation in areas such as {{skills}}. My most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}} allowed me to refine my expertise in [specific area related to the role].
+            </p>
+            <p>
+                During my tenure at {{latest_company}}, I successfully [specific achievement or responsibility], which directly contributed to [quantifiable result or impact]. Additionally, my educational background in {{top_field}} from {{top_institution}}, where I earned my {{top_degree}}, has equipped me with a robust theoretical understanding that complements my practical experience. I have also obtained certifications in {{certifications}}, further enhancing my skill set and industry knowledge.
+            </p>
+            <p>
+                I am particularly drawn to [specific aspect of the company or role] and am confident that my combination of skills, experience, and education makes me a strong candidate for this position. I would welcome the opportunity to discuss how my background aligns with the needs of your team.
+            </p>
+        </div>
+        <div class="closing">
+            Sincerely,
+        </div>
+        <div class="signature">
+            {{name}}
+        </div>
     </div>
 </body>
 </html>

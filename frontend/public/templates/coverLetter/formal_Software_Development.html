@@ -1,135 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formal Cover Letter - Software Development</title>
-    <style>
-        body {
-            font-family: 'Georgia', serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            background-color: #f9f9f9;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        header h1 {
-            font-size: 28px;
-            margin: 0;
-            color: #2c3e50; 
-        }
-        header p {
-            font-size: 16px;
-            color: #7f8c8d;
-            margin: 5px 0;
-            font-style: italic;
-        }
-        .contact-info {
-            text-align: right;
-            margin-bottom: 20px;
-        }
-        .contact-info p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #555;
-        }
-        main {
-            margin-bottom: 30px;
-        }
-        .section {
-            margin-bottom: 25px;
-            border-left: 4px solid #2c3e50; 
-            padding-left: 15px;
-            padding-top: 5px;
-            padding-bottom: 5px;
-            background-color: #fafafa; 
-            border-radius: 5px;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .section h2 {
-            font-size: 20px;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            font-variant: small-caps;
-            color: #2c3e50;
-        }
-        .section p {
-            font-size: 16px;
-            margin: 0;
-            color: #444;
-        }
-        .summary {
-            font-style: italic;
-            color: #555;
-        }
-        footer {
-            text-align: center;
-            font-size: 14px;
-            color: #777;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formal Cover Letter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: #2b2b2b;
+      background: linear-gradient(135deg, #e8ecf5 0%, #fdfdfd 100%);
+      margin: 0;
+      padding: 40px 20px;
+      line-height: 1.7;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 45px;
+      border-radius: 12px;
+      border: 2px solid #d4d8eb;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Accent strip on the left */
+    .container::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 6px;
+      height: 100%;
+      background: linear-gradient(180deg, #4a6cf7, #5ad2f5);
+    }
+
+    .header {
+      text-align: right;
+      margin-bottom: 25px;
+    }
+
+    .header p {
+      margin: 3px 0;
+      font-size: 15px;
+      color: #555;
+    }
+
+    .date {
+      text-align: left;
+      margin-bottom: 25px;
+      font-size: 15px;
+      color: #4a6cf7;
+      font-weight: 600;
+    }
+
+    .greeting {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      margin-bottom: 25px;
+    }
+
+    .body {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 25px;
+      text-align: justify;
+    }
+
+    .body p {
+      margin-bottom: 18px;
+    }
+
+    .closing {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-top: 35px;
+    }
+
+    .signature {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #4a6cf7;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .signature p {
+      margin: 5px 0;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 25px;
+      }
+      .body, .header, .signature, .closing {
+        font-size: 15px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>{{name}}</h1>
-            <p>{{title}}</p>
-        </header>
-        <div class="contact-info">
-            <p>{{address}}</p>
-            <p>{{phone}}</p>
-            <p>{{email}}</p>
-        </div>
-        <main>
-            <div class="section">
-                <h2>Dear Hiring Manager,</h2>
-                <p>I am writing to express my interest in the <strong>{{title}}</strong> position at your esteemed company. With <strong>{{experience_level}}</strong> in <strong>{{industry}}</strong>, I am confident in my ability to contribute effectively to your team.</p>
-            </div>
-            <div class="section">
-                <h2>Summary</h2>
-                <p class="summary">{{biography}}</p>
-            </div>
-            <div class="section">
-                <h2>Skills</h2>
-                <p>{{skills}}</p>
-            </div>
-            <div class="section">
-                <h2>Experience</h2>
-                <p><strong>{{latest_title}}</strong> at {{latest_company}}, {{latest_location}}</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-            </div>
-            <div class="section">
-                <h2>Education</h2>
-                <p><strong>{{top_degree}}</strong> in {{top_field}}, {{top_institution}}</p>
-            </div>
-            <div class="section">
-                <h2>Certifications</h2>
-                <p>{{certifications}}</p>
-            </div>
-            <div class="section">
-                <p>I look forward to the opportunity to discuss how my skills and experiences align with the needs of your team. Thank you for considering my application.</p>
-                <p>Sincerely,</p>
-                <p>{{name}}</p>
-            </div>
-        </main>
-        <footer>
-            <p>&copy; 2023 {{name}}. All rights reserved.</p>
-        </footer>
+  <div class="container">
+    <div class="header">
+      <p>{{name}}</p>
+      <p>{{address}}</p>
+      <p>{{email}} | {{phone}}</p>
     </div>
+
+    <div class="date">
+      <p>{{date}}</p>
+    </div>
+
+    <div class="greeting">
+      <p>Dear Hiring Manager,</p>
+    </div>
+
+    <div class="body">
+      <p>
+        I am excited to apply for the {{title}} role in the {{industry}} sector, where I can leverage my {{experience_level}} experience and expertise in {{skills}} to contribute to your team's success. With a strong background in software development, I have honed my skills in designing, developing, and maintaining robust applications.
+      </p>
+      <p>
+        In my most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}}, I successfully led a team to deliver high-quality software solutions, improving system efficiency by 20%. My educational foundation, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has equipped me with a deep understanding of software engineering principles. Additionally, my certifications in {{certifications}} have further enhanced my technical capabilities.
+      </p>
+      <p>
+        I am particularly drawn to this opportunity because of the innovative projects your company undertakes, and I am confident that my skills and experience align well with your needs. I would welcome the opportunity to discuss how my background and expertise can contribute to your ongoing success.
+      </p>
+    </div>
+
+    <div class="closing">
+      <p>Sincerely,</p>
+    </div>
+
+    <div class="signature">
+      <p>{{name}}</p>
+    </div>
+  </div>
 </body>
 </html>

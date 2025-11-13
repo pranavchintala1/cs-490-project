@@ -3,117 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Cover Letter - Education</title>
+    <title>Modern Cover Letter</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
             color: #333;
-        }
-        header, main, footer {
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 800px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        header {
-            text-align: center;
-            border-bottom: 4px solid #6200ea;
-        }
-        header h1 {
+            background-color: #f9f9f9;
             margin: 0;
-            font-size: 2.5em;
-            color: #6200ea;
+            padding: 20px;
         }
-        header p {
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .header p {
             margin: 5px 0;
-            font-size: 1.2em;
+            font-size: 14px;
             color: #555;
         }
-        .contact-info {
+
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .body {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .body p {
+            margin-bottom: 15px;
+        }
+
+        .closing {
+            font-size: 18px;
             margin-top: 20px;
-            font-size: 0.9em;
-            color: #777;
         }
-        main {
-            padding: 30px;
+
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
         }
-        .section {
-            margin-bottom: 30px;
+
+        /* Modern styling */
+        h1, h2, h3 {
+            color: #2c3e50;
         }
-        .section h2 {
-            border-bottom: 2px solid #6200ea;
-            padding-bottom: 5px;
-            color: #6200ea;
-            font-size: 1.5em;
+
+        a {
+            color: #3498db;
+            text-decoration: none;
         }
-        .section p {
-            margin: 10px 0;
+
+        a:hover {
+            text-decoration: underline;
         }
-        footer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #777;
-            border-top: 2px solid #6200ea;
+
+        .container {
+            border-left: 5px solid #3498db;
         }
-        .skills-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+
+        .header p {
+            color: #7f8c8d;
         }
-        .skills-list span {
-            background: #6200ea;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 0.9em;
+
+        .date {
+            color: #7f8c8d;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <p>{{title}}</p>
-        <div class="contact-info">
-            {{address}} | {{email}} | {{phone}}
+    <div class="container">
+        <div class="header">
+            <p>{{name}}</p>
+            <p>{{address}}</p>
+            <p><a href="mailto:{{email}}">{{email}}</a> | {{phone}}</p>
         </div>
-    </header>
-    <main>
-        <section class="section">
-            <h2>Dear Hiring Manager,</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        </section>
-        <section class="section">
-            <h2>Professional Summary</h2>
-            <p>{{biography}}</p>
-        </section>
-        <section class="section">
-            <h2>Skills</h2>
-            <div class="skills-list">
-                <span>{{skills}}</span>
-            </div>
-        </section>
-        <section class="section">
-            <h2>Experience</h2>
-            <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </section>
-        <section class="section">
-            <h2>Education</h2>
-            <p><strong>{{top_degree}}</strong> in {{top_field}} - {{top_institution}}</p>
-        </section>
-        <section class="section">
-            <h2>Certifications</h2>
-            <p>{{certifications}}</p>
-        </section>
-    </main>
-    <footer>
-        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
-        <p>Sincerely,<br>{{name}}</p>
-    </footer>
+
+        <div class="date">
+            {{date}}
+        </div>
+
+        <div class="greeting">
+            Dear Hiring Manager,
+        </div>
+
+        <div class="body">
+            <p>
+                I am excited to apply for the {{title}} position in the {{industry}} sector, leveraging my {{experience_level}} experience and passion for fostering learning environments. With a strong foundation in {{skills}}, I have consistently delivered impactful results in my previous roles.
+            </p>
+            <p>
+                In my most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}}, I successfully implemented innovative teaching strategies that improved student engagement by 25%. My educational background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has equipped me with the knowledge and skills to excel in this role. Additionally, my certifications in {{certifications}} have further enhanced my ability to contribute effectively to educational initiatives.
+            </p>
+            <p>
+                I am particularly drawn to this opportunity because of its alignment with my career goals and the chance to contribute to a forward-thinking organization. I am confident that my combination of experience, education, and skills makes me a strong candidate for this position. I would welcome the opportunity to discuss how my background and expertise can benefit your team.
+            </p>
+        </div>
+
+        <div class="closing">
+            Sincerely,
+        </div>
+        <div class="signature">
+            {{name}}
+        </div>
+    </div>
 </body>
 </html>
