@@ -26,11 +26,11 @@ function populateTemplate(template, data) {
   const latestEmployment = employment[0] || {};
 
   const today = new Date();
-    const formattedDate = today.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+  const formattedDate = today.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
   return template
     .replace(/\{\{name\}\}/g, profile?.full_name || profile?.username || "Your name here")
@@ -53,11 +53,25 @@ function populateTemplate(template, data) {
     .replace(/\{\{certifications\}\}/g, certifications?.map((c) => c.name).join(", ") || "certifications");
 }
 
+// Helper function to sort letters
+const sortLetters = (letters, sortOrder) => {
+  if (!sortOrder) return letters;
+  
+  const sorted = [...letters];
+  if (sortOrder === "most") {
+    sorted.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0));
+  } else if (sortOrder === "least") {
+    sorted.sort((a, b) => (a.usage_count || 0) - (b.usage_count || 0));
+  }
+  return sorted;
+};
+
 export default function CoverLetterList() {
   const [sampleLetters, setSampleLetters] = useState([]);
   const [userLetters, setUserLetters] = useState([]);
   const [filterStyle, setFilterStyle] = useState("");
   const [filterIndustry, setFilterIndustry] = useState("");
+  const [sortOrder, setSortOrder] = useState("");
   const [editingLetter, setEditingLetter] = useState(null);
   const [uploading, setUploading] = useState(false);
   const { showFlash } = useFlash();
@@ -113,7 +127,6 @@ export default function CoverLetterList() {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
       if (!doc) return;
 
-      // Capture the entire document including header/footer
       const canvas = await html2canvas(doc.documentElement, {
         scale: 2,
         useCORS: true,
@@ -123,7 +136,6 @@ export default function CoverLetterList() {
         windowHeight: doc.documentElement.scrollHeight
       });
 
-      // Create PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -137,7 +149,6 @@ export default function CoverLetterList() {
 
       let position = 0;
 
-      // Add image to PDF, handling multiple pages
       const imgData = canvas.toDataURL('image/png');
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
@@ -165,7 +176,6 @@ export default function CoverLetterList() {
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
       if (!iframeDoc) return;
 
-      // Capture as image (same as PDF)
       const canvas = await html2canvas(iframeDoc.body, {
         scale: 2,
         useCORS: true,
@@ -173,43 +183,35 @@ export default function CoverLetterList() {
         backgroundColor: '#ffffff'
       });
 
-      // Get blob from canvas
       const imgBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       
-      // Convert to data URL
       const reader = new FileReader();
       const dataUrl = await new Promise(resolve => {
         reader.onload = () => resolve(reader.result);
         reader.readAsDataURL(imgBlob);
       });
 
-      // Create a minimal DOCX XML structure with embedded image
       const base64Img = dataUrl.split(',')[1];
       
-      // Calculate image dimensions
-      const pageWidth = 8.5 * 914400; // EMUs (English Metric Units)
+      const pageWidth = 8.5 * 914400;
       const pageHeight = 11 * 914400;
       const margins = 0.75 * 914400;
       const contentWidth = pageWidth - (2 * margins);
       const contentHeight = (canvas.height / canvas.width) * contentWidth;
 
-      // Create DOCX with embedded image using JSZip
       const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
 
-      // Add _rels/.rels
       zip.folder('_rels').file('.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
 </Relationships>`);
 
-      // Add word/_rels/document.xml.rels
       zip.folder('word/_rels').file('document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>
 </Relationships>`);
 
-      // Add word/document.xml with image
       zip.folder('word').file('document.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <w:body>
@@ -255,10 +257,8 @@ export default function CoverLetterList() {
 </w:body>
 </w:document>`);
 
-      // Add image
       zip.folder('word/media').file('image1.png', base64Img, { base64: true });
 
-      // Add [Content_Types].xml
       zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
@@ -267,7 +267,6 @@ export default function CoverLetterList() {
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 </Types>`);
 
-      // Generate DOCX
       const docxBlob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(docxBlob);
       const a = document.createElement('a');
@@ -307,6 +306,14 @@ export default function CoverLetterList() {
     const loadLetters = async () => {
       try {
         const userData = await UserAPI.getAllData();
+        
+        let usageByType = {};
+        try {
+          const usageRes = await CoverLetterAPI.getUsageByType();
+          usageByType = usageRes.data || {};
+        } catch (err) {
+          console.warn("Failed to fetch usage stats:", err);
+        }
 
         let allSamples = [];
         for (let style of styles) {
@@ -315,12 +322,15 @@ export default function CoverLetterList() {
             try {
               const rawTemplate = await renderTemplate(templateFile);
               const populatedContent = populateTemplate(rawTemplate, userData);
+              const sampleId = `sample_${style}_${industry.replace(/\s/g, "_")}`;
               allSamples.push({
-                id: templateFile,
+                id: sampleId,
+                templateFile: templateFile,
                 title: `${style} - ${industry}`,
                 content: populatedContent,
                 style,
                 industry,
+                usage_count: usageByType[sampleId] || 0,
               });
             } catch (err) {
               console.error("Failed to load template:", templateFile, err);
@@ -331,15 +341,22 @@ export default function CoverLetterList() {
         if (filterStyle) allSamples = allSamples.filter((l) => l.style === filterStyle);
         if (filterIndustry) allSamples = allSamples.filter((l) => l.industry === filterIndustry);
 
-        const groupedSamples = allSamples.reduce((acc, letter) => {
-          let group = acc.find((g) => g.style === letter.style);
-          if (!group) {
-            group = { style: letter.style, letters: [] };
-            acc.push(group);
-          }
-          group.letters.push(letter);
-          return acc;
-        }, []);
+        let groupedSamples;
+        if (filterIndustry) {
+          // When filtering by industry, group by industry only
+          groupedSamples = [{ industry: filterIndustry, letters: allSamples }];
+        } else {
+          // Otherwise group by style
+          groupedSamples = allSamples.reduce((acc, letter) => {
+            let group = acc.find((g) => g.style === letter.style);
+            if (!group) {
+              group = { style: letter.style, letters: [] };
+              acc.push(group);
+            }
+            group.letters.push(letter);
+            return acc;
+          }, []);
+        }
 
         setSampleLetters(groupedSamples);
 
@@ -352,7 +369,7 @@ export default function CoverLetterList() {
     };
 
     loadLetters();
-  }, [filterStyle, filterIndustry, showFlash]);
+  }, [filterStyle, filterIndustry]);
 
   const handleAddSample = async (sample) => {
     try {
@@ -361,9 +378,30 @@ export default function CoverLetterList() {
         company: sample.company || "",
         position: sample.position || "",
         content: sample.content,
+        template_type: sample.id,
+        usage_count: 0
       };
       const res = await CoverLetterAPI.add(data);
       setUserLetters((prev) => [...prev, { ...data, id: res.data.coverletter_id }]);
+      
+      // Refetch usage stats to get updated global counts
+      try {
+        const usageRes = await CoverLetterAPI.getUsageByType();
+        const usageByType = usageRes.data || {};
+        
+        setSampleLetters((prevGroups) =>
+          prevGroups.map((group) => ({
+            ...group,
+            letters: group.letters.map((letter) => ({
+              ...letter,
+              usage_count: usageByType[letter.id] || 0,
+            })),
+          }))
+        );
+      } catch (err) {
+        console.warn("Failed to refresh usage stats:", err);
+      }
+      
       showFlash("Cover letter added!", "success");
     } catch (err) {
       console.error("Failed to add sample:", err);
@@ -399,7 +437,7 @@ export default function CoverLetterList() {
         showFlash("Cover letter updated!", "success");
       } else {
         const res = await CoverLetterAPI.add(letter);
-        setUserLetters((prev) => [...prev, { ...letter, id: res.data.coverletter_id }]);
+        setUserLetters((prev) => [...prev, { ...letter, id: res.data.coverletter_id, usage_count: 0 }]);
         showFlash("Cover letter added!", "success");
       }
       setEditingLetter(null);
@@ -418,10 +456,7 @@ export default function CoverLetterList() {
   };
 
   return (
-
-    
     <div>
-    
       {editingLetter && (
         <CoverLetterForm
           editEntry={editingLetter}
@@ -431,45 +466,45 @@ export default function CoverLetterList() {
       )}
 
       <h2 style={{ fontSize: "48px" }}>
-      <span style={{ color: "white" }}>YOUR COVER LETTERS</span>
+        <span style={{ color: "white" }}>YOUR COVER LETTERS</span>
       </h2>
           
       <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
-  <input
-    ref={fileInputRef}
-    type="file"
-    accept=".html,text/html"
-    onChange={handleFileUpload}
-    style={{ display: "none" }}
-    id="file-upload"
-  />
-  <label htmlFor="file-upload" style={{ display: "inline-block", flexShrink: 0 }}>
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "8px",
-        padding: "10px 20px",
-        background: uploading ? "#ccc" : "#2196f3",
-        color: "white",
-        borderRadius: "6px",
-        cursor: uploading ? "not-allowed" : "pointer",
-        fontSize: "14px",
-        fontWeight: "500",
-        whiteSpace: "nowrap",
-        width: "fit-content",
-        flexShrink: 0,
-      }}
-    >
-      <Upload size={18} />
-      {uploading ? "Uploading..." : "Upload HTML Template"}
-    </div>
-  </label>
-</div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".html,text/html"
+          onChange={handleFileUpload}
+          style={{ display: "none" }}
+          id="file-upload"
+        />
+        <label htmlFor="file-upload" style={{ display: "inline-block", flexShrink: 0 }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              padding: "10px 20px",
+              background: uploading ? "#ccc" : "#2196f3",
+              color: "white",
+              borderRadius: "6px",
+              cursor: uploading ? "not-allowed" : "pointer",
+              fontSize: "14px",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+              width: "fit-content",
+              flexShrink: 0,
+            }}
+          >
+            <Upload size={18} />
+            {uploading ? "Uploading..." : "Upload HTML Template"}
+          </div>
+        </label>
+      </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-        {userLetters.map((letter) => (
+        {sortLetters(userLetters, sortOrder).map((letter) => (
           <div
             key={letter.id}
             style={{
@@ -495,12 +530,23 @@ export default function CoverLetterList() {
                   UPLOADED
                 </span>
               )}
+              {letter.usage_count > 0 && (
+                <span style={{ 
+                  fontSize: "11px", 
+                  padding: "2px 8px", 
+                  background: "#2196f3", 
+                  color: "white", 
+                  borderRadius: "3px" 
+                }}>
+                  Used {letter.usage_count}x
+                </span>
+              )}
             </div>
             <iframe
               ref={(el) => (iframeRefs.current[letter.id] = el)}
               title={`user-${letter.id}`}
-              srcDoc={letter.content || "<html><body></body></html>"}
-              style={{ width: "100%", border: "1px solid #ccc", borderRadius: "6px" }}
+              srcDoc={letter.content ? letter.content : "<html><body></body></html>"}
+              style={{ width: "100%", border: "1px solid #ccc", borderRadius: "6px", minHeight: "200px" }}
               onLoad={(e) => autoResizeIframe(e.target)}
             />
             <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
@@ -541,156 +587,207 @@ export default function CoverLetterList() {
       </div>
 
       <h2 style={{ fontSize: "48px" }}>
-  <span style={{ color: "white" }}>SAMPLE COVER LETTERS</span>
-</h2>
+        <span style={{ color: "white" }}>SAMPLE COVER LETTERS</span>
+      </h2>
 
-<div
-  style={{
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: "20px",
-    marginBottom: "20px",
-    flexWrap: "wrap",
-  }}
->
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-    <label
-      style={{
-        fontWeight: "500",
-        marginBottom: "6px",
-        color: "#333",
-      }}
-    >
-      Style
-    </label>
-    <select
-      value={filterStyle}
-      onChange={(e) => setFilterStyle(e.target.value)}
-      style={{
-        display: "inline-block",
-        width: "fit-content",
-        minWidth: "180px",
-        padding: "10px 16px",
-        borderRadius: "6px",
-        border: "1px solid #ccc",
-        backgroundColor: "white",
-        color: "#333",
-        fontSize: "14px",
-        cursor: "pointer",
-        flexShrink: 0,
-        appearance: "none",
-        textAlign: "center",
-      }}
-    >
-      <option value="">All</option>
-      {styles.map((s) => (
-        <option key={s} value={s}>
-          {s}
-        </option>
-      ))}
-    </select>
-  </div>
-
-  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-    <label
-      style={{
-        fontWeight: "500",
-        marginBottom: "6px",
-        color: "#333",
-      }}
-    >
-      Industry
-    </label>
-    <select
-      value={filterIndustry}
-      onChange={(e) => setFilterIndustry(e.target.value)}
-      style={{
-        display: "inline-block",
-        width: "fit-content",
-        minWidth: "180px",
-        padding: "10px 16px",
-        borderRadius: "6px",
-        border: "1px solid #ccc",
-        backgroundColor: "white",
-        color: "#333",
-        fontSize: "14px",
-        cursor: "pointer",
-        flexShrink: 0,
-        appearance: "none",
-        textAlign: "center",
-      }}
-    >
-      <option value="">All</option>
-      {industries.map((i) => (
-        <option key={i} value={i}>
-          {i}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
-
-
-      {sampleLetters.map((group) => (
-        <div key={group.style} style={{ color:"black",marginBottom: "30px" }}>
-          <h3 style={{ textTransform: "capitalize", color:"white" }}>{group.style}</h3>
-          <div
-  style={{
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "16px",
-    alignItems: "stretch",
-  }}
->
-  {group.letters.map((sample) => (
-    <div
-      key={sample.id}
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: "6px",
-        padding: "16px",
-        background: "#f9f9f9",
-        width: "calc(33% - 10px)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between", // keep button at bottom
-      }}
-    >
-      <h4>{sample.title}</h4>
-      <iframe
-        ref={(el) => (iframeRefs.current[sample.id] = el)}
-        title={`sample-${sample.id}`}
-        srcDoc={sample.content || "<html><body></body></html>"}
+      <div
         style={{
-          width: "100%",
-          border: "1px solid #ccc",
-          borderRadius: "6px",
-          flexGrow: 1,      // <-- make iframe grow to fill remaining space
-          minHeight: "150px",
-        }}
-        onLoad={(e) => autoResizeIframe(e.target)}
-      />
-      <button
-        onClick={() => handleAddSample(sample)}
-        style={{
-          marginTop: "10px",
-          padding: "6px 12px",
-          background: "#4f8ef7",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          alignSelf: "center",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: "20px",
+          marginBottom: "20px",
+          flexWrap: "wrap",
         }}
       >
-        Use this sample
-      </button>
-    </div>
-  ))}
-</div>
-
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <label
+            style={{
+              fontWeight: "500",
+              marginBottom: "6px",
+              color: "#333",
+            }}
+          >
+            Style
+          </label>
+          <select
+            value={filterStyle}
+            onChange={(e) => setFilterStyle(e.target.value)}
+            style={{
+              display: "inline-block",
+              width: "fit-content",
+              minWidth: "180px",
+              padding: "10px 16px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              backgroundColor: "white",
+              color: "#333",
+              fontSize: "14px",
+              cursor: "pointer",
+              flexShrink: 0,
+              appearance: "none",
+              textAlign: "center",
+            }}
+          >
+            <option value="">All</option>
+            {styles.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
-      ))}
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <label
+            style={{
+              fontWeight: "500",
+              marginBottom: "6px",
+              color: "#333",
+            }}
+          >
+            Industry
+          </label>
+          <select
+            value={filterIndustry}
+            onChange={(e) => setFilterIndustry(e.target.value)}
+            style={{
+              display: "inline-block",
+              width: "fit-content",
+              minWidth: "180px",
+              padding: "10px 16px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              backgroundColor: "white",
+              color: "#333",
+              fontSize: "14px",
+              cursor: "pointer",
+              flexShrink: 0,
+              appearance: "none",
+              textAlign: "center",
+            }}
+          >
+            <option value="">All</option>
+            {industries.map((i) => (
+              <option key={i} value={i}>
+                {i}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <label
+            style={{
+              fontWeight: "500",
+              marginBottom: "6px",
+              color: "#333",
+            }}
+          >
+            Sort by Usage
+          </label>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            style={{
+              display: "inline-block",
+              width: "fit-content",
+              minWidth: "180px",
+              padding: "10px 16px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              backgroundColor: "white",
+              color: "#333",
+              fontSize: "14px",
+              cursor: "pointer",
+              flexShrink: 0,
+              appearance: "none",
+              textAlign: "center",
+            }}
+          >
+            <option value="">None</option>
+            <option value="most">Most Used</option>
+            <option value="least">Least Used</option>
+          </select>
+        </div>
+      </div>
+
+      {sampleLetters.map((group) => {
+        let sortedLetters = sortLetters(group.letters, sortOrder);
+
+        return (
+          <div key={group.style || group.industry} style={{ color: "black", marginBottom: "30px" }}>
+            <h3 style={{ textTransform: "capitalize", color: "white" }}>{group.style || group.industry}</h3>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "16px",
+                alignItems: "stretch",
+              }}
+            >
+              {sortedLetters.map((sample) => (
+                <div
+                  key={sample.id}
+                  style={{
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    padding: "16px",
+                    background: "#f9f9f9",
+                    width: "calc(33% - 10px)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "10px" }}>
+                    <h4 style={{ margin: 0 }}>{sample.title}</h4>
+                    {sample.usage_count > 0 && (
+                      <span style={{ 
+                        fontSize: "11px", 
+                        padding: "2px 8px", 
+                        background: "#ff9800", 
+                        color: "white", 
+                        borderRadius: "3px",
+                        whiteSpace: "nowrap"
+                      }}>
+                        {sample.usage_count}x used
+                      </span>
+                    )}
+                  </div>
+                  <iframe
+                    ref={(el) => (iframeRefs.current[sample.id] = el)}
+                    title={`sample-${sample.id}`}
+                    srcDoc={sample.content ? sample.content : "<html><body></body></html>"}
+                    style={{
+                      width: "100%",
+                      border: "1px solid #ccc",
+                      borderRadius: "6px",
+                      flexGrow: 1,
+                      minHeight: "150px",
+                    }}
+                    onLoad={(e) => autoResizeIframe(e.target)}
+                  />
+                  <button
+                    onClick={() => handleAddSample(sample)}
+                    style={{
+                      marginTop: "10px",
+                      padding: "6px 12px",
+                      background: "#4f8ef7",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      alignSelf: "center",
+                    }}
+                  >
+                    Use this sample
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
