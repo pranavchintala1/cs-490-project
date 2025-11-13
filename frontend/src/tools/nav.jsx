@@ -51,6 +51,7 @@ const Nav = () => {
           return;
         }
         navigate("/");
+        window.scrollTo({ top: 0, behavior: "smooth" }); 
         return;
       }
 
@@ -105,6 +106,7 @@ const Nav = () => {
             return;
           }
           navigate("/");
+          window.scrollTo({ top: 0, behavior: "smooth" }); 
         }
       } catch (error) {
         console.error("Session validation failed:", error);
@@ -116,6 +118,7 @@ const Nav = () => {
           return;
         }
         navigate("/");
+        window.scrollTo({ top: 0, behavior: "smooth" }); 
       } finally {
         setIsLoading(false);
         hasValidated.current = true;
@@ -192,6 +195,7 @@ const Nav = () => {
     setUsername("");
     hasValidated.current = false;
     navigate("/");
+    window.scrollTo({ top: 0, behavior: "smooth" }); 
   };
 
   // Optional: Show loading state while validating
@@ -199,7 +203,7 @@ const Nav = () => {
     return (
       <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
         <Container fluid>
-          <Navbar.Brand as={NavLink} to="/" className="d-flex align-items-center">
+          <Navbar.Brand as={NavLink} to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="d-flex align-items-center">
             <img 
               src="/image.png" 
               alt="Metamorphosis logo"
@@ -215,7 +219,7 @@ const Nav = () => {
   return (
     <Navbar bg="dark" variant="dark" expand="lg" sticky="top">
       <Container fluid>
-        <Navbar.Brand as={NavLink} to="/" className="d-flex align-items-center">
+        <Navbar.Brand as={NavLink} to="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="d-flex align-items-center">
           <img 
             src="/image.png" 
             alt="Metamorphosis logo"
