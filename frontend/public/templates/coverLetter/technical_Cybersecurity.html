@@ -3,109 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Technical Cover Letter - Cybersecurity</title>
+    <title>Cover Letter - {{name}}</title>
     <style>
         body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #f0f0f0;
-            color: #333;
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-        }
-        header, main, footer {
+            color: #333;
+            background-color: #f4f4f9;
+            background-image: linear-gradient(135deg, #f4f4f9 0%, #ffffff 100%);
+            margin: 0;
             padding: 20px;
-            margin: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        header {
-            border-bottom: 3px solid #007BFF;
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        footer {
-            border-top: 3px solid #007BFF;
-            text-align: center;
-            font-size: 0.9em;
-        }
-        h1, h2, h3 {
-            color: #007BFF;
-        }
-        .contact-info {
-            font-size: 0.9em;
+
+        .header {
+            text-align: right;
             margin-bottom: 20px;
         }
-        .summary, .skills, .experience, .education, .certifications {
-            margin-bottom: 30px;
-        }
-        .summary p {
-            background-color: #e8f4ff;
-            padding: 15px;
-            border-left: 5px solid #007BFF;
-        }
-        .skills ul, .certifications ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .skills ul li, .certifications ul li {
-            background-color: #e8f4ff;
+
+        .header p {
             margin: 5px 0;
-            padding: 10px;
-            border-left: 5px solid #007BFF;
+            font-size: 14px;
+            color: #555;
         }
-        .experience h3, .education h3 {
-            margin-bottom: 10px;
+
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
         }
-        .experience p, .education p {
-            margin: 5px 0;
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .body {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .body p {
+            margin-bottom: 15px;
+        }
+
+        .closing {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .highlight {
+            color: #007BFF;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="contact-info">
-            <strong>{{name}}</strong><br>
-            {{address}}<br>
-            {{phone}} | <a href="mailto:{{email}}">{{email}}</a>
+    <div class="container">
+        <div class="header">
+            <p>{{name}}</p>
+            <p>{{address}}</p>
+            <p>{{email}} | {{phone}}</p>
         </div>
-        <h1>{{title}}</h1>
-    </header>
-
-    <main>
-        <section class="summary">
-            <h2>Summary</h2>
-            <p>{{biography}}</p>
-        </section>
-
-        <section class="skills">
-            <h2>Skills</h2>
-            <ul>
-               {{skills}}
-            </ul>
-        </section>
-
-        <section class="experience">
-            <h2>Experience</h2>
-            <h3>{{latest_title}}</h3>
-            <p><strong>{{latest_company}}</strong> | {{latest_location}}</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </section>
-
-        <section class="education">
-            <h2>Education</h2>
-            <h3>{{top_degree}} in {{top_field}}</h3>
-            <p><strong>{{top_institution}}</strong></p>
-        </section>
-
-        <section class="certifications">
-            <h2>Certifications</h2>
-            <ul>
-                <li>{{certifications}}</li>
-            </ul>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; {{name}} | {{industry}} Professional with {{experience_level}} Experience</p>
-    </footer>
+        <div class="date">
+            <p>{{date}}</p>
+        </div>
+        <div class="greeting">
+            <p>Dear Hiring Manager,</p>
+        </div>
+        <div class="body">
+            <p>
+                I am excited to apply for the {{title}} role in the {{industry}} sector, leveraging my {{experience_level}} of experience in cybersecurity. At {{latest_company}} in {{latest_location}}, I held the position of {{latest_title}}, where I honed my expertise in {{skills}}. My academic background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has provided me with a strong foundation in securing digital infrastructures.
+            </p>
+            <p>
+                Throughout my career, I have successfully implemented robust security measures, conducted vulnerability assessments, and responded to incidents with precision. My certifications, such as {{certifications}}, demonstrate my commitment to staying current with industry best practices. I am particularly proud of my ability to <span class="highlight">identify and mitigate risks</span> while ensuring compliance with regulatory standards.
+            </p>
+            <p>
+                I am confident that my technical skills, combined with my passion for cybersecurity, make me a strong candidate for this role. I look forward to the opportunity to contribute to your team and help safeguard your organization’s digital assets.
+            </p>
+        </div>
+        <div class="closing">
+            <p>Sincerely,</p>
+            <div class="signature">
+                <p>{{name}}</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
