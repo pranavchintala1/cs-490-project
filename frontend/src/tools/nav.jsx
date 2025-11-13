@@ -1,8 +1,9 @@
 import React from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Navbar, Nav as BootstrapNav, Container, Button, NavDropdown } from "react-bootstrap";
+import { Navbar, Nav as BootstrapNav, Container, NavDropdown } from "react-bootstrap";
 import { useFlash } from "../context/flashContext";
 import AuthAPI from "../api/authentication";
+import ProfilesAPI from "../api/profiles";
 
 
 const Nav = () => {
@@ -16,6 +17,10 @@ const Nav = () => {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [showDropdown, setShowDropdown] = React.useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = React.useState(false);
+  const [avatarUrl, setAvatarUrl] = React.useState(localStorage.getItem("avatarUrl") || null);
+  const [username, setUsername] = React.useState(localStorage.getItem("username") || "");
+  const hasValidated = React.useRef(false);
 
   console.log(token)
   React.useEffect(() => {
@@ -25,16 +30,22 @@ const Nav = () => {
       location.pathname.startsWith(prefix)
     );
 
-    
-
     console.log("ENTERING EFFECT")
+    
+    // Skip validation if already validated
+    if (hasValidated.current) {
+      return;
+    }
+    
     const validateSession = async () => {
       if (!token) {
         setIsAuthenticated(false);
         setIsLoading(false);
         localStorage.removeItem("uuid");
         localStorage.removeItem("session");
+        localStorage.removeItem("username");
         setIsAuthenticated(false);
+        hasValidated.current = true;
         
         if (shouldSkip) {
           return;
@@ -45,14 +56,50 @@ const Nav = () => {
 
       try {
         const response = await AuthAPI.validateSession();
-        // console.log(response)
         
         if (response.status === 200) {
           setIsAuthenticated(true);
+          
+          // Check if we have cached username
+          const cachedUsername = localStorage.getItem("username");
+          
+          if (cachedUsername) {
+            setUsername(cachedUsername);
+          }
+          
+          // Always fetch avatar since blob URLs don't persist
+          try {
+            if (!cachedUsername) {
+              // First time - also fetch username
+              const profileRes = await ProfilesAPI.get();
+              const newUsername = profileRes.data.username || "User";
+              setUsername(newUsername);
+              localStorage.setItem("username", newUsername);
+            }
+            
+            // Always fetch avatar
+            const avatarRes = await ProfilesAPI.getAvatar();
+            const blob = avatarRes.data;
+            const url = URL.createObjectURL(blob);
+            if (url) {
+              setAvatarUrl(url);
+            } else {
+              setAvatarUrl("/default.png");
+            }
+          } catch (error) {
+            console.error("Failed to load profile data:", error);
+            // Set defaults if profile loading fails
+            setAvatarUrl("/default.png");
+            if (!cachedUsername) {
+              const defaultUsername = "User";
+              setUsername(defaultUsername);
+              localStorage.setItem("username", defaultUsername);
+            }
+          }
         } else {
-          // Non-200 response
           localStorage.removeItem("uuid");
           localStorage.removeItem("session");
+          localStorage.removeItem("username");
           setIsAuthenticated(false);
           if (shouldSkip) {
             return;
@@ -60,10 +107,10 @@ const Nav = () => {
           navigate("/");
         }
       } catch (error) {
-        // Request failed
         console.error("Session validation failed:", error);
         localStorage.removeItem("uuid");
         localStorage.removeItem("session");
+        localStorage.removeItem("username");
         setIsAuthenticated(false);
         if (shouldSkip) {
           return;
@@ -71,11 +118,54 @@ const Nav = () => {
         navigate("/");
       } finally {
         setIsLoading(false);
+        hasValidated.current = true;
       }
     };
 
     validateSession();
+    
+    return () => {
+      // Only revoke blob URLs created in this session, not cached ones
+      if (avatarUrl?.startsWith("blob:") && avatarUrl !== localStorage.getItem("avatarUrl")) {
+        URL.revokeObjectURL(avatarUrl);
+      }
+    };
   }, [token, navigate]);
+
+  // Listen for profile updates from the Profile page
+  React.useEffect(() => {
+    const handleProfileUpdate = async () => {
+      const newUsername = localStorage.getItem("username");
+      
+      if (newUsername) setUsername(newUsername);
+      
+      // Fetch fresh avatar
+      try {
+        const avatarRes = await ProfilesAPI.getAvatar();
+        const blob = avatarRes.data;
+        const url = URL.createObjectURL(blob);
+        if (url) {
+          // Revoke old blob URL
+          const oldUrl = avatarUrl;
+          if (oldUrl?.startsWith("blob:")) {
+            URL.revokeObjectURL(oldUrl);
+          }
+          setAvatarUrl(url);
+        } else {
+          setAvatarUrl("/default.png");
+        }
+      } catch (error) {
+        console.error("Failed to reload avatar:", error);
+        setAvatarUrl("/default.png");
+      }
+    };
+
+    window.addEventListener("profileUpdated", handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
+    };
+  }, []);
 
   const logout = async () => {
     const uuid = localStorage.getItem("uuid");
@@ -88,9 +178,19 @@ const Nav = () => {
       console.error("Logout failed:", error);
     }
 
+    // Revoke blob URL if it exists
+    const cachedAvatarUrl = localStorage.getItem("avatarUrl");
+    if (cachedAvatarUrl?.startsWith("blob:")) {
+      URL.revokeObjectURL(cachedAvatarUrl);
+    }
+
     localStorage.removeItem("uuid");
     localStorage.removeItem("session");
+    localStorage.removeItem("username");
     setIsAuthenticated(false);
+    setAvatarUrl(null);
+    setUsername("");
+    hasValidated.current = false;
     navigate("/");
   };
 
@@ -126,13 +226,9 @@ const Nav = () => {
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <BootstrapNav className="ms-auto gap-3">
+          <BootstrapNav className="ms-auto gap-3 align-items-center">
             {isAuthenticated ? (
               <>
-                <BootstrapNav.Link as={NavLink} to="/profile" className="mx-3">
-                  Profile
-                </BootstrapNav.Link>
-
                 <NavDropdown
                   title={
                     <span
@@ -181,13 +277,47 @@ const Nav = () => {
                   Cover Letters
                 </BootstrapNav.Link>
 
-                <Button
-                  variant="outline-light"
-                  onClick={logout}
-                  className="ms-2"
+                <NavDropdown
+                  title={
+                    <span
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate("/profile");
+                      }}
+                      style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                    >
+                      <img
+                        src={avatarUrl || "/default.png"}
+                        alt="Profile"
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          marginRight: "8px",
+                          border: "2px solid #fff"
+                        }}
+                      />
+                      {username}
+                    </span>
+                  }
+                  id="profile-dropdown"
+                  className="mx-3"
+                  align="end"
+                  show={showProfileDropdown}
+                  onMouseEnter={() => setShowProfileDropdown(true)}
+                  onMouseLeave={() => setShowProfileDropdown(false)}
                 >
-                  Logout
-                </Button>
+                  <NavDropdown.Item as={NavLink} to="/profile">
+                    <i className="fas fa-user" style={{ marginRight: "8px" }}></i>
+                    Profile
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={logout}>
+                    <i className="fas fa-sign-out-alt" style={{ marginRight: "8px" }}></i>
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
               </>
             ) : (
               <>
