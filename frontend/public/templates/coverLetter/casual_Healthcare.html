@@ -8,103 +8,86 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
+            color: #333;
             background-color: #f9f9f9;
+            background-image: url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23f0f0f0" fill-opacity="0.2" fill-rule="evenodd"%3E%3Cpath d="M0 40L40 0H20L0 20M40 40V20L20 40"/%3E%3C/g%3E%3C/svg%3E');
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .header p {
+            margin: 2px 0;
+            font-size: 0.9em;
+        }
+
+        .date-recipient {
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .greeting {
+            font-size: 1.2em;
+            margin-bottom: 20px;
             color: #333;
         }
-        header, main, footer {
-            padding: 20px;
-            margin: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+        .body {
+            margin-bottom: 20px;
+            color: #444;
         }
-        header {
-            text-align: center;
-            background-color: #e3f2fd;
-            color: #1a73e8;
+
+        .body p {
+            margin-bottom: 15px;
         }
-        main {
-            background-color: #ffffff;
+
+        .closing {
+            text-align: left;
+            color: #333;
         }
-        footer {
-            text-align: center;
-            background-color: #e3f2fd;
-            color: #1a73e8;
-            font-size: 0.9em;
-        }
-        h1, h2, h3 {
-            color: #1a73e8;
-        }
-        .summary {
-            background-color: #f1f8ff;
-            padding: 15px;
-            border-left: 5px solid #1a73e8;
-            margin: 20px 0;
-        }
-        .skills {
-            background-color: #f1f8ff;
-            padding: 15px;
-            margin: 20px 0;
-        }
-        .skills ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .skills ul li {
-            background: #e3f2fd;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .contact-info {
-            font-size: 0.9em;
-            color: #666;
+
+        .highlight {
+            color: #007BFF;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <p class="contact-info">
-            {{address}} | {{email}} | {{phone}}
-        </p>
-    </header>
-
-    <main>
-        <section class="summary">
-            <h2>Summary</h2><p>{{biography}}</p>
-        </section>
-
-        <section class="skills">
-            <h2>Skills</h2>
-            <ul>
-                {{skills}}
-            </ul>
-        </section>
-
-        <section class="experience">
-            <h2>Experience</h2>
-            <p><strong>{{latest_title}}</strong> at {{latest_company}} ({{latest_location}})</p>
-            <p>{{experience_level}} in {{industry}}</p>
-        </section>
-
-        <section class="education">
-            <h2>Education</h2>
-            <p><strong>{{top_degree}}</strong> in {{top_field}} from {{top_institution}}</p>
-        </section>
-
-        <section class="certifications">
-            <h2>Certifications</h2>
-            <p>{{certifications}}</p>
-        </section>
-    </main>
-
-    <footer>
-        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
-        <p>Sincerely,</p>
+    <div class="header">
         <p>{{name}}</p>
-    </footer>
+        <p>{{address}}</p>
+        <p>{{email}} | {{phone}}</p>
+    </div>
+
+    <div class="date-recipient">
+        <p>{{date}}</p>
+        <p>Hiring Manager<br>Healthcare Company<br>123 Healthcare Lane<br>City, State, ZIP</p>
+    </div>
+
+    <div class="greeting">
+        <p>Dear Hiring Manager,</p>
+    </div>
+
+    <div class="body">
+        <p>
+            I am excited to apply for the {{title}} role in the {{industry}} sector, where I can leverage my {{experience_level}} experience and passion for delivering exceptional patient care. With a strong foundation in {{skills}}, I am confident in my ability to contribute effectively to your team.
+        </p>
+        <p>
+            In my most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}}, I honed my skills in patient management, team collaboration, and healthcare administration. My educational background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has provided me with a solid understanding of the latest healthcare practices and technologies.
+        </p>
+        <p>
+            Additionally, I hold certifications in {{certifications}}, which have further enhanced my expertise and commitment to professional development. I am eager to bring my knowledge and enthusiasm to your organization and contribute to the well-being of your patients.
+        </p>
+    </div>
+
+    <div class="closing">
+        <p>Sincerely,<br>{{name}}</p>
+    </div>
 </body>
 </html>

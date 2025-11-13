@@ -8,116 +8,89 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
             color: #333;
-        }
-        header, main, footer {
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 800px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        header {
-            text-align: center;
-            border-bottom: 3px solid #6200ea;
-        }
-        header h1 {
+            background-color: #f9f9f9;
             margin: 0;
-            font-size: 2.5em;
-            color: #6200ea;
+            padding: 20px;
         }
-        header p {
-            margin: 5px 0;
-            font-size: 1.2em;
-            color: #555;
-        }
-        main {
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
             padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        main h2 {
-            color: #6200ea;
-            border-bottom: 2px solid #6200ea;
-            padding-bottom: 10px;
+        .header {
+            text-align: right;
             margin-bottom: 20px;
         }
-        main p {
-            margin: 10px 0;
-        }
-        footer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #777;
-            border-top: 1px solid #ddd;
-        }
-        .summary {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-left: 4px solid #6200ea;
-            margin: 20px 0;
-        }
-        .skills ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .skills ul li {
-            background: #6200ea;
-            color: white;
-            display: inline-block;
-            margin: 5px;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-        .contact-info {
-            font-size: 0.9em;
+        .header p {
+            margin: 5px 0;
+            font-size: 14px;
             color: #555;
+        }
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .body {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .body p {
+            margin: 15px 0;
+        }
+        .closing {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .highlight {
+            color: #007BFF;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <p>{{title}}</p>
-        <div class="contact-info">
+    <div class="container">
+        <div class="header">
+            <p>{{name}}</p>
             <p>{{address}}</p>
-            <p>{{phone}} | {{email}}</p>
+            <p>{{email}} | {{phone}}</p>
         </div>
-    </header>
-
-    <main>
-        <section class="summary">
-            <p><em>{{biography}}</em></p>
-        </section>
-
-        <section class="experience">
-            <h2>Professional Experience</h2>
-            <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
-            <p><em>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</em></p>
-        </section>
-
-        <section class="education">
-            <h2>Education</h2>
-            <p><strong>{{top_degree}} in {{top_field}}</strong> - {{top_institution}}</p>
-        </section>
-
-        <section class="skills">
-            <h2>Skills</h2>
-            <ul>
-                {{skills}}
-            </ul>
-        </section>
-
-        <section class="certifications">
-            <h2>Certifications</h2>
-            <p>{{certifications}}</p>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2023 {{name}}. All rights reserved.</p>
-    </footer>
+        <div class="date">
+            <p>{{date}}</p>
+        </div>
+        <div class="greeting">
+            <p>Dear Hiring Manager,</p>
+        </div>
+        <div class="body">
+            <p>
+                I am excited to apply for the {{title}} role within the {{industry}} sector. With {{experience_level}} of experience, I have developed a strong foundation in <span class="highlight">{{skills}}</span>, which I believe aligns well with the requirements of this position.
+            </p>
+            <p>
+                In my most recent role as {{latest_title}} at {{latest_company}} in {{latest_location}}, I successfully led initiatives that improved operational efficiency and team productivity. My educational background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has equipped me with the analytical and problem-solving skills necessary to excel in this role. Additionally, I hold certifications in <span class="highlight">{{certifications}}</span>, further enhancing my expertise.
+            </p>
+            <p>
+                I am particularly drawn to this opportunity because of the company’s reputation for innovation and its commitment to fostering professional growth. I am confident that my skills, experience, and passion make me a strong candidate, and I am eager to contribute to your team’s success.
+            </p>
+        </div>
+        <div class="closing">
+            <p>Sincerely,</p>
+            <div class="signature">
+                <p>{{name}}</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

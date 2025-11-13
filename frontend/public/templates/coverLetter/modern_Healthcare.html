@@ -8,114 +8,111 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
             color: #333;
-        }
-        header, main, footer {
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 800px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        header {
-            text-align: center;
-            border-bottom: 4px solid #007BFF;
-        }
-        header h1 {
+            background-color: #f9f9f9;
             margin: 0;
-            font-size: 2.5em;
-            color: #007BFF;
+            padding: 20px;
         }
-        header p {
-            margin: 5px 0;
-            font-size: 1.2em;
-            color: #555;
-        }
-        main {
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
             padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        main h2 {
-            color: #007BFF;
-            border-bottom: 2px solid #007BFF;
-            padding-bottom: 10px;
+
+        .header {
+            text-align: right;
             margin-bottom: 20px;
         }
-        main p {
-            margin: 10px 0;
-        }
-        footer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #777;
-            border-top: 2px solid #007BFF;
-        }
-        .summary {
-            background-color: #e8f4ff;
-            padding: 15px;
-            border-left: 4px solid #007BFF;
-            margin: 20px 0;
-        }
-        .skills ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        .skills ul li {
-            background: #e8f4ff;
+
+        .header p {
             margin: 5px 0;
-            padding: 10px;
-            border-left: 4px solid #007BFF;
+            font-size: 14px;
+            color: #555;
         }
-        .contact-info {
-            display: flex;
-            justify-content: space-between;
+
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .body {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .body p {
+            margin-bottom: 15px;
+        }
+
+        .closing {
+            font-size: 18px;
             margin-top: 20px;
         }
-        .contact-info p {
-            margin: 5px 0;
+
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        /* Modern styling */
+        .container {
+            border-left: 5px solid #007bff;
+        }
+
+        .header p {
+            color: #007bff;
+        }
+
+        .greeting, .closing {
+            color: #007bff;
+        }
+
+        .body {
+            color: #444;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <p>{{title}}</p>
-        <div class="contact-info">
+    <div class="container">
+        <div class="header">
+            <p>{{name}}</p>
             <p>{{address}}</p>
-            <p>{{email}}</p>
-            <p>{{phone}}</p>
+            <p>{{email}} | {{phone}}</p>
         </div>
-    </header>
-    <main>
-        <h2>Dear Hiring Manager,</h2>
-        <div class="summary">
-            <p><strong>Summary:</strong> {{biography}}</p>
+        <div class="date">
+            <p>{{date}}</p>
         </div>
-        <section class="skills">
-            <h2>Key Skills</h2>
-            <ul>
-                {{skills}}
-            </ul>
-        </section>
-        <section class="experience">
-            <h2>Professional Experience</h2>
-            <p><strong>{{latest_title}}</strong> - {{latest_company}}, {{latest_location}}</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </section>
-        <section class="education">
-            <h2>Education</h2>
-            <p><strong>{{top_degree}} in {{top_field}}</strong> - {{top_institution}}</p>
-        </section>
-        <section class="certifications">
-            <h2>Certifications</h2>
-            <p>{{certifications}}</p>
-        </section>
-    </main>
-    <footer>
-        <p>Thank you for considering my application. I look forward to the opportunity to discuss how I can contribute to your team.</p>
-        <p>Sincerely,<br>{{name}}</p>
-    </footer>
+        <div class="greeting">
+            <p>Dear Hiring Manager,</p>
+        </div>
+        <div class="body">
+            <p>
+                I am excited to apply for the {{title}} role within the {{industry}} sector, leveraging my {{experience_level}} of experience to contribute to your team's success. With a strong foundation in {{skills}}, I have consistently delivered high-quality care and operational efficiency in fast-paced healthcare environments.
+            </p>
+            <p>
+                In my most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}}, I honed my ability to manage patient care, streamline processes, and collaborate effectively with multidisciplinary teams. My educational background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has equipped me with the knowledge to tackle complex healthcare challenges. Additionally, my certifications in {{certifications}} have further enhanced my expertise and commitment to excellence in patient care.
+            </p>
+            <p>
+                I am particularly drawn to this opportunity because of its alignment with my passion for {{industry}} and my desire to make a meaningful impact in healthcare. I am confident that my combination of clinical expertise, technical skills, and dedication to continuous learning makes me a strong candidate for this role.
+            </p>
+        </div>
+        <div class="closing">
+            <p>Sincerely,</p>
+        </div>
+        <div class="signature">
+            <p>{{name}}</p>
+        </div>
+    </div>
 </body>
 </html>

@@ -3,168 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creative Cover Letter - Education</title>
+    <title>Creative Cover Letter</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        header {
-            background-color: #ff6f61;
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        header h1 {
-            font-size: 2.5rem;
-            margin: 0;
-            letter-spacing: 2px;
-        }
-        header p {
-            font-size: 1.2rem;
-            margin: 0.5rem 0 0;
-        }
-        main {
-            max-width: 800px;
-            margin: -50px auto 2rem;
-            padding: 2rem;
-            background-color: white;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            position: relative;
-            z-index: 1;
-        }
-        .contact-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-        .contact-info div {
-            flex: 1;
-            text-align: center;
-        }
-        .contact-info div:not(:last-child) {
-            border-right: 2px solid #ff6f61;
-        }
-        .contact-info p {
-            margin: 0;
-            color: #555;
-        }
-        .contact-info strong {
-            color: #ff6f61;
-        }
-        section {
-            margin-bottom: 2rem;
-        }
-        section h2 {
-            color: #ff6f61;
-            border-bottom: 2px solid #ff6f61;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        section p {
+            font-family: 'Georgia', serif;
             line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            background-image: url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23f0f0f0" fill-opacity="0.2" fill-rule="evenodd"%3E%3Cpath d="M0 40L40 0H20L0 20M40 40V20L20 40"/%3E%3C/g%3E%3C/svg%3E');
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
             color: #555;
         }
-        .summary {
-            background-color: #fff3e6;
-            padding: 1rem;
-            border-left: 4px solid #ff6f61;
-            margin-bottom: 2rem;
+
+        .header p {
+            margin: 2px 0;
+            font-size: 14px;
         }
-        .skills ul {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            color: #777;
         }
-        .skills li {
-            background-color: #ff6f61;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
+
+        .greeting, .closing {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
         }
-        footer {
-            text-align: center;
-            padding: 1rem;
-            background-color: #ff6f61;
-            color: white;
-            font-size: 0.9rem;
+
+        .body {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #444;
         }
-        @media (max-width: 768px) {
-            main {
-                margin: -30px 1rem 2rem;
-                padding: 1.5rem;
-            }
-            .contact-info {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            .contact-info div {
-                border-right: none;
-            }
+
+        .body p {
+            margin-bottom: 15px;
+        }
+
+        .signature {
+            text-align: left;
+            margin-top: 20px;
+            font-size: 16px;
+            color: #2c3e50;
+        }
+
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <p>{{title}}</p>
-    </header>
-    <main>
-        <div class="contact-info">
-            <div>
-                <p><strong>Email</strong><br>{{email}}</p>
-            </div>
-            <div>
-                <p><strong>Phone</strong><br>{{phone}}</p>
-            </div>
-            <div>
-                <p><strong>Address</strong><br>{{address}}</p>
-            </div>
+    <div class="header">
+        <p>{{name}}</p>
+        <p>{{address}}</p>
+        <p>{{email}} | {{phone}}</p>
+    </div>
+
+    <div class="date">
+        <p>{{date}}</p>
+    </div>
+
+    <div class="greeting">
+        <p>Dear Hiring Manager,</p>
+    </div>
+
+    <div class="body">
+        <p>
+            I am excited to apply for the {{title}} role in the {{industry}} sector, where I can leverage my {{experience_level}} experience and passion for fostering learning environments. With a strong foundation in <span class="highlight">{{skills}}</span>, I have successfully contributed to innovative educational programs and student development initiatives.
+        </p>
+        <p>
+            In my most recent position as {{latest_title}} at {{latest_company}} in {{latest_location}}, I implemented strategies that improved student engagement by 25% and streamlined administrative processes, demonstrating my ability to lead and inspire. My academic background, including a {{top_degree}} in {{top_field}} from {{top_institution}}, has equipped me with the knowledge to design curriculum and assess learning outcomes effectively.
+        </p>
+        <p>
+            Additionally, my <span class="highlight">{{certifications}}</span> have enhanced my expertise in instructional design and educational technology, allowing me to create dynamic and inclusive learning experiences. I am eager to bring my creative approach and dedication to excellence to your team.
+        </p>
+    </div>
+
+    <div class="closing">
+        <p>Sincerely,</p>
+        <div class="signature">
+            <p>{{name}}</p>
         </div>
-
-        <section class="summary">
-            <p><em>{{biography}}</em></p>
-        </section>
-
-        <section class="experience">
-            <h2>Professional Experience</h2>
-            <p><strong>{{latest_title}}</strong><br>
-            {{latest_company}}, {{latest_location}}<br>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </section>
-
-        <section class="education">
-            <h2>Education</h2>
-            <p><strong>{{top_degree}} in {{top_field}}</strong><br>
-            {{top_institution}}<br>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-        </section>
-
-        <section class="skills">
-            <h2>Key Skills</h2>
-            <ul>
-                {{skills}}
-            </ul>
-        </section>
-
-        <section class="certifications">
-            <h2>Certifications</h2>
-            <p>{{certifications}}</p>
-        </section>
-    </main>
-    <footer>
-        &copy; 2023 {{name}} | Designed for the Education Industry
-    </footer>
+    </div>
 </body>
 </html>

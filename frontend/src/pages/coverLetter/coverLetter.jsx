@@ -25,6 +25,13 @@ function populateTemplate(template, data) {
   const topEducation = education[0] || {};
   const latestEmployment = employment[0] || {};
 
+  const today = new Date();
+    const formattedDate = today.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+
   return template
     .replace(/\{\{name\}\}/g, profile?.full_name || profile?.username || "Your name here")
     .replace(/\{\{username\}\}/g, profile?.username || "username")
@@ -34,13 +41,15 @@ function populateTemplate(template, data) {
     .replace(/\{\{title\}\}/g, profile?.title || "title")
     .replace(/\{\{biography\}\}/g, profile?.biography || "Here is where details about you would go.")
     .replace(/\{\{industry\}\}/g, profile?.industry || "industry")
-    .replace(/\{\{experience_level\}\}/g, profile?.experience_level || "").replace(/\{\{skills\}\}/g,skills?.filter(s => s && s.name && s.name.trim() !== "").map(s => `<li>${s.name}</li>`).join("") || "")
+    .replace(/\{\{experience_level\}\}/g, profile?.experience_level || "")
+    .replace(/\{\{skills\}\}/g, skills?.filter(s => s && s.name && s.name.trim() !== "").slice(0, 3).map(s => s.name).join(", ") || "")
     .replace(/\{\{latest_title\}\}/g, latestEmployment?.title || "title")
     .replace(/\{\{latest_company\}\}/g, latestEmployment?.company || "company")
     .replace(/\{\{latest_location\}\}/g, latestEmployment?.location || "location")
     .replace(/\{\{top_degree\}\}/g, topEducation?.degree || "degree")
     .replace(/\{\{top_field\}\}/g, topEducation?.field_of_study || "field")
     .replace(/\{\{top_institution\}\}/g, topEducation?.institution_name || "institution")
+    .replace(/\{\{date\}\}/g, formattedDate || "Today's date")
     .replace(/\{\{certifications\}\}/g, certifications?.map((c) => c.name).join(", ") || "certifications");
 }
 
@@ -624,8 +633,8 @@ export default function CoverLetterList() {
 
 
       {sampleLetters.map((group) => (
-        <div key={group.style} style={{ color:"white",marginBottom: "30px" }}>
-          <h3 style={{ textTransform: "capitalize" }}>{group.style}</h3>
+        <div key={group.style} style={{ color:"black",marginBottom: "30px" }}>
+          <h3 style={{ textTransform: "capitalize", color:"white" }}>{group.style}</h3>
           <div
   style={{
     display: "flex",

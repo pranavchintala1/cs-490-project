@@ -3,147 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creative Cover Letter - Software Development</title>
+    <title>Creative Cover Letter</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        header {
-            background-color: #6200ea;
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        header h1 {
-            margin: 0;
-            font-size: 2.5rem;
-            letter-spacing: 2px;
-        }
-        header p {
-            margin: 0.5rem 0 0;
-            font-size: 1.2rem;
-        }
-        main {
-            padding: 2rem;
-            max-width: 800px;
-            margin: -50px auto 2rem;
-            background-color: white;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            position: relative;
-            z-index: 1;
-        }
-        .contact-info {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-        .contact-info div {
-            flex: 1;
-            text-align: center;
-        }
-        .contact-info div:not(:last-child) {
-            border-right: 2px solid #6200ea;
-        }
-        .contact-info p {
-            margin: 0.2rem 0;
-        }
-        .section {
-            margin-bottom: 2rem;
-        }
-        .section h2 {
-            color: #6200ea;
-            border-bottom: 3px solid #6200ea;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        .section p {
+            font-family: 'Georgia', serif;
             line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            background-image: url('data:image/svg+xml,%3Csvg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23f0f0f0" fill-opacity="0.2" fill-rule="evenodd"%3E%3Cpath d="M0 40L40 0H20L0 20M40 40V20L20 40"/%3E%3C/g%3E%3C/svg%3E');
+            padding: 20px;
+            margin: 0;
         }
-        .skills ul {
-            list-style-type: none;
-            padding: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .skills li {
-            background-color: #6200ea;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
+
+        .header {
+            text-align: right;
+            margin-bottom: 20px;
         }
-        footer {
-            text-align: center;
-            padding: 1rem;
-            background-color: #6200ea;
-            color: white;
-            font-size: 0.9rem;
-            border-top: 3px solid #fff;
+
+        .header h1 {
+            font-size: 28px;
+            margin: 0;
+            color: #2c3e50;
         }
+
+        .header p {
+            margin: 5px 0;
+            color: #7f8c8d;
+        }
+
+        .date {
+            text-align: left;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .body {
+            font-size: 16px;
+            color: #34495e;
+            margin-bottom: 20px;
+        }
+
+        .body p {
+            margin-bottom: 15px;
+        }
+
+        .closing {
+            text-align: left;
+            font-size: 18px;
+            color: #2c3e50;
+        }
+
+        .signature {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
         .highlight {
-            color: #6200ea;
+            color: #e74c3c;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{{name}}</h1>
-        <p>{{title}}</p>
-    </header>
-    <main>
-        <div class="contact-info">
-            <div>
-                <p>{{address}}</p>
-            </div>
-            <div>
-                <p>{{email}}</p>
-            </div>
-            <div>
-                <p>{{phone}}</p>
+    <div class="container">
+        <div class="header">
+            <h1>{{name}}</h1>
+            <p>{{address}}</p>
+            <p>{{email}} | {{phone}}</p>
+        </div>
+        <div class="date">
+            <p>{{date}}</p>
+        </div>
+        <div class="greeting">
+            <p>Dear Hiring Manager,</p>
+        </div>
+        <div class="body">
+            <p>
+                I am excited to apply for the {{title}} role in the {{industry}} sector, where I can leverage my {{experience_level}} experience and passion for innovative software solutions. With a strong foundation in {{top_field}} from {{top_institution}}, I have honed my skills in {{skills}} during my tenure as {{latest_title}} at {{latest_company}} in {{latest_location}}.
+            </p>
+            <p>
+                My expertise lies in developing scalable applications, as evidenced by my contributions to [specific project or achievement]. Additionally, I hold certifications in {{certifications}}, which have equipped me with advanced problem-solving techniques and a deep understanding of industry best practices.
+            </p>
+            <p>
+                I am particularly drawn to [Company Name]’s commitment to [specific value or project], and I am confident that my technical proficiency and creative approach would make me a valuable addition to your team. I look forward to the opportunity to discuss how my background aligns with your goals.
+            </p>
+        </div>
+        <div class="closing">
+            <p>Sincerely,</p>
+            <div class="signature">
+                {{name}}
             </div>
         </div>
-        <section class="section">
-            <h2>Dear Hiring Manager,</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        </section>
-        <section class="section skills">
-            <h2>Skills</h2>
-            <ul>
-                {{skills}}
-            </ul>
-        </section>
-        <section class="section">
-            <h2>Experience</h2>
-            <p><strong>{{latest_title}}</strong> at <span class="highlight">{{latest_company}}</span> | {{latest_location}}</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </section>
-        <section class="section">
-            <h2>Education</h2>
-            <p><strong>{{top_degree}}</strong> in {{top_field}} | {{top_institution}}</p>
-        </section>
-        <section class="section">
-            <h2>Certifications</h2>
-            <p>{{certifications}}</p>
-        </section>
-        <section class="section">
-            <h2>Closing</h2>
-            <p>I look forward to the opportunity to discuss how my skills and experiences align with the role. Thank you for considering my application.</p>
-            <p>Sincerely,<br>{{name}}</p>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2023 {{name}}. All rights reserved.</p>
-    </footer>
+    </div>
 </body>
 </html>
