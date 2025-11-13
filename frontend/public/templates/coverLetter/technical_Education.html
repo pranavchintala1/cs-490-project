@@ -59,12 +59,17 @@
             padding: 5px 10px;
             border-radius: 15px;
         }
+        .certifications div{
+            color:white;
+            background-color: #007BFF;
+        }
         .experience h3, .education h3 {
             margin-bottom: 10px;
         }
         .experience p, .education p {
             margin: 5px 0;
         }
+
     </style>
 </head>
 <body>
@@ -79,7 +84,7 @@
     <main>
         <section class="summary">
             <h2>Summary</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p>{{biography}}</p>
         </section>
         <section class="skills">
             <h2>Skills</h2>
@@ -104,9 +109,8 @@
         <section class="certifications">
             <h2>Certifications</h2>
             <ul>
-                {{certifications}}
+               <li> {{certifications}}</li>
                 <li>Certified Educator</li>
-                <li>Google Educator Level 1</li>
             </ul>
         </section>
     </main>

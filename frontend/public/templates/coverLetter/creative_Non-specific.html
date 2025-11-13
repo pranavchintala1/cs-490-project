@@ -19,21 +19,23 @@
             padding: 2rem;
             text-align: center;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
         header h1 {
             margin: 0;
             font-size: 2.5rem;
             letter-spacing: 2px;
+            line-height: 1.2; 
         }
         header p {
             margin: 0.5rem 0 0;
             font-size: 1.2rem;
+            line-height: 1.2; 
         }
         main {
             padding: 2rem;
             max-width: 800px;
-            margin: -50px auto 2rem;
+            margin: 2rem auto;
             background-color: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
@@ -131,12 +133,12 @@
         </section>
         <section class="summary">
             <h2>Professional Summary</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p>{{biography}}</p>
         </section>
         <section class="skills">
             <h2>Key Skills</h2>
             <ul>
-                <li>{{skills}}</li>
+                {{skills}}
             </ul>
         </section>
         <section class="closing">

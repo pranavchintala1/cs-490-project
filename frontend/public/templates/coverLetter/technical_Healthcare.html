@@ -76,7 +76,7 @@
 
         <section class="summary">
             <h3>Summary</h3>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p>{{biography}}</p>
         </section>
 
         <section>
@@ -88,9 +88,9 @@
         <section>
             <h3>Skills</h3>
             <div class="skills">
-                {{#each skills}}
-                    <div class="skill">{{this}}</div>
-                {{/each}}
+                <ul>
+                {{skills}}
+                </ul>
             </div>
         </section>
 

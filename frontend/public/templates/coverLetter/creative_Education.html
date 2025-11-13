@@ -134,7 +134,7 @@
         </div>
 
         <section class="summary">
-            <p><em>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</em></p>
+            <p><em>{{biography}}</em></p>
         </section>
 
         <section class="experience">
@@ -154,16 +154,13 @@
         <section class="skills">
             <h2>Key Skills</h2>
             <ul>
-                {{#each skills}}
-                    <li>{{this}}</li>
-                {{/each}}
+                {{skills}}
             </ul>
         </section>
 
         <section class="certifications">
             <h2>Certifications</h2>
-            <p>{{certifications}}<br>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            <p>{{certifications}}</p>
         </section>
     </main>
     <footer>

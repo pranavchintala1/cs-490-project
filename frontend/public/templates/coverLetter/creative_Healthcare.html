@@ -69,7 +69,7 @@
             padding: 0;
         }
         .skills ul li {
-            background-color: #ff6b6b;
+            background-color: #6c5ce7;
             color: white;
             display: inline-block;
             margin: 5px;
@@ -85,11 +85,15 @@
         .experience p {
             margin: 5px 0;
         }
+
+        h1.name{
+            color:white;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>{{name}}</h1>
+        <h1 class="name">{{name}}</h1>
         <div class="contact-info">
             <p>{{address}}</p>
             <p>{{phone}}</p>
@@ -99,7 +103,7 @@
     <main>
         <section class="summary">
             <h2>Summary</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p>{{biography}}</p>
         </section>
         <section class="experience">
             <h2>Professional Experience</h2>
@@ -112,7 +116,7 @@
         <section class="skills">
             <h2>Skills</h2>
             <ul>
-                <li>{{skills}}</li>
+                {{skills}}
             </ul>
         </section>
         <section class="education">
