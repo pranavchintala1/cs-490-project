@@ -50,8 +50,14 @@ const ResetPassword = () => {
         return;
       }
 
-      showFlash("Password reset successful! Please login with your new password.", "success");
-      navigate(`/login`);
+      localStorage.setItem("session", res.data.session_token);
+      localStorage.setItem("uuid", res.data.uuid);
+
+      navigate(`/dashboard`);
+
+      //For going to login
+      //showFlash("Password reset successful! Please login with your new password.", "success");
+      //navigate(`/login`);
     } catch (err) {
       console.error(err);
       showFlash("Something went wrong", "error");
