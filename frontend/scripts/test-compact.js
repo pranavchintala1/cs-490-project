@@ -82,23 +82,30 @@ function runBackendTests() {
   
   let result;
   
-  if (isWindows) {
-    // Windows batch file activation
-    const activatePath = path.join(venvDir, 'Scripts', 'activate.bat');
-    const cmd = `cd /d "${backendDir}" && "${activatePath}" && python -m pytest "${testFile}" -v --tb=line 2>&1`;
-    result = spawnSync('cmd', ['/c', cmd], {
-      stdio: 'pipe',
-      encoding: 'utf-8',
-      shell: true,
-    });
-  } else {
-    // Unix/macOS bash activation
-    const activatePath = path.join(venvDir, 'bin', 'activate');
-    const cmd = `cd "${backendDir}" && source "${activatePath}" && python -m pytest "${testFile}" -v --tb=line 2>&1`;
-    result = spawnSync('bash', ['-c', cmd], {
-      stdio: 'pipe',
-      encoding: 'utf-8',
-    });
+  try {
+    if (isWindows) {
+      // Windows: Direct python execution with venv python.exe
+      const pythonExe = path.join(venvDir, 'Scripts', 'python.exe');
+      if (!fs.existsSync(pythonExe)) {
+        throw new Error(`Python not found at: ${pythonExe}. Run: python -m venv .venv`);
+      }
+      result = spawnSync(pythonExe, ['-m', 'pytest', testFile, '-v', '--tb=line'], {
+        cwd: backendDir,
+        stdio: 'pipe',
+        encoding: 'utf-8',
+      });
+    } else {
+      // Unix/macOS bash activation
+      const activatePath = path.join(venvDir, 'bin', 'activate');
+      const cmd = `cd "${backendDir}" && source "${activatePath}" && python -m pytest "${testFile}" -v --tb=line 2>&1`;
+      result = spawnSync('bash', ['-c', cmd], {
+        stdio: 'pipe',
+        encoding: 'utf-8',
+      });
+    }
+  } catch (error) {
+    print.error(`Backend test error: ${error.message}`);
+    return 1;
   }
 
   const output = (result.stdout || '') + (result.stderr || '');
