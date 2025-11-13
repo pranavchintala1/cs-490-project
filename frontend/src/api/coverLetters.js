@@ -19,7 +19,7 @@ class CoverLetterAPI {
   }
 
   upload(data){
-    return api.post(`${BASE_URL}/upload`,data);
+    return api.post(`${BASE_URL}/upload`, data);
   }
 
   // PUT update an existing cover letter
@@ -30,6 +30,11 @@ class CoverLetterAPI {
   // DELETE a cover letter
   delete(coverLetterId) {
     return api.delete(`${BASE_URL}/${coverLetterId}`);
+  }
+
+  // GET usage stats aggregated by template type
+  getUsageByType() {
+    return api.get(`${BASE_URL}/usage/by-type`);
   }
 }
 
