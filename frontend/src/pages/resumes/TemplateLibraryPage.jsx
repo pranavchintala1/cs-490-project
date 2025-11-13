@@ -64,6 +64,11 @@ export default function TemplateLibraryPage() {
   const [resumeName, setResumeName] = useState('');
   const [creating, setCreating] = useState(false);
   const [sharingTemplateId, setSharingTemplateId] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importName, setImportName] = useState('');
+  const [importDescription, setImportDescription] = useState('');
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -161,7 +166,7 @@ export default function TemplateLibraryPage() {
         name: resumeName.trim(),
         template: template.template_type,
         templateId: template.id,  // Store the template ID for rendering
-        sections: ['contact', 'summary', 'experience', 'education', 'skills'],
+        sections: ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'],
         contact: {
           name: '',
           email: '',
@@ -172,6 +177,8 @@ export default function TemplateLibraryPage() {
         summary: '',
         experience: [],
         education: [],
+        certifications: [],
+        projects: [],
         skills: [],
         colors: templateColors,
         fonts: templateFonts,
@@ -196,6 +203,62 @@ export default function TemplateLibraryPage() {
       })));
     } catch (err) {
       alert('Failed to set default template: ' + err.message);
+    }
+  };
+
+  const handleFileSelected = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate HTML file
+    if (file.type !== 'text/html' && !file.name.toLowerCase().endsWith('.html')) {
+      alert('Please upload an HTML file');
+      return;
+    }
+
+    setImportFile(file);
+    setImportName(file.name.replace(/\.[^/.]+$/, ''));
+  };
+
+  const handleImportTemplate = async () => {
+    if (!importFile) {
+      alert('Please select a file');
+      return;
+    }
+
+    if (!importName.trim()) {
+      alert('Please enter a template name');
+      return;
+    }
+
+    try {
+      setImporting(true);
+      const formData = new FormData();
+      formData.append('file', importFile);
+      formData.append('name', importName.trim());
+      formData.append('description', importDescription.trim());
+
+      const result = await TemplatesAPI.upload(formData);
+
+      // Add new template to list
+      if (result.template) {
+        setTemplates([...templates, {
+          ...result.template,
+          _id: result.template_id
+        }]);
+        setSelectedTemplate(result.template);
+      }
+
+      // Reset form
+      setShowImportModal(false);
+      setImportFile(null);
+      setImportName('');
+      setImportDescription('');
+      alert('Template imported successfully!');
+    } catch (err) {
+      alert('Failed to import template: ' + err.message);
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -233,7 +296,16 @@ export default function TemplateLibraryPage() {
       <div className="template-library-layout">
         {/* Left Side: Template List */}
         <div className="template-list-panel">
-          <h3>Available Templates</h3>
+          <div className="template-list-header-section">
+            <h3>Available Templates</h3>
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="btn btn-sm btn-success"
+              title="Import HTML resume as template"
+            >
+              📥 Import HTML
+            </button>
+          </div>
           <div className="template-list">
             {templates.map((template) => (
               <div
@@ -354,6 +426,95 @@ export default function TemplateLibraryPage() {
             alert('Template shared successfully!');
           }}
         />
+      )}
+
+      {/* Import Template Modal */}
+      {showImportModal && (
+        <div className="modal-overlay" onClick={() => !importing && setShowImportModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Import HTML Resume as Template</h2>
+              <button
+                type="button"
+                className="btn-close"
+                onClick={() => !importing && setShowImportModal(false)}
+                disabled={importing}
+              />
+            </div>
+
+            <div className="modal-body">
+              <div className="form-group mb-3">
+                <label htmlFor="templateFile" className="form-label">
+                  HTML Resume File
+                </label>
+                <input
+                  id="templateFile"
+                  type="file"
+                  accept=".html"
+                  className="form-control"
+                  onChange={handleFileSelected}
+                  disabled={importing}
+                />
+                <small className="text-muted">Select an HTML file exported from your resume</small>
+              </div>
+
+              <div className="form-group mb-3">
+                <label htmlFor="templateName" className="form-label">
+                  Template Name
+                </label>
+                <input
+                  id="templateName"
+                  type="text"
+                  className="form-control"
+                  placeholder="e.g., My Professional Resume"
+                  value={importName}
+                  onChange={(e) => setImportName(e.target.value)}
+                  disabled={importing}
+                />
+              </div>
+
+              <div className="form-group mb-3">
+                <label htmlFor="templateDescription" className="form-label">
+                  Description (Optional)
+                </label>
+                <textarea
+                  id="templateDescription"
+                  className="form-control"
+                  placeholder="Describe your template..."
+                  value={importDescription}
+                  onChange={(e) => setImportDescription(e.target.value)}
+                  disabled={importing}
+                  rows="3"
+                />
+              </div>
+
+              {importFile && (
+                <div className="alert alert-info">
+                  <strong>Selected file:</strong> {importFile.name}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowImportModal(false)}
+                disabled={importing}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleImportTemplate}
+                disabled={importing || !importFile || !importName.trim()}
+              >
+                {importing ? 'Importing...' : 'Import Template'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

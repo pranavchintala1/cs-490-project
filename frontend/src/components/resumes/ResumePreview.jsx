@@ -16,7 +16,7 @@ export default function ResumePreview({ resume, onSectionReorder }) {
     return <div className="resume-preview-empty">No resume data</div>;
   }
 
-  const { contact, summary, experience, skills, education, colors, fonts, template, templateId, sections } = resume;
+  const { contact, summary, experience, skills, education, certifications, projects, colors, fonts, template, templateId, sections } = resume;
 
   // Apply custom colors and fonts if provided
   const styles = {
@@ -228,6 +228,81 @@ export default function ResumePreview({ resume, onSectionReorder }) {
     </ResumeSectionWrapper>
   );
 
+  // Helper function to render certifications section content
+  const renderCertificationsContent = () => (
+    <>
+      {certifications && certifications.length > 0 && (
+        <div className="resume-section">
+          <h2 className="section-heading">CERTIFICATIONS</h2>
+          {certifications.map((cert) => (
+            <div key={cert.id} className="certification-entry">
+              <div className="certification-header">
+                <strong>{cert.name}</strong>
+                <span className="date">{cert.dateEarned}</span>
+              </div>
+              {cert.issuer && <p className="issuer">{cert.issuer}</p>}
+              {cert.certNumber && <p className="cert-id">ID: {cert.certNumber}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  // Wrapped certifications section for drag-and-drop
+  const renderCertifications = () => (
+    <ResumeSectionWrapper
+      sectionId="certifications"
+      isDragging={draggedSection === 'certifications'}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {renderCertificationsContent()}
+    </ResumeSectionWrapper>
+  );
+
+  // Helper function to render projects section content
+  const renderProjectsContent = () => (
+    <>
+      {projects && projects.length > 0 && (
+        <div className="resume-section">
+          <h2 className="section-heading">PROJECTS</h2>
+          {projects.map((project) => (
+            <div key={project.id} className="project-entry">
+              <div className="project-header">
+                <strong>{project.title}</strong>
+                <span className="date">
+                  {project.startDate} {project.endDate ? `- ${project.endDate}` : ''}
+                </span>
+              </div>
+              {project.role && <p className="role">{project.role}</p>}
+              {project.description && <p className="description">{project.description}</p>}
+              {project.skills && project.skills.length > 0 && (
+                <p className="skills"><strong>Skills:</strong> {Array.isArray(project.skills) ? project.skills.join(', ') : project.skills}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+
+  // Wrapped projects section for drag-and-drop
+  const renderProjects = () => (
+    <ResumeSectionWrapper
+      sectionId="projects"
+      isDragging={draggedSection === 'projects'}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      onDragEnd={handleDragEnd}
+    >
+      {renderProjectsContent()}
+    </ResumeSectionWrapper>
+  );
+
   // Helper function to render summary section content
   const renderSummaryContent = () => (
     <>
@@ -260,6 +335,8 @@ export default function ResumePreview({ resume, onSectionReorder }) {
     summary: renderSummary,
     experience: renderExperience,
     education: renderEducation,
+    certifications: renderCertifications,
+    projects: renderProjects,
     skills: renderSkills,
   };
 
@@ -275,42 +352,42 @@ export default function ResumePreview({ resume, onSectionReorder }) {
 
   // PROFESSIONAL TEMPLATE: Clean and traditional business style
   const renderProfessional = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
   };
 
   // MODERN TEMPLATE: Sleek, contemporary design
   const renderModern = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
   };
 
   // MINIMAL TEMPLATE: Ultra-clean and space-efficient
   const renderMinimal = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
   };
 
   // CREATIVE TEMPLATE: Colorful and visually engaging
   const renderCreative = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
   };
 
   // TECHNICAL TEMPLATE: Code-inspired and developer-friendly
   const renderTechnical = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return renderSectionsByOrder(sectionOrder);
   };
 
   // MODERN-GRADIENT TEMPLATE: Modern with gradient accent divider
   const renderModernGradient = () => {
-    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'skills'];
+    const defaultOrder = ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'];
     const sectionOrder = sections && sections.length > 0 ? sections : defaultOrder;
     return (
       <div className="modern-gradient-layout">

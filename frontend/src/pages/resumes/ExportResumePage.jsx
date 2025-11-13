@@ -91,9 +91,13 @@ export default function ExportResumePage() {
         // Export DOCX from stored resume data
         console.log('Exporting DOCX from resume data...');
         fileBlob = await PDFAPI.generateDOCX(id);
+      } else if (selectedFormat === 'html') {
+        // Export HTML from stored resume data
+        console.log('Exporting HTML from resume data...');
+        fileBlob = await PDFAPI.exportHTMLFromData(id);
       } else {
         // Other formats not yet available
-        throw new Error('Multi-format export (HTML, TXT) is not yet available. Please use PDF or DOCX format.');
+        throw new Error('TXT export is not yet available. Please use PDF, DOCX, or HTML format.');
       }
 
       if (!fileBlob || fileBlob.size === 0) {
@@ -151,9 +155,9 @@ export default function ExportResumePage() {
             selectedFormat={selectedFormat}
             onSelect={setSelectedFormat}
           />
-          {selectedFormat !== 'pdf' && (
+          {selectedFormat === 'txt' && (
             <div className="alert alert-info mt-3">
-              <small>Multi-format export coming soon. Currently only PDF is available.</small>
+              <small>TXT export coming soon. Currently PDF, DOCX, and HTML are available.</small>
             </div>
           )}
         </div>
@@ -226,9 +230,9 @@ export default function ExportResumePage() {
         <div className="export-actions mt-4">
           <button
             onClick={handleExport}
-            disabled={exporting || !filename.trim() || selectedFormat !== 'pdf'}
+            disabled={exporting || !filename.trim() || selectedFormat === 'txt'}
             className="btn btn-primary btn-lg"
-            title={selectedFormat !== 'pdf' ? 'Multi-format export not yet available' : ''}
+            title={selectedFormat === 'txt' ? 'TXT export not yet available' : ''}
           >
             {exporting ? 'Exporting...' : `Download as ${selectedFormat.toUpperCase()}`}
           </button>
