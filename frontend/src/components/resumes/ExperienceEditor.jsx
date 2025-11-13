@@ -75,6 +75,14 @@ export default function ExperienceEditor({ experience, onUpdate }) {
     setFormData({ ...formData, [field]: value });
   };
 
+  // Helper function to extract description text from string or object
+  const getDescriptionText = (desc) => {
+    if (!desc) return '';
+    if (typeof desc === 'string') return desc;
+    if (typeof desc === 'object' && desc.description) return desc.description;
+    return '';
+  };
+
   const handleAddFromProfile = (employment) => {
     const newId = Math.max(...items.map((e) => e.id || 0), 0) + 1;
     const newExperience = {
@@ -152,7 +160,7 @@ export default function ExperienceEditor({ experience, onUpdate }) {
                     <textarea
                       className="form-control"
                       rows="4"
-                      value={formData.description || ''}
+                      value={getDescriptionText(formData.description)}
                       onChange={(e) => handleFormChange('description', e.target.value)}
                       placeholder="Describe your accomplishments and responsibilities"
                     />
@@ -178,7 +186,7 @@ export default function ExperienceEditor({ experience, onUpdate }) {
                     </span>
                   </div>
                   <p className="company">{item.company}</p>
-                  <p className="description">{item.description}</p>
+                  <p className="description">{getDescriptionText(item.description)}</p>
                   <div className="experience-actions">
                     <button
                       onClick={() => handleEditExperience(item.id)}
