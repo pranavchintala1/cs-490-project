@@ -1054,6 +1054,9 @@ const loadJobs = async () => {
               <option value="Education">Education</option>
               <option value="Marketing">Marketing</option>
               <option value="Design">Design</option>
+              <option value="Consulting">Consulting</option>
+              <option value="Manufacturing">Manufacturing</option>
+              <option value="Retail">Retail</option>
               <option value="Other">Other</option>
             </select>
 
@@ -1117,6 +1120,7 @@ const loadJobs = async () => {
           cancelEdit={() => {
             setView("pipeline");
             setEditingJob(null);
+            window.location.reload();
           }}
         />
       )}

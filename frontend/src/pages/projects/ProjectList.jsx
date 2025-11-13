@@ -3,7 +3,6 @@ import ProjectForm from "./ProjectForm";
 import ProjectCard from "./ProjectCard";
 import ProjectsAPI from "../../api/projects";
 import { useLocation } from "react-router-dom";
-import { Container, Row, Col, Card, Button, Spinner, Alert } from 'react-bootstrap';
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState([]);
@@ -227,233 +226,233 @@ export default function ProjectsList() {
 
   if (loading) {
     return (
-      <div className="dashboard-gradient min-vh-100 py-4">
-        <Container>
-          <h1 className="text-center text-white fw-bold mb-5 display-4">
-            Special Projects
+      <div style={{ 
+        background: "linear-gradient(135deg, #005e9e, #00c28a)",
+        minHeight: "100vh",
+        padding: "40px 20px",
+      }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <h1 style={{
+            textAlign: "center",
+            color: "#ffffff",
+            fontWeight: 700,
+            fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+            fontFamily: '"Playfair Display", serif',
+            marginBottom: "40px"
+          }}>
+            🚀 Special Projects
           </h1>
-          <div className="d-flex flex-column align-items-center justify-content-center" style={{ height: '200px' }}>
-            <Spinner animation="border" variant="light" className="mb-3" />
-            <p className="text-white fs-5">Loading Special Projects data...</p>
+          <div style={{ 
+            textAlign: "center", 
+            color: "white",
+            padding: "40px"
+          }}>
+            <p style={{ fontSize: "18px" }}>Loading Special Projects data...</p>
           </div>
-        </Container>
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        background: "linear-gradient(135deg, #005e9e, #00c28a)",
-        minHeight: "100vh",
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "flex-start",
-        padding: "40px 20px",
-        boxSizing: "border-box",
-        }}
-    >
-
-    <div style={{ width: "100%", maxWidth: "1200px", }}>
-
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column", //stacks title & button vertically on small screens
-        alignItems: "center",
-        flexWrap: "wrap",
-        textAlign: "center",
-        gap: "15px", // adds clean spacing
-        marginBottom: "30px",
-      }}
-    >
-      
-    {/* Wrap title + underline together */}
-    <div style={{ display: "inline-block" }}>
-      <h1
-        style={{
-          margin: 0,
-          color: "#ffffff",
-          fontWeight: 700,
-          fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
-          fontFamily: '"Playfair Display", serif',
-          WebkitTextFillColor: "#ffffff", // ensures true white text
-        }}
-      >
-        🚀 Special Projects
-      </h1>
-
-      {/* the underline under the text */}
-      <div
-        style={{
-          width: "120px", // you can tweak this 
-          height: "4px",
-          margin: "6px auto 0",
-          borderRadius: "2px",
-          background: "linear-gradient(90deg, #00c28a, #005e9e)", // green → blue
-        }}
-      />
-    </div>
-        <button
-          onClick={() => {
-            setShowForm(!showForm);
-            setEditProject(null);
-          }}
-          style={{
-            padding: "12px 24px",
-            background: "#4f8ef7",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px"
-          }}
-        >
-          {showForm ? "← Cancel" : "+ Add Project"}
-        </button>
-      </div>
-
-      {showForm && (
-        <ProjectForm
-          addProject={addProject}
-          editProject={editProject ? { ...editProject, submit: submitEdit } : null}
-          cancelEdit={() => {
-            setEditProject(null);
-            setShowForm(false);
-          }}
-        />
-      )}
-
-      {!showForm && (
-        <>
-          <div style={{
-            background: "#f9f9f9",
-            padding: "16px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-          }}>
-            <div style={{
-              display: "flex",
-              flexWrap: "wrap", 
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "12px",
+    <div style={{
+      background: "linear-gradient(135deg, #005e9e, #00c28a)",
+      minHeight: "100vh",
+      padding: "40px 20px",
+    }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        
+        {/* Header Section */}
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "15px",
+          marginBottom: "30px",
+        }}>
+          <div style={{ textAlign: "center" }}>
+            <h1 style={{
+              margin: 0,
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+              fontFamily: '"Playfair Display", serif',
             }}>
-              <input
-                placeholder="🔍 Search projects..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  fontSize: "14px"
-                }}
-              />
-              <input
-                placeholder="Industry..."
-                value={industrySearch}
-                onChange={(e) => setIndustrySearch(e.target.value)}
-                style={{
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  fontSize: "14px"
-                }}
-              />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  fontSize: "14px"
-                }}
-              >
-                <option value="">All Status</option>
-                <option value="Planned">Planned</option>
-                <option value="Ongoing">Ongoing</option>
-                <option value="Completed">Completed</option>
-              </select>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                style={{
-                  padding: "10px",
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  fontSize: "14px"
-                }}
-              >
-                <option value="">Sort By...</option>
-                <option value="date_desc">Newest First</option>
-                <option value="date_asc">Oldest First</option>
-              </select>
-              <button
-                onClick={() => window.print()}
-                style={{
-                  flex: "0 1 100px",
-                  padding: "10px 20px",
-                  background: "#4f4f4f",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  minWidth: "100px",
-                }}
-              >
-                🖨️ Print
-              </button>
-            </div>
+              🚀 Special Projects
+            </h1>
+            <div style={{
+              width: "120px",
+              height: "4px",
+              margin: "6px auto 0",
+              borderRadius: "2px",
+              background: "linear-gradient(90deg, #00c28a, #005e9e)",
+            }} />
           </div>
+          
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditProject(null);
+            }}
+            style={{
+              padding: "12px 24px",
+              background: "#4f8ef7",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              fontSize: "14px"
+            }}
+          >
+            {showForm ? "← Cancel" : "+ Add Project"}
+          </button>
+        </div>
 
-          {filteredProjects.length === 0 ? (
+        {/* Form Section */}
+        {showForm && (
+          <ProjectForm
+            addProject={addProject}
+            editProject={editProject ? { ...editProject, submit: submitEdit } : null}
+            cancelEdit={() => {
+              setEditProject(null);
+              setShowForm(false);
+            }}
+          />
+        )}
+
+        {/* Filters and Project List */}
+        {!showForm && (
+          <>
             <div style={{
               background: "#f9f9f9",
-              padding: "40px",
+              padding: "16px",
               borderRadius: "8px",
-              textAlign: "center",
-              color: "#999"
+              marginBottom: "20px",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
             }}>
-              <p style={{ fontSize: "16px" }}>
-                {search || industrySearch || statusFilter
-                  ? "No projects match your filters"
-                  : "No projects yet. Add your first one!"}
-              </p>
-            </div>
-          ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: "16px",
-              alignItems: "start"
-            }}>
-              {filteredProjects.map((p) => (
-                <ProjectCard
-                  key={p.id}
-                  project={p}
-                  deleteProject={deleteProject}
-                  onEdit={(id) => {
-                    const proj = projects.find(p => p.id === id);
-                    setEditProject(proj);
-                    setShowForm(true);
+              <div style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "12px",
+                justifyContent: "center",
+              }}>
+                <input
+                  placeholder="🔍 Search projects..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{
+                    flex: "1 1 200px",
+                    padding: "10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "14px"
                   }}
-                  expanded={expandedCardId === p.id}
-                  onToggle={handleCardToggle}
-                  onMediaDelete={loadProjects}
                 />
-              ))}
+                <input
+                  placeholder="Industry..."
+                  value={industrySearch}
+                  onChange={(e) => setIndustrySearch(e.target.value)}
+                  style={{
+                    flex: "1 1 150px",
+                    padding: "10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "14px"
+                  }}
+                />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{
+                    flex: "1 1 150px",
+                    padding: "10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "14px"
+                  }}
+                >
+                  <option value="">All Status</option>
+                  <option value="Planned">Planned</option>
+                  <option value="Ongoing">Ongoing</option>
+                  <option value="Completed">Completed</option>
+                </select>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  style={{
+                    flex: "1 1 150px",
+                    padding: "10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "14px"
+                  }}
+                >
+                  <option value="">Sort By...</option>
+                  <option value="date_desc">Newest First</option>
+                  <option value="date_asc">Oldest First</option>
+                </select>
+                <button
+                  onClick={() => window.print()}
+                  style={{
+                    flex: "0 1 auto",
+                    padding: "10px 20px",
+                    background: "#4f4f4f",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    minWidth: "100px",
+                  }}
+                >
+                  🖨️ Print
+                </button>
+              </div>
             </div>
-          )}
-        </>
-      )}
-    </div>
+
+            {filteredProjects.length === 0 ? (
+              <div style={{
+                background: "#f9f9f9",
+                padding: "40px",
+                borderRadius: "8px",
+                textAlign: "center",
+                color: "#999"
+              }}>
+                <p style={{ fontSize: "16px" }}>
+                  {search || industrySearch || statusFilter
+                    ? "No projects match your filters"
+                    : "No projects yet. Add your first one!"}
+                </p>
+              </div>
+            ) : (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gap: "16px",
+                alignItems: "start"
+              }}>
+                {filteredProjects.map((p) => (
+                  <ProjectCard
+                    key={p.id}
+                    project={p}
+                    deleteProject={deleteProject}
+                    onEdit={(id) => {
+                      const proj = projects.find(p => p.id === id);
+                      setEditProject(proj);
+                      setShowForm(true);
+                    }}
+                    expanded={expandedCardId === p.id}
+                    onToggle={handleCardToggle}
+                    onMediaDelete={loadProjects}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
