@@ -39,7 +39,7 @@ const Home = ({ user, session }) => {
             <div>
               <Button 
                 as={Link}
-                to="/register"
+                to="/login"
                 variant="success"
                 size="lg"
                 className="me-3"
@@ -47,7 +47,7 @@ const Home = ({ user, session }) => {
                 Get Started
               </Button>
               
-              <Button variant="outline-light" size="lg">
+              <Button variant="outline-light" size="lg" onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}>
                 Learn More
               </Button>
             </div>
