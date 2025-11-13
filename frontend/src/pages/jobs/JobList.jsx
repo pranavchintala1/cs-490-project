@@ -1117,6 +1117,8 @@ const loadJobs = async () => {
           cancelEdit={() => {
             setView("pipeline");
             setEditingJob(null);
+            window.location.reload();
+
           }}
         />
       )}
