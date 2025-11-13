@@ -3,9 +3,10 @@ from typing import Optional
 
 class CoverLetterIn(BaseModel):
     title: str
-    company: str
-    position: str
+    company: str = ""
+    position: str = ""
     content: str
+    template_type: Optional[str] = None
 
 class CoverLetterOut(BaseModel):
     id: str
@@ -15,3 +16,5 @@ class CoverLetterOut(BaseModel):
     position: str
     content: str
     created_at: str
+    template_type: Optional[str] = None
+    usage_count: Optional[int] = 0
