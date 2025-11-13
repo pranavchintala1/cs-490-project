@@ -94,7 +94,6 @@ export default function Profile() {
     setMsg("");
 
     try {
-
       const data = {
           username: form.username || null,
           email: form.email || null,
@@ -107,6 +106,12 @@ export default function Profile() {
           experience_level: form.experience_level || null,
       };
       await ProfilesAPI.update(data);
+      
+      // Update username in localStorage
+      if (form.username) {
+        localStorage.setItem("username", form.username);
+      }
+      
       if (selectedFile) {
         await ProfilesAPI.uploadAvatar(selectedFile);
       }
@@ -126,6 +131,9 @@ export default function Profile() {
           setAvatarUrl(newAvatarUrl);
         }
       }
+
+      // Dispatch custom event to notify Nav component
+      window.dispatchEvent(new Event("profileUpdated"));
 
       // Clear file selection UI after brief delay so save completes visually
       setTimeout(() => {
