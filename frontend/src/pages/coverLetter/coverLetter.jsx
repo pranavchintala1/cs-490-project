@@ -11,7 +11,7 @@ import { Upload } from "lucide-react";
 
 const styles = ["formal", "creative", "technical", "modern", "casual"];
 const industries = [
-  "Software_Development",
+  "Software Development",
   "Cybersecurity",
   "Healthcare",
   "Education",
@@ -26,23 +26,22 @@ function populateTemplate(template, data) {
   const latestEmployment = employment[0] || {};
 
   return template
-    .replace(/\{\{name\}\}/g, profile?.full_name || profile?.username || "")
-    .replace(/\{\{username\}\}/g, profile?.username || "")
-    .replace(/\{\{email\}\}/g, profile?.email || "")
-    .replace(/\{\{phone\}\}/g, profile?.phone_number || "")
-    .replace(/\{\{address\}\}/g, profile?.address || "")
-    .replace(/\{\{title\}\}/g, profile?.title || "")
-    .replace(/\{\{biography\}\}/g, profile?.biography || "")
-    .replace(/\{\{industry\}\}/g, profile?.industry || "")
-    .replace(/\{\{experience_level\}\}/g, profile?.experience_level || "")
-    .replace(/\{\{skills\}\}/g, skills?.map((s) => s.name).join(", ") || "")
-    .replace(/\{\{latest_title\}\}/g, latestEmployment?.title || "")
-    .replace(/\{\{latest_company\}\}/g, latestEmployment?.company || "")
-    .replace(/\{\{latest_location\}\}/g, latestEmployment?.location || "")
-    .replace(/\{\{top_degree\}\}/g, topEducation?.degree || "")
-    .replace(/\{\{top_field\}\}/g, topEducation?.field_of_study || "")
-    .replace(/\{\{top_institution\}\}/g, topEducation?.institution_name || "")
-    .replace(/\{\{certifications\}\}/g, certifications?.map((c) => c.name).join(", ") || "");
+    .replace(/\{\{name\}\}/g, profile?.full_name || profile?.username || "Your name here")
+    .replace(/\{\{username\}\}/g, profile?.username || "username")
+    .replace(/\{\{email\}\}/g, profile?.email || "email")
+    .replace(/\{\{phone\}\}/g, profile?.phone_number || "phone number")
+    .replace(/\{\{address\}\}/g, profile?.address || "address")
+    .replace(/\{\{title\}\}/g, profile?.title || "title")
+    .replace(/\{\{biography\}\}/g, profile?.biography || "Here is where details about you would go.")
+    .replace(/\{\{industry\}\}/g, profile?.industry || "industry")
+    .replace(/\{\{experience_level\}\}/g, profile?.experience_level || "").replace(/\{\{skills\}\}/g,skills?.filter(s => s && s.name && s.name.trim() !== "").map(s => `<li>${s.name}</li>`).join("") || "")
+    .replace(/\{\{latest_title\}\}/g, latestEmployment?.title || "title")
+    .replace(/\{\{latest_company\}\}/g, latestEmployment?.company || "company")
+    .replace(/\{\{latest_location\}\}/g, latestEmployment?.location || "location")
+    .replace(/\{\{top_degree\}\}/g, topEducation?.degree || "degree")
+    .replace(/\{\{top_field\}\}/g, topEducation?.field_of_study || "field")
+    .replace(/\{\{top_institution\}\}/g, topEducation?.institution_name || "institution")
+    .replace(/\{\{certifications\}\}/g, certifications?.map((c) => c.name).join(", ") || "certifications");
 }
 
 export default function CoverLetterList() {
@@ -122,8 +121,8 @@ export default function CoverLetterList() {
         format: 'a4'
       });
 
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
+      const imgWidth = 210; 
+      const pageHeight = 295; 
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
 
@@ -410,7 +409,10 @@ export default function CoverLetterList() {
   };
 
   return (
+
+    
     <div>
+    
       {editingLetter && (
         <CoverLetterForm
           editEntry={editingLetter}
@@ -419,35 +421,43 @@ export default function CoverLetterList() {
         />
       )}
 
-      <h2>Your Cover Letters</h2>
-      
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".html,text/html"
-          onChange={handleFileUpload}
-          style={{ display: "none" }}
-          id="file-upload"
-        />
-        <label htmlFor="file-upload">
-          <div style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "10px 20px",
-            background: uploading ? "#ccc" : "#2196f3",
-            color: "white",
-            borderRadius: "6px",
-            cursor: uploading ? "not-allowed" : "pointer",
-            fontSize: "14px",
-            fontWeight: "500"
-          }}>
-            <Upload size={18} />
-            {uploading ? "Uploading..." : "Upload HTML Template"}
-          </div>
-        </label>
-      </div>
+      <h2 style={{ fontSize: "48px" }}>
+      <span style={{ color: "white" }}>YOUR COVER LETTERS</span>
+      </h2>
+          
+      <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept=".html,text/html"
+    onChange={handleFileUpload}
+    style={{ display: "none" }}
+    id="file-upload"
+  />
+  <label htmlFor="file-upload" style={{ display: "inline-block", flexShrink: 0 }}>
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+        padding: "10px 20px",
+        background: uploading ? "#ccc" : "#2196f3",
+        color: "white",
+        borderRadius: "6px",
+        cursor: uploading ? "not-allowed" : "pointer",
+        fontSize: "14px",
+        fontWeight: "500",
+        whiteSpace: "nowrap",
+        width: "fit-content",
+        flexShrink: 0,
+      }}
+    >
+      <Upload size={18} />
+      {uploading ? "Uploading..." : "Upload HTML Template"}
+    </div>
+  </label>
+</div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
         {userLetters.map((letter) => (
@@ -521,70 +531,155 @@ export default function CoverLetterList() {
         ))}
       </div>
 
-      <h2 style={{ marginTop: "40px" }}>Sample Cover Letters</h2>
-      <div style={{ marginBottom: "16px" }}>
-        <label>
-          Style:
-          <select value={filterStyle} onChange={(e) => setFilterStyle(e.target.value)}>
-            <option value="">All</option>
-            {styles.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </label>
-        <label style={{ marginLeft: "16px" }}>
-          Industry:
-          <select value={filterIndustry} onChange={(e) => setFilterIndustry(e.target.value)}>
-            <option value="">All</option>
-            {industries.map((i) => (
-              <option key={i} value={i}>{i}</option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <h2 style={{ fontSize: "48px" }}>
+  <span style={{ color: "white" }}>SAMPLE COVER LETTERS</span>
+</h2>
+
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "20px",
+    marginBottom: "20px",
+    flexWrap: "wrap",
+  }}
+>
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <label
+      style={{
+        fontWeight: "500",
+        marginBottom: "6px",
+        color: "#333",
+      }}
+    >
+      Style
+    </label>
+    <select
+      value={filterStyle}
+      onChange={(e) => setFilterStyle(e.target.value)}
+      style={{
+        display: "inline-block",
+        width: "fit-content",
+        minWidth: "180px",
+        padding: "10px 16px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        backgroundColor: "white",
+        color: "#333",
+        fontSize: "14px",
+        cursor: "pointer",
+        flexShrink: 0,
+        appearance: "none",
+        textAlign: "center",
+      }}
+    >
+      <option value="">All</option>
+      {styles.map((s) => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <label
+      style={{
+        fontWeight: "500",
+        marginBottom: "6px",
+        color: "#333",
+      }}
+    >
+      Industry
+    </label>
+    <select
+      value={filterIndustry}
+      onChange={(e) => setFilterIndustry(e.target.value)}
+      style={{
+        display: "inline-block",
+        width: "fit-content",
+        minWidth: "180px",
+        padding: "10px 16px",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+        backgroundColor: "white",
+        color: "#333",
+        fontSize: "14px",
+        cursor: "pointer",
+        flexShrink: 0,
+        appearance: "none",
+        textAlign: "center",
+      }}
+    >
+      <option value="">All</option>
+      {industries.map((i) => (
+        <option key={i} value={i}>
+          {i}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
 
       {sampleLetters.map((group) => (
-        <div key={group.style} style={{ marginBottom: "30px" }}>
+        <div key={group.style} style={{ color:"white",marginBottom: "30px" }}>
           <h3 style={{ textTransform: "capitalize" }}>{group.style}</h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-            {group.letters.map((sample) => (
-              <div
-                key={sample.id}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "6px",
-                  padding: "16px",
-                  background: "#f9f9f9",
-                  width: "calc(33% - 10px)",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <h4>{sample.title}</h4>
-                <iframe
-                  ref={(el) => (iframeRefs.current[sample.id] = el)}
-                  title={`sample-${sample.id}`}
-                  srcDoc={sample.content || "<html><body></body></html>"}
-                  style={{ width: "100%", border: "1px solid #ccc", borderRadius: "6px" }}
-                  onLoad={(e) => autoResizeIframe(e.target)}
-                />
-                <button
-                  onClick={() => handleAddSample(sample)}
-                  style={{
-                    marginTop: "10px",
-                    padding: "6px 12px",
-                    background: "#4f8ef7",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    alignSelf: "center",
-                  }}
-                >
-                  Use this sample
-                </button>
-              </div>
-            ))}
-          </div>
+          <div
+  style={{
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "16px",
+    alignItems: "stretch",
+  }}
+>
+  {group.letters.map((sample) => (
+    <div
+      key={sample.id}
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: "6px",
+        padding: "16px",
+        background: "#f9f9f9",
+        width: "calc(33% - 10px)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between", // keep button at bottom
+      }}
+    >
+      <h4>{sample.title}</h4>
+      <iframe
+        ref={(el) => (iframeRefs.current[sample.id] = el)}
+        title={`sample-${sample.id}`}
+        srcDoc={sample.content || "<html><body></body></html>"}
+        style={{
+          width: "100%",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+          flexGrow: 1,      // <-- make iframe grow to fill remaining space
+          minHeight: "150px",
+        }}
+        onLoad={(e) => autoResizeIframe(e.target)}
+      />
+      <button
+        onClick={() => handleAddSample(sample)}
+        style={{
+          marginTop: "10px",
+          padding: "6px 12px",
+          background: "#4f8ef7",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          alignSelf: "center",
+        }}
+      >
+        Use this sample
+      </button>
+    </div>
+  ))}
+</div>
+
         </div>
       ))}
     </div>
