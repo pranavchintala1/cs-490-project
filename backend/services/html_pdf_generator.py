@@ -4,13 +4,7 @@ Converts HTML resume to PDF using Playwright
 Renders the exact same styling as the React frontend
 """
 
-import asyncio
-import sys
 from playwright.async_api import async_playwright
-
-# Windows asyncio subprocess fix
-if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class HTMLPDFGenerator:
@@ -31,28 +25,38 @@ class HTMLPDFGenerator:
         if not isinstance(html_content, str):
             raise TypeError(f"html_content must be a string, got {type(html_content).__name__}")
 
-        async with async_playwright() as p:
-            try:
-                browser = await p.chromium.launch(headless=True)
-            except Exception as e:
-                print(f"[HTMLPDFGenerator] Failed to launch browser: {e}")
-                print("[HTMLPDFGenerator] Make sure Playwright browsers are installed: playwright install")
-                raise
-            page = await browser.new_page()
+        browser = None
+        try:
+            async with async_playwright() as p:
+                try:
+                    browser = await p.chromium.launch(headless=True)
+                except NotImplementedError as e:
+                    print(f"[HTMLPDFGenerator] NotImplementedError (Windows asyncio): {e}")
+                    raise ValueError("Playwright browser launch failed. Run: python -m playwright install")
+                except Exception as e:
+                    print(f"[HTMLPDFGenerator] Failed to launch browser: {e}")
+                    raise
 
-            try:
-                # Set HTML content
-                await page.set_content(html_content)
+                page = None
+                try:
+                    page = await browser.new_page()
+                    await page.set_content(html_content)
 
-                # Generate PDF
-                pdf_bytes = await page.pdf(
-                    format='Letter',
-                    margin={'top': '0.5in', 'right': '0.5in', 'bottom': '0.5in', 'left': '0.5in'},
-                )
+                    # Generate PDF
+                    pdf_bytes = await page.pdf(
+                        format='Letter',
+                        margin={'top': '0.5in', 'right': '0.5in', 'bottom': '0.5in', 'left': '0.5in'},
+                    )
 
-                return pdf_bytes
-            finally:
-                await browser.close()
+                    return pdf_bytes
+                finally:
+                    if page:
+                        await page.close()
+                    if browser:
+                        await browser.close()
+        except Exception as e:
+            print(f"[HTMLPDFGenerator] Error in generate_pdf_from_html_async: {e}")
+            raise
 
     @staticmethod
     async def generate_pdf_from_html(html_content: str) -> bytes:

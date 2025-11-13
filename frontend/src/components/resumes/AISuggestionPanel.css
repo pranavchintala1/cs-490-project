@@ -70,6 +70,13 @@
   background: #f8f9fa;
 }
 
+/* Suggestion Content */
+
+.suggestion-content {
+  min-height: 100px;
+  background: transparent;
+}
+
 /* Suggestion Sections */
 
 .suggestion-section {
@@ -269,6 +276,75 @@
   padding: 0.75rem;
   border-radius: 4px;
   margin-bottom: 0.75rem;
+}
+
+/* Bullet Alternatives */
+
+.bullet-alternatives-container {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.bullet-alternatives-container strong {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 0.75rem;
+}
+
+.bullet-alternative-group {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #f9f9f9;
+  border-left: 3px solid #0066cc;
+  border-radius: 4px;
+}
+
+.original-bullet {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  border-left: 3px solid #ffc107;
+}
+
+.original-bullet strong {
+  color: #666;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  display: inline;
+  margin-right: 0.5rem;
+}
+
+.alternatives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.alternative-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem;
+}
+
+.bullet-checkbox {
+  margin-top: 0.25rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.alternative-text {
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: #555;
+  line-height: 1.4;
+  margin: 0;
 }
 
 .variations-container strong {

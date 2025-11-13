@@ -192,6 +192,20 @@ export default function AISuggestionPanel({
   };
 
   const renderExperienceSuggestions = () => {
+    // Debug logging
+    console.log('[AISuggestionPanel] Experience suggestions:', suggestions);
+
+    if (!suggestions.tailored_experiences || suggestions.tailored_experiences.length === 0) {
+      return (
+        <div className="suggestion-content">
+          <div className="alert alert-warning">
+            <p>No experience entries to tailor.</p>
+            <p className="small text-muted">Make sure you have at least one work experience entry added to your resume.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="suggestion-content">
         {suggestions.tailored_experiences?.map((exp, expIdx) => (
@@ -219,37 +233,69 @@ export default function AISuggestionPanel({
               </div>
             )}
 
-            <div className="variations-container">
-              <strong>Suggested Variations:</strong>
-              <div className="variation-selector">
-                {exp.variations?.map((variation, varIdx) => (
-                  <div key={varIdx} className="variation-option">
-                    <input
-                      type="radio"
-                      id={`var-${expIdx}-${varIdx}`}
-                      name={`variation-${expIdx}`}
-                      defaultChecked={varIdx === 0}
-                    />
-                    <label htmlFor={`var-${expIdx}-${varIdx}`} className="variation-text">
-                      {variation}
-                    </label>
+            {/* Per-bullet alternatives */}
+            {exp.bullet_alternatives && exp.bullet_alternatives.length > 0 ? (
+              <div className="bullet-alternatives-container">
+                <strong>Tailor Each Bullet Point:</strong>
+                {exp.bullet_alternatives.map((bullet, bulletIdx) => (
+                  <div key={bulletIdx} className="bullet-alternative-group">
+                    <div className="original-bullet">
+                      <strong>Original:</strong> {bullet.original_bullet}
+                    </div>
+
+                    <div className="alternatives-list">
+                      {bullet.alternatives?.map((alt, altIdx) => (
+                        <div key={altIdx} className="alternative-option">
+                          <input
+                            type="checkbox"
+                            id={`bullet-${expIdx}-${bulletIdx}-${altIdx}`}
+                            className="bullet-checkbox"
+                            data-exp-idx={expIdx}
+                            data-bullet-idx={bulletIdx}
+                            data-alt-text={alt}
+                          />
+                          <label htmlFor={`bullet-${expIdx}-${bulletIdx}-${altIdx}`} className="alternative-text">
+                            {alt}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
+            ) : (
+              <p className="text-muted small">No bullet point alternatives generated</p>
+            )}
 
             <button
-              className="btn btn-sm btn-success mt-2"
+              className="btn btn-sm btn-success mt-3"
               onClick={() => {
-                const selected = document.querySelector(`input[name="variation-${expIdx}"]:checked`)
-                  ?.nextElementSibling?.textContent;
-                onAccept({ experience_index: exp.index, new_description: selected });
+                // Collect all selected bullet alternatives
+                const selectedAlts = {};
+                document.querySelectorAll(`.bullet-checkbox:checked`).forEach((checkbox) => {
+                  const expIdx = parseInt(checkbox.getAttribute('data-exp-idx'));
+                  const bulletIdx = parseInt(checkbox.getAttribute('data-bullet-idx'));
+                  const altText = checkbox.getAttribute('data-alt-text');
+
+                  if (!selectedAlts[bulletIdx]) {
+                    selectedAlts[bulletIdx] = altText;
+                  }
+                });
+
+                if (Object.keys(selectedAlts).length > 0) {
+                  onAccept({
+                    experience_index: exp.index,
+                    bullet_replacements: selectedAlts
+                  });
+                } else {
+                  alert('Please select at least one bullet point alternative');
+                }
               }}
             >
-              ✓ Accept This Variation
+              ✓ Apply Selected Changes
             </button>
             <button
-              className="btn btn-sm btn-outline-secondary mt-2 ms-2"
+              className="btn btn-sm btn-outline-secondary mt-3 ms-2"
               onClick={() => onReject(`experience-${exp.index}`)}
             >
               ✗ Skip
@@ -295,6 +341,11 @@ export default function AISuggestionPanel({
               <span className="visually-hidden">Loading...</span>
             </div>
             <p className="mt-2">Generating suggestions...</p>
+          </div>
+        ) : !suggestions ? (
+          <div className="alert alert-warning">
+            <p>No suggestions available. Please try again.</p>
+            <p className="small text-muted">Type: {type}</p>
           </div>
         ) : (
           <>

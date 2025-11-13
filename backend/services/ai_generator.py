@@ -238,18 +238,27 @@ class AIGenerator:
 
             # Parse response
             response_text = response.choices[0].message.content
-            result = cls.parse_json_response(response_text)
+            print(f"[AIGenerator] Raw tailor_experience response: {response_text[:500]}")
+            try:
+                result = cls.parse_json_response(response_text)
+            except ValueError as parse_err:
+                print(f"[AIGenerator] JSON parse error details: {parse_err}")
+                print(f"[AIGenerator] Response text (full): {response_text}")
+                raise
 
             # Format tailored experiences
             tailored_experiences = []
             experiences_data = result.get('experiences', []) if isinstance(result.get('experiences', []), list) else [result]
 
             for idx, exp in enumerate(experiences_data):
+                # Handle new bullet_alternatives structure
+                bullet_alternatives = exp.get('bullet_alternatives', [])
+
                 tailored_experiences.append({
                     'index': idx,
                     'original': exp.get('original_description', ''),
                     'title': exp.get('title', ''),
-                    'variations': exp.get('variants', [])[:3],
+                    'bullet_alternatives': bullet_alternatives,  # New: per-bullet alternatives
                     'relevance_score': min(100, max(0, exp.get('relevance_score', 60))),
                     'matched_keywords': exp.get('matched_keywords', [])[:3]
                 })
