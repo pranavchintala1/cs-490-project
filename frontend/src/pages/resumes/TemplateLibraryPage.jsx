@@ -166,7 +166,7 @@ export default function TemplateLibraryPage() {
         name: resumeName.trim(),
         template: template.template_type,
         templateId: template.id,  // Store the template ID for rendering
-        sections: ['contact', 'summary', 'experience', 'education', 'skills'],
+        sections: ['contact', 'summary', 'experience', 'education', 'certifications', 'projects', 'skills'],
         contact: {
           name: '',
           email: '',
@@ -177,6 +177,8 @@ export default function TemplateLibraryPage() {
         summary: '',
         experience: [],
         education: [],
+        certifications: [],
+        projects: [],
         skills: [],
         colors: templateColors,
         fonts: templateFonts,
