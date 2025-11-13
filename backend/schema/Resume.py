@@ -3,6 +3,8 @@ from typing import Optional
 
 from schema.Employment import Employment
 from schema.Education import Education
+from schema.Certification import Certification
+from schema.Project import Project
 from schema.Skill import Skill
 
 class ContactInfo(BaseModel): # related to Resume
@@ -28,6 +30,8 @@ class Resume(BaseModel):
     summary: Optional[str] = None
     experience: Optional[list[Employment]] = None
     education: Optional[list[Education]] = None
+    certifications: Optional[list[Certification]] = None
+    projects: Optional[list[Project]] = None
     skills: Optional[list[Skill]] = None
     colors: Optional[Colors] = None
     fonts: Optional[Fonts] = None

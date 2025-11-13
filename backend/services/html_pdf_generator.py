@@ -134,11 +134,46 @@ class HTMLPDFGenerator:
                 education_html += f"""
                 <div class="education-entry">
                     <div class="degree">{edu.get('degree', '')}</div>
-                    <div class="school-name">{edu.get('school', '')}</div>
-                    <div class="graduation-year">{edu.get('graduation_year', '')}</div>
+                    <div class="school-name">{edu.get('institution_name', '')}</div>
+                    <div class="graduation-year">{edu.get('graduation_date', '')}</div>
                 </div>
                 """
             education_html += '</div>'
+
+        # Build certifications
+        certifications_html = ""
+        if resume_data.get('certifications'):
+            certifications_html = '<div class="resume-section"><div class="section-heading">Certifications</div>'
+            for cert in resume_data['certifications']:
+                certifications_html += f"""
+                <div class="certification-entry">
+                    <div class="certification-header">
+                        <strong>{cert.get('name', '')}</strong>
+                        <span class="date">{cert.get('date_earned', '')}</span>
+                    </div>
+                    {f'<p class="issuer">{cert.get("issuer", "")}</p>' if cert.get('issuer') else ''}
+                    {f'<p class="cert-id">ID: {cert.get("cert_number", "")}</p>' if cert.get('cert_number') else ''}
+                </div>
+                """
+            certifications_html += '</div>'
+
+        # Build projects
+        projects_html = ""
+        if resume_data.get('projects'):
+            projects_html = '<div class="resume-section"><div class="section-heading">Projects</div>'
+            for proj in resume_data['projects']:
+                projects_html += f"""
+                <div class="project-entry">
+                    <div class="project-header">
+                        <strong>{proj.get('project_name', '')}</strong>
+                        <span class="date">{proj.get('start_date', '')} {f'- {proj.get("end_date", "")}' if proj.get('end_date') else ''}</span>
+                    </div>
+                    {f'<p class="role">Role: {proj.get("role", "")}</p>' if proj.get('role') else ''}
+                    {f'<p class="description">{proj.get("description", "")}</p>' if proj.get('description') else ''}
+                    {f'<p class="skills"><strong>Skills:</strong> {", ".join(proj.get("skills", []))}</p>' if proj.get('skills') else ''}
+                </div>
+                """
+            projects_html += '</div>'
 
         # Build skills
         skills_html = ""
@@ -157,6 +192,8 @@ class HTMLPDFGenerator:
             {summary_html}
             {experience_html}
             {education_html}
+            {certifications_html}
+            {projects_html}
             {skills_html}
         </div>
         """
@@ -248,7 +285,7 @@ class HTMLPDFGenerator:
             margin-bottom: 10px;
         }}
 
-        .experience-entry, .education-entry {{
+        .experience-entry, .education-entry, .certification-entry, .project-entry {{
             margin-bottom: 12px;
         }}
 
@@ -298,6 +335,29 @@ class HTMLPDFGenerator:
         .summary-text {{
             line-height: 1.5;
             margin-top: 8px;
+        }}
+
+        .certification-header, .project-header {{
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }}
+
+        .certification-header strong, .project-header strong {{
+            font-family: {heading_font}, sans-serif;
+            font-weight: bold;
+            color: {primary_color};
+        }}
+
+        .issuer, .role, .cert-id, .skills {{
+            font-size: 12px;
+            color: {accent_color};
+            margin: 2px 0;
+        }}
+
+        .date {{
+            font-size: 12px;
+            color: {accent_color};
         }}
     </style>
 </head>
