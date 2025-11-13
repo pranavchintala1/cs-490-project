@@ -172,7 +172,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
       contacts: contacts.trim() || undefined,
       salary_notes: salaryNotes.trim() || undefined,
       interview_notes: interviewNotes.trim() || undefined,
-      company_data: companyData || undefined, // This includes the image!
+      company_data: companyData || undefined, 
     };
 
     console.log("Submitting job data:", {
@@ -260,7 +260,7 @@ export default function JobForm({ addJob, editJob, cancelEdit }) {
           🔗 Quick Import from URL
         </h3>
         <p style={{ fontSize: "13px", color: "#666", marginBottom: "12px" }}>
-          Paste a job posting URL from Indeed to auto-fill the form (includes company logo!)
+          Paste a job posting URL from Indeed to auto-fill the form
         </p>
 
         <label style={labelStyle}>Import URL</label>
