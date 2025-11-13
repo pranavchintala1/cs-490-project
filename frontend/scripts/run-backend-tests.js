@@ -8,31 +8,32 @@ console.log('\n🔧 Running Backend Tests...\n');
 
 const backendDir = path.join(__dirname, '../../backend');
 const venvDir = path.join(backendDir, '.venv');
-
-// Determine the python executable path based on OS
-let pythonPath;
-let activateCmd;
-
-if (os.platform() === 'win32') {
-  pythonPath = path.join(venvDir, 'Scripts', 'python.exe');
-  activateCmd = `${path.join(venvDir, 'Scripts', 'activate.bat')} && `;
-} else {
-  pythonPath = path.join(venvDir, 'bin', 'python');
-  activateCmd = `source ${path.join(venvDir, 'bin', 'activate')} && `;
-}
-
-// Run pytest with the virtual environment activated
-// Use full path to test file to avoid directory resolution issues
+const isWindows = os.platform() === 'win32';
 const testFile = path.join(backendDir, 'test_backend_comprehensive.py');
-const cmd = `cd ${backendDir} && ${activateCmd}python -m pytest "${testFile}" -v`;
 
-console.log('Running from:', backendDir);
-console.log('');
+let result;
 
-const result = spawnSync('bash', ['-c', cmd], {
-  stdio: 'inherit',
-  shell: true,
-});
+if (isWindows) {
+  // Windows batch file activation
+  const activatePath = path.join(venvDir, 'Scripts', 'activate.bat');
+  const cmd = `cd /d "${backendDir}" && "${activatePath}" && python -m pytest "${testFile}" -v`;
+  console.log('Running from:', backendDir);
+  console.log('Platform: Windows\n');
+  result = spawnSync('cmd', ['/c', cmd], {
+    stdio: 'inherit',
+    shell: true,
+  });
+} else {
+  // Unix/macOS bash activation
+  const activatePath = path.join(venvDir, 'bin', 'activate');
+  const cmd = `cd "${backendDir}" && source "${activatePath}" && python -m pytest "${testFile}" -v`;
+  console.log('Running from:', backendDir);
+  console.log('Platform:', os.platform() === 'darwin' ? 'macOS' : 'Linux\n');
+  result = spawnSync('bash', ['-c', cmd], {
+    stdio: 'inherit',
+    shell: true,
+  });
+}
 
 // Show test summary
 console.log('\n✅ Backend tests completed!\n');

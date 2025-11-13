@@ -72,33 +72,51 @@ function runBackendTests() {
 
   const backendDir = path.join(__dirname, '../../backend');
   const venvDir = path.join(backendDir, '.venv');
-  const pythonPath = path.join(venvDir, 'bin', 'python');
-  const activateCmd = `source ${path.join(venvDir, 'bin', 'activate')} && `;
+  const isWindows = os.platform() === 'win32';
   const testFile = path.join(backendDir, 'test_backend_comprehensive.py');
-  const cmd = `cd ${backendDir} && ${activateCmd}python -m pytest "${testFile}" -v --tb=short`;
 
-  const result = spawnSync('bash', ['-c', cmd], {
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  });
+  let result;
 
-  const output = result.stdout + result.stderr;
+  if (isWindows) {
+    // Windows batch file activation
+    const activatePath = path.join(venvDir, 'Scripts', 'activate.bat');
+    const cmd = `cd /d "${backendDir}" && "${activatePath}" && python -m pytest "${testFile}" -v --tb=short 2>&1`;
+    result = spawnSync('cmd', ['/c', cmd], {
+      stdio: 'pipe',
+      encoding: 'utf-8',
+      shell: true,
+    });
+  } else {
+    // Unix/macOS bash activation
+    const activatePath = path.join(venvDir, 'bin', 'activate');
+    const cmd = `cd "${backendDir}" && source "${activatePath}" && python -m pytest "${testFile}" -v --tb=short 2>&1`;
+    result = spawnSync('bash', ['-c', cmd], {
+      stdio: 'pipe',
+      encoding: 'utf-8',
+    });
+  }
 
-  // Parse results
-  const passMatch = output.match(/(\d+) passed/);
-  const failMatch = output.match(/(\d+) failed/);
-  const timeMatch = output.match(/in ([\d.]+)s/);
+  const output = (result.stdout || '') + (result.stderr || '');
+
+  // Parse results with null safety
+  const passMatch = output ? output.match(/(\d+) passed/) : null;
+  const failMatch = output ? output.match(/(\d+) failed/) : null;
+  const timeMatch = output ? output.match(/in ([\d.]+)s/) : null;
 
   backendResults = {
     passed: passMatch ? parseInt(passMatch[1]) : 0,
     failed: failMatch ? parseInt(failMatch[1]) : 0,
     total: (passMatch ? parseInt(passMatch[1]) : 0) + (failMatch ? parseInt(failMatch[1]) : 0),
     time: timeMatch ? `${timeMatch[1]}s` : 'N/A',
-    exitCode: result.status,
+    exitCode: result.status || 0,
   };
 
   // Print output
-  console.log(output);
+  if (output) {
+    console.log(output);
+  } else {
+    log(colors.yellow, 'No test output received. Check if pytest is installed and venv is accessible.');
+  }
 
   return result.status;
 }
