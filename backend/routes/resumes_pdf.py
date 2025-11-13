@@ -157,8 +157,8 @@ async def export_resume_pdf(resume_id: str, uuid: str = Depends(authorize)):
         print(f"[Export PDF] Building HTML from resume data for resume_id={resume_id}")
         resume_html = HTMLPDFGenerator.build_resume_html_from_data(resume)
 
-        # Wrap with full HTML document and styles
-        full_html = HTMLPDFGenerator.wrap_resume_html(resume_html)
+        # Wrap with full HTML document and styles (include colors and fonts)
+        full_html = HTMLPDFGenerator.wrap_resume_html(resume_html, resume.get('colors'), resume.get('fonts'))
 
         # Generate PDF from HTML
         print(f"[Export PDF] Generating PDF from resume data")
@@ -202,8 +202,8 @@ async def export_resume_html(resume_id: str, uuid: str = Depends(authorize)):
         print(f"[Export HTML] Building HTML from resume data for resume_id={resume_id}")
         resume_html = HTMLPDFGenerator.build_resume_html_from_data(resume)
 
-        # Wrap with full HTML document and styles
-        full_html = HTMLPDFGenerator.wrap_resume_html(resume_html)
+        # Wrap with full HTML document and styles (include colors and fonts)
+        full_html = HTMLPDFGenerator.wrap_resume_html(resume_html, resume.get('colors'), resume.get('fonts'))
 
         # Encode HTML to bytes
         html_bytes = full_html.encode('utf-8')

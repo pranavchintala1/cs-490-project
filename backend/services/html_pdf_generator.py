@@ -164,16 +164,25 @@ class HTMLPDFGenerator:
         return resume_html
 
     @staticmethod
-    def wrap_resume_html(resume_html: str) -> str:
+    def wrap_resume_html(resume_html: str, colors: dict = None, fonts: dict = None) -> str:
         """
-        Wrap resume HTML with proper page styling for PDF export
+        Wrap resume HTML with proper page styling for PDF/HTML export
+        Includes custom colors and fonts if provided
 
         Args:
             resume_html: The resume content HTML
+            colors: Dictionary with 'primary' and 'accent' colors
+            fonts: Dictionary with 'heading' and 'body' fonts
 
         Returns:
-            Complete HTML document with CSS for PDF
+            Complete HTML document with CSS for PDF/HTML
         """
+        # Extract colors and fonts, with defaults
+        primary_color = colors.get('primary', '#1a1a1a') if colors else '#1a1a1a'
+        accent_color = colors.get('accent', '#2c3e50') if colors else '#2c3e50'
+        heading_font = fonts.get('heading', 'Calibri') if fonts else 'Calibri'
+        body_font = fonts.get('body', 'Calibri') if fonts else 'Calibri'
+
         full_html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -186,9 +195,9 @@ class HTMLPDFGenerator:
         }}
 
         body {{
-            font-family: Arial, sans-serif;
+            font-family: {body_font}, sans-serif;
             line-height: 1.4;
-            color: #000;
+            color: {primary_color};
             background: white;
         }}
 
@@ -205,92 +214,90 @@ class HTMLPDFGenerator:
             margin: 0;
         }}
 
-        /* Template-specific styles */
-        .template-professional-clean .resume-header {{
-            border-bottom: 3px solid #003366;
-        }}
-
-        .template-professional-clean .section-heading {{
-            color: #003366;
-            border-bottom: 2px solid #003366;
-        }}
-
-        .template-modern-bold .resume-header {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            margin: -40px -40px 20px -40px;
-        }}
-
-        .template-modern-bold .section-heading {{
-            background-color: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            border-left: 5px solid #667eea;
-            padding: 8px 12px;
-        }}
-
-        .template-modern-gradient .gradient-divider {{
-            height: 3px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            margin: 15px 0;
-        }}
-
-        .template-minimal-zen {{
-            font-size: 12px;
-            line-height: 1.3;
-        }}
-
-        .template-minimal-zen .resume-header {{
-            border: none;
-        }}
-
-        .template-creative-vibrant .resume-header {{
-            background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 100%);
-            color: white;
-            padding: 20px;
-            margin: -40px -40px 20px -40px;
-        }}
-
-        .template-creative-vibrant .section-heading {{
-            color: #ff6b6b;
-            border-bottom: 3px solid #ff6b6b;
-        }}
-
-        .template-academic-formal .resume-header {{
-            text-align: center;
-            border-bottom: 1px solid #333;
+        /* Custom resume styling */
+        .resume-header {{
+            border-bottom: 3px solid {primary_color};
+            margin-bottom: 15px;
         }}
 
         .resume-name {{
+            font-family: {heading_font}, sans-serif;
             font-weight: bold;
             font-size: 24px;
+            color: {primary_color};
             margin-bottom: 8px;
+        }}
+
+        .contact-line {{
+            font-size: 12px;
+            color: {accent_color};
+        }}
+
+        .resume-section {{
+            margin-bottom: 15px;
         }}
 
         .section-heading {{
+            font-family: {heading_font}, sans-serif;
             font-weight: bold;
             font-size: 13px;
+            color: {primary_color};
             text-transform: uppercase;
-            margin-top: 15px;
-            margin-bottom: 8px;
+            border-bottom: 2px solid {primary_color};
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }}
+
+        .experience-entry, .education-entry {{
+            margin-bottom: 12px;
+        }}
+
+        .exp-header-row {{
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
         }}
 
         .job-title, .degree {{
+            font-family: {heading_font}, sans-serif;
             font-weight: bold;
-            margin-top: 8px;
+            color: {primary_color};
+            margin-top: 0;
         }}
 
         .company-name, .school-name {{
             font-style: italic;
+            color: {accent_color};
             margin: 2px 0;
+        }}
+
+        .date-range {{
+            font-size: 12px;
+            color: {accent_color};
+        }}
+
+        .description {{
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 4px;
         }}
 
         .skill-item {{
             display: inline;
         }}
 
-        .experience-entry, .education-entry {{
-            margin-bottom: 8px;
+        ul {{
+            margin-left: 20px;
+            margin-top: 5px;
+        }}
+
+        li {{
+            margin-bottom: 4px;
+        }}
+
+        .summary-text {{
+            line-height: 1.5;
+            margin-top: 8px;
         }}
     </style>
 </head>
