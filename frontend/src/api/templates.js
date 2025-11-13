@@ -3,6 +3,8 @@
  * Related to UC-046: Resume Template Management
  */
 
+import api from './base';
+
 const API_BASE = 'http://localhost:8000/api/templates';
 
 const TemplatesAPI = {
@@ -249,19 +251,13 @@ const TemplatesAPI = {
    * Upload an HTML resume file as a template
    */
   upload: async (formData) => {
-    const response = await fetch(`${API_BASE}/upload`, {
-      method: 'POST',
-      credentials: 'include',
-      body: formData,
-      // Don't set Content-Type header - browser will set it with boundary
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Failed to upload template');
+    try {
+      const response = await api.post(`/templates/upload`, formData);
+      return response.data;
+    } catch (err) {
+      const error = err?.response?.data;
+      throw new Error(error?.detail || 'Failed to upload template');
     }
-
-    return response.json();
   },
 
   /**

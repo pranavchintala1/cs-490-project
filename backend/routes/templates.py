@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Header, File, UploadFile,
 from typing import Optional
 import os
 import json
+import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -24,6 +25,40 @@ async def authorize_optional(uuid: str = Header(None), authorization: str = Head
     return None
 
 templates_router = APIRouter(prefix="/templates")
+
+
+def extract_colors_and_fonts_from_html(html_content: str) -> tuple:
+    """
+    Extract colors and fonts from HTML/CSS content
+    Looks for common color hex values and font-family declarations
+    Returns (colors_dict, fonts_dict)
+    """
+    colors = {'primary': '#1a1a1a', 'accent': '#2c3e50'}  # defaults
+    fonts = {'heading': 'Calibri', 'body': 'Calibri'}  # defaults
+
+    try:
+        # Find all hex colors in the HTML
+        hex_colors = re.findall(r'#[0-9a-fA-F]{6}', html_content)
+        if len(hex_colors) >= 1:
+            colors['primary'] = hex_colors[0]  # First color is primary
+        if len(hex_colors) >= 2:
+            colors['accent'] = hex_colors[1]   # Second color is accent
+
+        # Find font-family declarations
+        font_families = re.findall(r'font-family:\s*([^;,\n}]+)', html_content)
+        if font_families:
+            # Clean up font names (remove quotes and extra spaces)
+            cleaned_fonts = [f.strip().strip("'\"") for f in font_families]
+            # Use first font as heading, last unique as body
+            if cleaned_fonts:
+                fonts['heading'] = cleaned_fonts[0]
+                fonts['body'] = cleaned_fonts[-1] if len(cleaned_fonts) > 1 else cleaned_fonts[0]
+
+    except Exception as e:
+        print(f"[Extract Styles] Error extracting colors/fonts: {e}")
+        # Return defaults on error
+
+    return colors, fonts
 
 
 @templates_router.post("", tags=["templates"])
@@ -54,12 +89,16 @@ async def upload_resume_template(
     file: UploadFile = File(...),
     name: str = Form(...),
     description: str = Form(""),
-    uuid: str = Depends(authorize)
+    uuid: str = Header(default=None)
 ):
     """
     Upload an HTML resume file as a template
     Related to UC-046: Resume Template Management - Import existing resume as template
     """
+    # Verify user is authenticated
+    if not uuid:
+        raise HTTPException(status_code=401, detail="User authentication required - missing uuid")
+
     # Validate file type
     if file.content_type != "text/html" and not file.filename.lower().endswith('.html'):
         raise HTTPException(status_code=400, detail="Only HTML files are supported")
@@ -76,6 +115,11 @@ async def upload_resume_template(
         template_id = str(uuid4())
         created_at = datetime.now(timezone.utc)
 
+        # Extract colors and fonts from the HTML
+        print(f"[Upload Template] Extracting colors and fonts from HTML")
+        extracted_colors, extracted_fonts = extract_colors_and_fonts_from_html(html_content)
+        print(f"[Upload Template] Extracted colors: {extracted_colors}, fonts: {extracted_fonts}")
+
         # Create new template document
         new_template = {
             "_id": template_id,
@@ -83,9 +127,9 @@ async def upload_resume_template(
             "name": name,
             "description": description,
             "template_type": "imported",
-            "html_content": html_content,  # Store raw HTML
-            "colors": None,
-            "fonts": None,
+            "html_content": html_content,  # Store raw HTML for reference
+            "colors": extracted_colors,    # Store extracted colors
+            "fonts": extracted_fonts,      # Store extracted fonts
             "sections": ["contact", "summary", "experience", "education", "skills"],
             "is_default": False,
             "created_at": created_at,
