@@ -32,13 +32,14 @@ export default function SkillForm({ addSkill, existingSkills }) {
   const [proficiency, setProficiency] = useState("");
   const [suggestions, setSuggestions] = useState([]);
 
+  const allSkills = Object.values(commonSkillsByCategory).flat();
+
   const handleNameChange = (e) => {
     const value = e.target.value;
     setName(value);
     
-    if (value.trim() && category) {
-      const categorySkills = commonSkillsByCategory[category] || [];
-      const filtered = categorySkills.filter(skill =>
+    if (value.trim()) {
+      const filtered = allSkills.filter(skill =>
         skill.toLowerCase().startsWith(value.toLowerCase()) &&
         skill.toLowerCase() !== value.toLowerCase() &&
         !existingSkills.some(s => s.name.toLowerCase() === skill.toLowerCase())
@@ -94,11 +95,11 @@ export default function SkillForm({ addSkill, existingSkills }) {
       <form onSubmit={handleSubmit}>
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", // responsive grid
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "12px",
           alignItems: "start",
           justifyContent: "center",
-          }}>
+        }}>
           <div style={{ position: "relative" }}>
             <input
               placeholder="Skill name (e.g., JavaScript, Leadership)"
@@ -151,10 +152,7 @@ export default function SkillForm({ addSkill, existingSkills }) {
 
           <select 
             value={category} 
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setSuggestions([]);
-            }} 
+            onChange={(e) => setCategory(e.target.value)} 
             style={inputStyle}
             required
           >
