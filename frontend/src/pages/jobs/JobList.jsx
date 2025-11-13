@@ -738,23 +738,25 @@ const loadJobs = async () => {
               {showCalendar ? "📋 Hide Calendar" : "📅 Show Calendar"}
             </button>
           )}
-          {view === "pipeline" && (
+{view === "pipeline" && (
             <>
-              <button
-                onClick={() => setShowArchived(!showArchived)}
-                style={{
-                  padding: "12px 24px",
-                  background: showArchived ? "#ff5722" : "#607d8b",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontWeight: "bold",
-                  fontSize: "14px"
-                }}
-              >
-                {showArchived ? "📂 Show Active" : "🗄️ Show Archived"}
-              </button>
+              {!showCalendar && (
+                <button
+                  onClick={() => setShowArchived(!showArchived)}
+                  style={{
+                    padding: "12px 24px",
+                    background: showArchived ? "#ff5722" : "#607d8b",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    fontSize: "14px"
+                  }}
+                >
+                  {showArchived ? "📂 Show Active" : "🗄️ Show Archived"}
+                </button>
+              )}
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 style={{
@@ -772,7 +774,7 @@ const loadJobs = async () => {
               </button>
             </>
           )}
-          <button
+            <button
             onClick={() => {
               setView(view === "pipeline" ? "form" : "pipeline");
               setEditingJob(null);
@@ -902,7 +904,7 @@ const loadJobs = async () => {
       {/* Deadline Widget and Calendar - show only in pipeline view for active jobs */}
       {view === "pipeline" && !showArchived && (
         <>
-          <DeadlineWidget jobs={jobs.filter(j => !j.archived)} onJobClick={(job) => setSelectedJob(job)} />
+          {!showCalendar && <DeadlineWidget jobs={jobs.filter(j => !j.archived)} onJobClick={(job) => setSelectedJob(job)} />}
           {showCalendar && <DeadlineCalendar jobs={jobs.filter(j => !j.archived)} />}
         </>
       )}
