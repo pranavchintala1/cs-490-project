@@ -192,7 +192,7 @@ async def add_job(job: Job, uuid: str = Depends(authorize)):
     except HTTPException as http:
         raise http
     except Exception as e:
-        raise HTTPException(500, "Encountered internal server error")
+        raise HTTPException(500, str(e))
     
     return {"detail": "Sucessfully added job", "job_id": result}
 
@@ -201,7 +201,7 @@ async def get_job(job_id: str, uuid: str = Depends(authorize)):
     try:
         result = await jobs_dao.get_job(job_id)
     except Exception as e:
-        raise HTTPException(500, "Encountered internal service error")
+        raise HTTPException(500, str(e))
     
     if result:
         result["_id"] = str(result["_id"])
@@ -214,7 +214,7 @@ async def get_all_jobs(uuid: str = Depends(authorize)):
     try:
         results = await jobs_dao.get_all_jobs(uuid)
     except Exception as e:
-        raise HTTPException(500, "Encountered internal service error")
+        raise HTTPException(500, str(e))
     
     return results
 
@@ -224,7 +224,7 @@ async def update_job(job_id: str, job: Job, uuid: str = Depends(authorize)):
         model = job.model_dump(exclude_unset = True)
         updated = await jobs_dao.update_job(job_id, model)
     except Exception as e:
-        raise HTTPException(500, "Encountered internal service error")
+        raise HTTPException(500, str(e))
     
     if updated == 0:
         raise HTTPException(400, "Job not found")
@@ -236,7 +236,7 @@ async def delete_job(job_id: str, uuid: str = Depends(authorize)):
     try:
         deleted = await jobs_dao.delete_job(job_id)
     except Exception as e:
-        raise HTTPException(500, "Encountered internal service error")
+        raise HTTPException(500, str(e))
 
     if deleted == 0:
         raise HTTPException(400, "Job not found")
@@ -255,7 +255,7 @@ async def import_from_url(url: UrlBody):
     except ValueError as e:
         raise HTTPException(400, str(e))
     except Exception as e:
-        raise HTTPException(500, "Ecountered internal service error") from e
+        raise HTTPException(500, str(e)) from e
     
     return data
 
@@ -264,7 +264,7 @@ async def upload_image(job_id: str, media: UploadFile = File(...), uuid: str = D
     try:
         media_id = await media_dao.add_media(job_id, media.filename, await media.read(), media.content_type)
     except Exception as e:
-        raise HTTPException(500, "Encountered interal service error")
+        raise HTTPException(500, str(e))
     
     if not media_id:
         raise HTTPException(500, "Unable to upload media")
@@ -276,7 +276,7 @@ async def download_image(media_id: str, uuid: str = Depends(authorize)):
     try:
         media = await media_dao.get_media(media_id)
     except Exception as e:
-        raise HTTPException(500, "Encountered interal service error")
+        raise HTTPException(500, str(e))
     
     if not media:
         raise HTTPException(400, "Could not find requested media")
