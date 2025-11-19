@@ -32,6 +32,7 @@ import { FlashProvider, FlashMessage } from "./context/flashContext";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+import NetworkOverview from "./pages/network/NetworkOverview";
 
 // inside your router
 
@@ -78,6 +79,7 @@ export function App() {
               <Route path="/resumes/feedback/:id" element={<SharingAndFeedbackPage />} />
               <Route path="/resumes/public/:token" element={<PublicSharePage />} />
               <Route path="/resumes/export/:id" element={<ExportResumePage />} />
+              <Route path="/network" element={<NetworkOverview />} />
               </Routes>
             </FlashProvider>
           </>

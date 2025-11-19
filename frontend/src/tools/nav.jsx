@@ -281,6 +281,10 @@ const Nav = () => {
                   Cover Letters
                 </BootstrapNav.Link>
 
+                <BootstrapNav.Link as={NavLink} to="/network" classname="mx-3">
+                  Network
+                </BootstrapNav.Link>
+
                 <NavDropdown
                   title={
                     <span
