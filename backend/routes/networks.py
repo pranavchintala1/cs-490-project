@@ -69,7 +69,7 @@ async def delete_contact(contact_id: str, uuid: str = Depends(authorize)):
     else:
         return {"detail": "Sucessfully deleted contact"}
 
-@networks_dao.post("/avatar", tags = ["networks"])
+@networks_router.post("/avatar", tags = ["networks"])
 async def upload_avatar(contact_id: str, media: UploadFile = File(...), uuid: str = Depends(authorize)):
     try:
         media_id = await media_dao.add_media(contact_id, media.filename, await media.read(), media.content_type)
@@ -82,9 +82,9 @@ async def upload_avatar(contact_id: str, media: UploadFile = File(...), uuid: st
     return {"media_id": media_id}
 
 @networks_router.get("/avatar", tags = ["networks"])
-async def download_avatar(contact_id: str, uuid: str = Depends(authorize)):
+async def download_avatar(media_id: str, uuid: str = Depends(authorize)):
     try:
-        media = await media_dao.get_media(contact_id)
+        media = await media_dao.get_media(media_id)
     except Exception as e:
         raise HTTPException(500, str(e))
     
@@ -100,9 +100,9 @@ async def download_avatar(contact_id: str, uuid: str = Depends(authorize)):
     )
 
 @networks_router.put("/avatar", tags = ["networks"])
-async def update_avatar(media_id: str, contact_id: str, media: UploadFile, uuid: str = Depends(authorize)):
+async def update_avatar(media_id: str, media: UploadFile, uuid: str = Depends(authorize)):
     try:
-        updated = await media_dao.update_media(media_id, media.filename, await media.read(), contact_id, media.content_type)
+        updated = await media_dao.update_media(media_id, media.filename, await media.read(), None, media.content_type)
     except Exception as e:
         raise HTTPException(500, str(e))
     
